@@ -1,0 +1,160 @@
+<!--Neuron is a World of Warcraft® user interface addon.
+	Copyright (c) 2017-2023 Britt W. Yazel
+	Copyright (c) 2006-2014 Connor H. Chenoweth
+	This code is licensed under the MIT license (see LICENSE for details)-->
+
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.blizzard.com/wow/ui/" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI_shared.xsd">
+
+	<CheckButton name="NeuronActionButtonTemplate" inherits="SecureActionButtonTemplate, SecureHandlerEnterLeaveTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="43" y="43"/>
+		</Size>
+		<Layers>
+
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture name="$parentStyle" parentKey="Style" hidden="true">
+					<Size x="220" y="110"/>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+
+			<Layer level="BACKGROUND" textureSubLevel="2">
+				<Texture name="$parentIcon" parentKey="Icon">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="3" y="-3"/>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+
+			<Layer level="ARTWORK" textureSubLevel="1">
+				<FontString name="$parentCountdown" parentKey="Countdown" inherits="NumberFontNormal">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+
+			<Layer level="ARTWORK" textureSubLevel="2">
+				<FontString name="$parentHotkey" parentKey="Hotkey" inherits="NumberFontNormal" justifyH="RIGHT" justifyV="TOP">
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="-3" y="-4"/>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentCount" parentKey="Count" inherits="NumberFontNormal" justifyH="RIGHT" justifyV="BOTTOM">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="4"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<FontString name="$parentName" parentKey="Name" inherits="GameFontHighlightSmallOutline">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="2" y="2"/>
+						<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+					</Anchors>
+				</FontString>
+
+				<Texture name="$parentBorder" parentKey="Border" file="Interface\Buttons\UI-ActionButton-Border" hidden="true" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<TexCoords left="0.1875" right="0.8125" top="0.1875" bottom="0.8125"/>
+				</Texture>
+			</Layer>
+
+			<Layer level="OVERLAY" textureSubLevel="2">
+				<Texture name="$parentAutoCastable" parentKey="AutoCastable" file="Interface\Buttons\UI-AutoCastableOverlay" hidden="true">
+					<Size x="60" y="60"/>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+
+				<!--Flyout Textures-->
+				<Texture name="$parentFlyoutTop" parentKey="FlyoutTop" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+					<Size x="56" y="16"/>
+					<Anchors>
+						<Anchor point="TOP" x="0" y="5"/>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0" bottom="0.28125"/>
+				</Texture>
+				<Texture name="$parentFlyoutBottom" parentKey="FlyoutBottom" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+					<Size x="56" y="16"/>
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="-5"/>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0.71875" bottom="1"/>
+				</Texture>
+				<Texture name="$parentFlyoutLeft" parentKey="FlyoutLeft" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+					<Size x="16" y="56"/>
+					<Anchors>
+						<Anchor point="LEFT" x="-5" y="0"/>
+					</Anchors>
+					<TexCoords left="0" right="0.28125" top="0" bottom="1"/>
+				</Texture>
+				<Texture name="$parentFlyoutRight" parentKey="FlyoutRight" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+					<Size x="16" y="56"/>
+					<Anchors>
+						<Anchor point="RIGHT" x="5" y="0"/>
+					</Anchors>
+					<TexCoords left="0.71875" right="1" top="0" bottom="1"/>
+				</Texture>
+			</Layer>
+
+		</Layers>
+
+		<Frames>
+			<Frame name="$parentShine" parentKey="Shine" inherits="AutoCastShineTemplate">
+				<Size x="36" y="36"/>
+				<Anchors>
+					<Anchor point="CENTER" x="0" y="0"/>
+				</Anchors>
+			</Frame>
+			<Cooldown name="$parentCooldown" parentKey="Cooldown" inherits="CooldownFrameTemplate" useParentLevel="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="2" y="-3"/>
+					<Anchor point="BOTTOMRIGHT" x="-4" y="3"/>
+				</Anchors>
+				<SwipeTexture>
+					<Color r=".1" g=".1" b=".1" a="0.8"/>
+				</SwipeTexture>
+			</Cooldown>
+		</Frames>
+
+		<NormalTexture name="$parentNormalTexture" parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="-11" y="11"/>
+				<Anchor point="BOTTOMRIGHT" x="11" y="-11"/>
+			</Anchors>
+		</NormalTexture>
+		<PushedTexture name="$parentPushedTexture" parentKey="PushedTexture" file="Interface\Buttons\UI-Quickslot-Depress">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+				<Anchor point="CENTER">
+					<Offset x="0" y="0"/>
+				</Anchor>
+			</Anchors>
+		</PushedTexture>
+		<HighlightTexture name="$parentHighlightTexture" parentKey="HighlightTexture" alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+		<CheckedTexture name="$parentCheckedTexture" parentKey="CheckedTexture" alphaMode="ADD" file="Interface\Buttons\CheckButtonHilight">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="3" y="-3"/>
+				<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+				<Anchor point="CENTER">
+					<Offset x="0" y="0"/>
+				</Anchor>
+			</Anchors>
+		</CheckedTexture>
+	</CheckButton>
+</Ui>

@@ -1,0 +1,67 @@
+## Interface: 100100
+## Interface-Wrath: 30401
+## Interface-Classic: 11403
+## Title: Neuron
+## Notes: A macro-based action bar and object manager add-on
+## IconTexture: Interface\AddOns\Neuron\Images\static_icon.tga
+## Author: Britt W. Yazel
+## Version: @project-version@
+## DefaultState: enabled
+## OptionalDeps: Masque
+## SavedVariables: NeuronProfilesDB
+## SavedVariablesPerCharacter:
+## X-Credits-Maintainer: Britt W. Yazel
+## X-Email: bwyazel@gmail.com
+## X-License: MIT
+## X-Curse-Project-ID: 279283
+## X-Wago-ID: e56n1AN9
+## X-WoWI-ID: 10636
+
+Libs\embeds.xml
+Localizations\Neuron_Localizations.xml
+
+Utilities\Array.lua
+Utilities\Spec.lua
+Utilities\DB-Fixer.lua
+
+Overlay\ButtonBinder.lua
+Overlay\ButtonEditor.lua
+Overlay\BarEditor.lua
+
+Neuron-DB-Defaults.lua
+Neuron.lua
+Neuron-States.lua
+Neuron-RegisteredBarData.lua
+
+Objects\Button.lua
+Objects\Bar.lua
+Objects\ActionButton.lua
+Objects\ActionButton_DragAndDrop.lua
+Objects\ActionButton_Flyout.lua
+Objects\BagButton.lua
+Objects\ExitButton.lua
+Objects\ExtraButton.lua
+Objects\MenuButton.lua
+Objects\PetButton.lua
+Objects\ZoneAbilityButton.lua
+Objects\Bar_SnapTo.lua
+Objects\StatusButton.lua
+Objects\ExpButton.lua
+Objects\RepButton.lua
+Objects\CastButton.lua
+Objects\MirrorButton.lua
+
+Neuron-DisableBlizzardUI.lua
+Neuron-Console.lua
+Neuron-MinimapIcon.lua
+
+XML\NeuronActionButtonTemplate.xml
+XML\NeuronAnchorButtonTemplate.xml
+XML\NeuronBarTemplate.xml
+XML\NeuronOverlayFrameTemplate.xml
+XML\NeuronStatusBarTemplate.xml
+
+Neuron-Default-Profile.lua
+Neuron-Startup.lua
+
+GUI\Neuron-GUI.xml
