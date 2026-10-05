@@ -729,13 +729,15 @@ end
 
 --Delete bar popup menu
 function NeuronGUI:DeleteBarPopup()
+	--remember the bar the popup was opened for, the selection can change or be cleared before the click
+	local bar = Neuron.currentBar
 	StaticPopupDialogs["Delete_Bar_Popup"] = {
-		text = "Do you really wish to delete "..Neuron.currentBar:GetBarName().."?",
+		text = "Do you really wish to delete "..bar:GetBarName().."?",
 		button1 = ACCEPT,
 		button2 = CANCEL,
 		timeout = 0,
 		whileDead = true,
-		OnAccept = function() Neuron.currentBar:DeleteBar(); NeuronGUI:RefreshEditor() end,
+		OnAccept = function() bar:DeleteBar(); NeuronGUI:RefreshEditor() end,
 		OnCancel = function() NeuronGUI:RefreshEditor() end,
 	}
 	StaticPopup_Show("Delete_Bar_Popup")

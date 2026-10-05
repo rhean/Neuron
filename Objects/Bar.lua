@@ -8,6 +8,7 @@ local Neuron = addonTable.Neuron
 
 local Spec = addonTable.utilities.Spec
 local BarEditor = addonTable.overlay.BarEditor
+local ButtonEditor = addonTable.overlay.ButtonEditor
 
 ---@class Bar : CheckButton @This is our bar object that serves as the container for all of our button objects
 local Bar = setmetatable({}, {__index = CreateFrame("CheckButton")}) --this is the metatable for our button object
@@ -161,9 +162,18 @@ function Bar:CreateNewBar(class)
 	local newBar = Bar.new(class, barID) --create new bar
 
 	newBar.objTemplate.new(newBar, 1) --add at least 1 button to a new bar
-	Bar.ChangeSelectedBar(newBar)
 	newBar:Load() --load the bar
-	--TODO: Show the transparent blue overlay that we show in the edit mode
+
+	--overlays are only allocated when edit mode is turned on, so a bar created while editing needs its own
+	if Neuron.barEditMode then
+		newBar.editFrame = BarEditor.allocate(newBar, function(overlay, button, down)
+			overlay.bar:OnClick(button, down)
+		end)
+		newBar:UpdateObjectVisibility(true)
+		newBar:UpdateBarStatus(true)
+	end
+
+	Bar.ChangeSelectedBar(newBar)
 end
 Neuron.CreateNewBar = Bar.CreateNewBar --this is so the slash function works correctly
 
@@ -196,6 +206,12 @@ function Bar:DeleteBar()
 	self:SetScript("OnShow", function() end)
 	self:SetScript("OnHide", function() end)
 
+	--the bar overlay is parented to UIParent, so hiding the bar alone leaves it on screen
+	if self.editFrame then
+		BarEditor.free(self.editFrame)
+		self.editFrame = nil
+	end
+
 	self:SetWidth(36)
 	self:SetHeight(36)
 	self:ClearAllPoints()
@@ -210,7 +226,8 @@ function Bar:DeleteBar()
 
 		v.id = k --update the bar id to match the new index value, this is VERY important
 
-		if v.name == self.barLabel.." "..oldID then --if the name is name according to the oldID, update the name to the new ID (i.e. if they never changed the name, we don't want to overwrite custom names)
+		--bars saved without an id (i.e. from the default profile) can't have an auto-generated name to update
+		if oldID and v.name == self.barLabel.." "..oldID then --if the name is name according to the oldID, update the name to the new ID (i.e. if they never changed the name, we don't want to overwrite custom names)
 			v.name = self.barLabel.." "..v.id
 		end
 	end
@@ -264,6 +281,12 @@ function Bar:RemoveObjectFromBar() --called from NeuronGUI
 
 		if object.binder then
 			object.binder:KeybindOverlay_ClearBindings()
+		end
+
+		--edit overlays are parented to UIParent, so they would stay on screen after the button is trashed
+		if object.editFrame then
+			ButtonEditor.free(object.editFrame)
+			object.editFrame = nil
 		end
 
 		object:SetParent(Trashcan)
