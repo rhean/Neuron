@@ -99,7 +99,7 @@ function RepButton:UpdateData(repGainedString)
 		[9] = { l="Paragon", r=1, g=0.5, b=0},
 	}
 
-	if GetNumFactions() <= 0 then --quit if for some reason the number of known factions is 0 or less (should never happen, this is just for safety)
+	if C_Reputation.GetNumFactions() <= 0 then --quit if for some reason the number of known factions is 0 or less (should never happen, this is just for safety)
 		return
 	end
 
@@ -107,8 +107,10 @@ function RepButton:UpdateData(repGainedString)
 
 	local header --we set this on each header to categorize all the factions that follow
 
-	for i=1, GetNumFactions() do
-		local name, _, standingID, min, max, value, _, _, isHeader, _, hasRep, _, isChild, factionID = GetFactionInfo(i)
+	for i=1, C_Reputation.GetNumFactions() do
+		local factionData = C_Reputation.GetFactionDataByIndex(i)
+		local name, standingID, min, max, value = factionData.name, factionData.reaction, factionData.currentReactionThreshold, factionData.nextReactionThreshold, factionData.currentStanding
+		local isHeader, hasRep, isChild, factionID = factionData.isHeader, factionData.isHeaderWithRep, factionData.isChild, factionData.factionID
 		local colors = {}
 
 		if not standingID then --not sure if we will ever be in a position where standingID comes back as nil, but if so, protect for it.
@@ -128,9 +130,12 @@ function RepButton:UpdateData(repGainedString)
 			end
 		end
 
-		if (not isHeader or hasRep) and not IsFactionInactive(i) then
+		if (not isHeader or hasRep) and C_Reputation.IsFactionActive(i) then
 
-			local friendID, _, _, _, _, _, standing, _, _ = C_GossipInfo.GetFriendshipReputation(factionID)
+			--GetFriendshipReputation returns a table, with friendshipFactionID 0 for factions that aren't friendships
+			local friendshipInfo = C_GossipInfo.GetFriendshipReputation(factionID)
+			local friendID = friendshipInfo and friendshipInfo.friendshipFactionID ~= 0 and friendshipInfo.friendshipFactionID or nil
+			local standing = friendID and friendshipInfo.reaction
 			local isParagon = C_Reputation.IsFactionParagon(factionID)
 
 			if not isParagon then

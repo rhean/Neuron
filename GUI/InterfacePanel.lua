@@ -178,7 +178,9 @@ function NeuronGUI:LoadInterfaceOptions()
 	-- set up the top level panel
 	LibStub("AceConfigRegistry-3.0"):ValidateOptionsTable(mainPanel, addonName)
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(addonName, mainPanel)
-	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addonName, addonName)
+	--keep the category ID so Neuron:ToggleMainMenu() can open the panel with Settings.OpenToCategory
+	local _, categoryID = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addonName, addonName)
+	Neuron.optionsCategoryID = categoryID
 
 	-- set up the tree of child panels
 	for _,options in ipairs(subPanels) do

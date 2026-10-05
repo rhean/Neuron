@@ -58,7 +58,7 @@ local function updateTooltip(overlay)
 
 	---TODO:we should definitely added name strings for pets/companions as well. This was just to get it going
 	if overlay.button.spellID then
-		name = GetSpellInfo(overlay.button.spellID)
+		name = C_Spell.GetSpellName(overlay.button.spellID)
 	elseif overlay.button.actionSpell then
 		name = overlay.button.actionSpell
 	elseif overlay.button.macroitem then

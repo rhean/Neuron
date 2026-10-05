@@ -387,11 +387,11 @@ function ActionButton:UpdateGlow()
 		--Swipe(Cat): 106785
 		--Swipe(NoForm): 213764
 
-		if self.spell and self.spell:lower() == "thrash()" and IsSpellOverlayed(106830) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
+		if self.spell and self.spell:lower() == "thrash()" and C_SpellActivationOverlay.IsSpellOverlayed(106830) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
 			self:StartGlow()
-		elseif self.spell and self.spell:lower() == "swipe()" and IsSpellOverlayed(106785) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
+		elseif self.spell and self.spell:lower() == "swipe()" and C_SpellActivationOverlay.IsSpellOverlayed(106785) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
 			self:StartGlow()
-		elseif IsSpellOverlayed(self.spellID) then --this is the default "true" condition
+		elseif C_SpellActivationOverlay.IsSpellOverlayed(self.spellID) then --this is the default "true" condition
 			self:StartGlow()
 		else --this is the default "false" condition
 			self:StopGlow()
@@ -563,7 +563,8 @@ function ActionButton:AutoWriteMacro(spell)
 			spell = spellName
 		end
 	else
-		_,_,_,_,_,_,spellID = GetSpellInfo(spell)
+		local spellInfo = C_Spell.GetSpellInfo(spell)
+		spellID = spellInfo and spellInfo.spellID
 	end
 
 	local modifier, modKey = " ", nil
@@ -773,16 +774,16 @@ function ActionButton.ExtractMacroData(macro)
 		elseif abilityOrItem and #abilityOrItem > 0 then
 			if Neuron.itemCache[abilityOrItem:lower()] then --if our abilityOrItem is actually an item in our cache, amend it as such
 				item = abilityOrItem
-			elseif GetItemInfo(abilityOrItem) then
+			elseif C_Item.GetItemInfo(abilityOrItem) then
 				item = abilityOrItem
 			elseif tonumber(abilityOrItem) and GetInventoryItemLink("player", abilityOrItem) then --in case abilityOrItem is a number and corresponds to a valid inventory item
 				item = GetInventoryItemLink("player", abilityOrItem)
 			elseif Neuron.spellCache[abilityOrItem:lower()] then
 				spell = abilityOrItem
 				spellID = Neuron.spellCache[abilityOrItem:lower()].spellID
-			elseif GetSpellInfo(abilityOrItem) then
+			elseif C_Spell.GetSpellInfo(abilityOrItem) then
 				spell = abilityOrItem
-				_,_,_,_,_,_,spellID = GetSpellInfo(abilityOrItem)
+				spellID = C_Spell.GetSpellInfo(abilityOrItem).spellID
 			end
 		end
 	end
@@ -913,7 +914,7 @@ function ActionButton.GetSpellAppearance(spell)
 	local border = nil
 
 	---@type number|string|nil
-	local texture = GetSpellTexture(spell)
+	local texture = C_Spell.GetSpellTexture(spell)
 
 	if not texture then
 		if Neuron.spellCache[spell:lower()] then
@@ -932,11 +933,11 @@ end
 function ActionButton.GetItemAppearance(item)
 	local border = nil
 	---@type number|string|nil
-	local texture = GetItemIcon(item)
+	local texture = C_Item.GetItemIconByID(item)
 
 	if not texture then
 		if Neuron.itemCache[item:lower()] then
-			texture = GetItemIcon("item:"..Neuron.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
+			texture = C_Item.GetItemIconByID("item:"..Neuron.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
 		end
 	end
 
@@ -944,7 +945,7 @@ function ActionButton.GetItemAppearance(item)
 		texture = "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK"
 	end
 
-	if IsEquippedItem(item) then --makes the border green when item is equipped and dragged to a button
+	if C_Item.IsEquippedItem(item) then --makes the border green when item is equipped and dragged to a button
 		border = {0, 1.0, 0, 0.2}
 	end
 

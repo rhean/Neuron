@@ -203,7 +203,7 @@ local function loadingDatabaseFailed(DB)
 		timeout = 0,
 		whileDead = true,
 		OnAccept = function() DB:ResetProfile() end,
-		OnCancel = function() DisableAddOn("Neuron"); ReloadUI() end,
+		OnCancel = function() C_AddOns.DisableAddOn("Neuron"); ReloadUI() end,
 	}
 	StaticPopup_Show("Profile_Migration_Failed")
 end

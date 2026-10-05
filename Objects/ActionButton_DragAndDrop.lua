@@ -220,15 +220,18 @@ function ActionButton:PlaceSpell(action1, action2, spellID)
 		if not spellID or spellID == 0 then
 			return
 		else
-			spell = GetSpellInfo(spellID)
+			spell = C_Spell.GetSpellName(spellID)
 		end
 	else
-		spell,_= GetSpellBookItemName(action1, action2):lower()
-		_,spellID = GetSpellBookItemInfo(action1, action2)
+		--the cursor reports the book as a string, the C_SpellBook functions take an Enum.SpellBookSpellBank
+		local spellBank = action2 == "pet" and Enum.SpellBookSpellBank.Pet or Enum.SpellBookSpellBank.Player
+		spell = C_SpellBook.GetSpellBookItemName(action1, spellBank):lower()
+		spellID = C_SpellBook.GetSpellBookItemInfo(action1, spellBank).spellID
 	end
 
 
-	local spellName , _, icon = GetSpellInfo(spellID)
+	local spellName = C_Spell.GetSpellName(spellID)
+	local icon = C_Spell.GetSpellTexture(spellID)
 
 	if not spellName then
 		if Neuron.spellCache[spell:lower()] then
@@ -253,7 +256,7 @@ function ActionButton:PlacePetAbility(action1, action2)
 	local spellIndex = action2
 
 	if spellIndex then --if the ability doesn't have a spellIndex, i.e (passive, follow, defensive, etc, print a warning)
-		local spellInfoName , _, icon = GetSpellInfo(spellID)
+		local spellInfoName = C_Spell.GetSpellName(spellID)
 
 		self:SetMacroText(self:AutoWriteMacro(spellInfoName))
 		self:SetMacroIcon() --will pull icon automatically unless explicitly overridden
@@ -270,14 +273,14 @@ end
 
 
 function ActionButton:PlaceItem(action1, action2)
-	local item, link = GetItemInfo(action2)
+	local item, link = C_Item.GetItemInfo(action2)
 
 	if link and not Neuron.itemCache[item:lower()] then --add the item to the itemcache if it isn't otherwise in it
 		local _, itemID = link:match("(item:)(%d+)")
 		Neuron.itemCache[item:lower()] = itemID
 	end
 
-	if IsEquippableItem(item) then
+	if C_Item.IsEquippableItem(item) then
 		self:SetMacroText("/equip "..item.."\n/use "..item)
 	else
 		self:SetMacroText("/use "..item)
@@ -367,7 +370,7 @@ function ActionButton:PlaceMount(action1, action2)
 	if action1 == 0 or not mountSpellID or mountSpellID == 0 then
 		return
 	else
-		mountSpell = GetSpellInfo(mountSpellID)
+		mountSpell = C_Spell.GetSpellName(mountSpellID)
 	end
 
 	--The Summon Random Mount from the Mount Journal
@@ -393,7 +396,7 @@ function ActionButton:PlaceCompanion(action1, action2)
 	end
 
 	local _, _, spellID, icon = GetCompanionInfo(action2, action1)
-	local name = GetSpellInfo(spellID)
+	local name = C_Spell.GetSpellName(spellID)
 
 	if name then
 		self:SetMacroName(name)
@@ -483,25 +486,25 @@ function ActionButton:SetMouseCursor()
 	ClearCursor()
 
 	if self.spell and self.spellID then
-		PickupSpell(self.spellID)
+		C_Spell.PickupSpell(self.spellID)
 		if GetCursorInfo() then
 			return
 		end
 	end
 
 	if self.item then
-		PickupItem(self.item) --this is to try to catch any stragglers that might not have a spellID on the button. Things like mounts and such. This only works on currently available items
+		C_Item.PickupItem(self.item) --this is to try to catch any stragglers that might not have a spellID on the button. Things like mounts and such. This only works on currently available items
 		if GetCursorInfo() then --if this isn't a normal spell (like a flyout) or it is a pet abiity, revert to a question mark symbol
 			return
 		end
 
-		PickupItem(GetItemInfoInstant(self.item))
+		C_Item.PickupItem(C_Item.GetItemInfoInstant(self.item))
 		if GetCursorInfo() then
 			return
 		end
 
 		if Neuron.itemCache[self.item:lower()] then --try to pull the spellID from our ItemCache as a last resort
-			PickupItem(Neuron.itemCache[self.item:lower()])
+			C_Item.PickupItem(Neuron.itemCache[self.item:lower()])
 			if GetCursorInfo() then
 				return
 			end
@@ -509,5 +512,5 @@ function ActionButton:SetMouseCursor()
 	end
 
 	--failsafe so there is 'something' on the mouse cursor
-	PickupItem(1217) --questionmark symbol
+	C_Item.PickupItem(1217) --questionmark symbol
 end

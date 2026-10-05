@@ -52,7 +52,7 @@ function ZoneAbilityButton:InitializeButton()
 
 	self:SetScript("OnDragStart", function()
 		if self.spellID then
-			PickupSpell(self.spellID)
+			C_Spell.PickupSpell(self.spellID)
 		end
 	end)
 	self:SetScript("PostClick", function() self:UpdateStatus() end)
@@ -100,7 +100,7 @@ function ZoneAbilityButton:UpdateData()
 	end
 
 	if self.spellID then
-		self.spell = GetSpellInfo(self.spellID);
+		self.spell = C_Spell.GetSpellName(self.spellID);
 		if self.spell and not InCombatLockdown() then
 			self:SetAttribute("macrotext1", "/cast " .. self.spell .. "();")
 		end
@@ -130,7 +130,8 @@ end
 
 --overwrite function in parent class Button
 function ZoneAbilityButton:UpdateIcon()
-	local spellTexture = GetSpellTexture(self.spellID)
+	--C_Spell.GetSpellTexture errors on nil, and spellID is nil when there is no zone ability
+	local spellTexture = self.spellID and C_Spell.GetSpellTexture(self.spellID)
 	self.Icon:SetTexture(spellTexture);
 
 	local texture = self.textureKit or "Interface\\ExtraButton\\GarrZoneAbility-Armory"

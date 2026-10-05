@@ -94,7 +94,7 @@ function ExtraButton:UpdateData()
 		_, self.spellID = GetActionInfo(self.actionID)
 
 		if self.spellID then
-			self.spell = GetSpellInfo(self.spellID);
+			self.spell = C_Spell.GetSpellName(self.spellID);
 		else
 			self.spell = nil
 		end
@@ -126,7 +126,8 @@ end
 
 --overwrite function in parent class Button
 function ExtraButton:UpdateIcon()
-	local spellTexture = GetSpellTexture(self.spellID)
+	--C_Spell.GetSpellTexture errors on nil, and spellID is nil when there is no extra action
+	local spellTexture = self.spellID and C_Spell.GetSpellTexture(self.spellID)
 	self.Icon:SetTexture(spellTexture)
 
 	local texture = GetOverrideBarSkin() or "Interface\\ExtraButton\\Default"

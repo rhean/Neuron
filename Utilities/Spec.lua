@@ -16,8 +16,8 @@ local Spec; Spec = {
   -- @param bool indicating whether we want multispec
   -- @return the spec index and name
   active = function (multiSpec)
-    local index = GetSpecialization()
-    local _, name = GetSpecializationInfo(index)
+    local index = C_SpecializationInfo.GetSpecialization()
+    local _, name = C_SpecializationInfo.GetSpecializationInfo(index)
 
     index = multiSpec and index or 1
 
@@ -32,7 +32,7 @@ local Spec; Spec = {
   names = function(multiSpec)
     local names = Array.initialize(
       GetNumSpecializations(),
-      function(i) return select(2, GetSpecializationInfo(i)) end
+      function(i) return select(2, C_SpecializationInfo.GetSpecializationInfo(i)) end
     )
 
     return multiSpec and names or {""}

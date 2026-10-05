@@ -136,14 +136,24 @@ local function isAnyMatchIn(needles,haystack)
 	return hit
 end
 
+--C_SpellBook returns an Enum.SpellBookItemType, the filters below still match on the old string names
+local spellBookItemTypes = {
+	[Enum.SpellBookItemType.Spell] = "SPELL",
+	[Enum.SpellBookItemType.FutureSpell] = "FUTURESPELL",
+	[Enum.SpellBookItemType.PetAction] = "PETACTION",
+	[Enum.SpellBookItemType.Flyout] = "FLYOUT",
+}
+
 ---@param index number,
----@param bookType string constant ("spell" or "pet")
+---@param spellBank Enum.SpellBookSpellBank
 ---@return string, string, string, number, number name, rank|subType, spellType, spellID, icon
-local function getSpellInfo(index, bookType)
-	local spellBookSpellName, spellRankOrSubtype = GetSpellBookItemName(index, bookType)
-	local spellType,spellIdOrActionId = GetSpellBookItemInfo(index, bookType)
-	local _,_, icon = GetSpellInfo(index, spellRankOrSubtype)
-	return spellBookSpellName, spellRankOrSubtype, spellType, spellIdOrActionId, icon
+local function getSpellInfo(index, spellBank)
+	local spellBookSpellName, spellRankOrSubtype = C_SpellBook.GetSpellBookItemName(index, spellBank)
+	local itemInfo = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
+	if not itemInfo then
+		return spellBookSpellName, spellRankOrSubtype, "NONE"
+	end
+	return spellBookSpellName, spellRankOrSubtype, spellBookItemTypes[itemInfo.itemType] or "NONE", itemInfo.spellID or itemInfo.actionID, itemInfo.iconID
 end
 
 local function sequence(delim,first,...)
@@ -332,8 +342,8 @@ function ActionButton:filter_item(tooltip)
 					end
 				end
 			else --bags
-				for j=1, GetContainerNumSlots(i) do
-					local itemId = GetContainerItemID(i,j)
+				for j=1, C_Container.GetContainerNumSlots(i) do
+					local itemId = C_Container.GetContainerItemID(i,j)
 					if (itemId) then
 						GameTooltip:SetOwner(UIParent,"ANCHOR_NONE")
 						GameTooltip:SetBagItem(i,j)
@@ -356,7 +366,7 @@ function ActionButton:filter_item(tooltip)
 			for j=0, 19 do -- go through equip slots
 				local itemId = GetInventoryItemID("player",j)
 				if (itemId and itemId ~= 0) then
-					local name,_,_,_,_,_,_,_,equipLoc =  GetItemInfo(itemId)
+					local name,_,_,_,_,_,_,_,equipLoc =  C_Item.GetItemInfo(itemId)
 					if name then
 						repeat -- repeat until true gives breaks of the repeat the functionality of a C continue
 							if tooltip then
@@ -379,10 +389,10 @@ function ActionButton:filter_item(tooltip)
 				end
 			end
 		else -- bags
-			for j=1, GetContainerNumSlots(i) do
-				local itemId = GetContainerItemID(i,j)
+			for j=1, C_Container.GetContainerNumSlots(i) do
+				local itemId = C_Container.GetContainerItemID(i,j)
 				if (itemId) then
-					local name =  GetItemInfo(itemId)
+					local name =  C_Item.GetItemInfo(itemId)
 					--itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
 					--itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID,
 					--isCraftingReagent = GetItemInfo(itemID or "itemString" or "itemName" or "itemLink")
@@ -419,22 +429,21 @@ function ActionButton:filter_spell(tooltip)
 	local data, spellTooltips, Criteria = {},{}, self:getCriteria()
 	-- build tooltip table
 	if (tooltip) then
-		for i=1, GetNumSpellTabs() do
-			local _,_,numSpellsInPrevTabs,entries = GetSpellTabInfo(i)
+		for i=1, C_SpellBook.GetNumSpellBookSkillLines() do
+			local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
+			local numSpellsInPrevTabs, entries = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems
 			for j=numSpellsInPrevTabs + 1, numSpellsInPrevTabs + entries do -- go through entries
-				local bookType = BOOKTYPE_SPELL
-				if i == 5 and HasPetSpells() then
-					bookType = BOOKTYPE_PET --assumed a fifth tab is a pet tab.
-				end
-				local name, rank, spellType, spellID, icon = getSpellInfo(j,bookType)
+				--pet spells are no longer part of the player skill lines since 11.0, so only the player bank is scanned
+				local spellBank = Enum.SpellBookSpellBank.Player
+				local name, rank, spellType, spellID, icon = getSpellInfo(j,spellBank)
 
 				repeat -- repeat until true gives breaks of the repeat the functionality of a C continue
-					if IsPassiveSpell(j,bookType) then break end
-					if not IsSpellKnown(spellID,bookType == BOOKTYPE_PET) then break end
+					if C_SpellBook.IsSpellBookItemPassive(j,spellBank) then break end
+					if not IsSpellKnown(spellID) then break end
 
 					if (("SPELL FUTURESPELL"):match(spellType) and spellID) then
 						GameTooltip:SetOwner(UIParent,"ANCHOR_NONE")
-						GameTooltip:SetSpellBookItem(j, spellType)
+						GameTooltip:SetSpellBookItem(j, spellBank)
 						-- GameTooltip:SetSpellByID(spellIdOrActionId)
 						local spellTooltip = ""
 						for l=GameTooltip:NumLines(),2,-1 do
@@ -450,14 +459,13 @@ function ActionButton:filter_spell(tooltip)
 		end
 	end
 	-- perform checks
-	for i=1, GetNumSpellTabs() do -- Go through spell tabs
-		local _,_,numSpellsInPrevTabs,entries = GetSpellTabInfo(i)
+	for i=1, C_SpellBook.GetNumSpellBookSkillLines() do -- Go through spell tabs
+		local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
+		local numSpellsInPrevTabs, entries = skillLineInfo.itemIndexOffset, skillLineInfo.numSpellBookItems
 		for j=numSpellsInPrevTabs + 1, numSpellsInPrevTabs + entries do -- go through entries
-			local bookType = BOOKTYPE_SPELL
-			if i == 5 and HasPetSpells() then
-				bookType = BOOKTYPE_PET --assumed a fifth tab is a pet tab.
-			end
-			local name, rank, spellType, spellID, icon = getSpellInfo(j,bookType)
+			--pet spells are no longer part of the player skill lines since 11.0, so only the player bank is scanned
+			local spellBank = Enum.SpellBookSpellBank.Player
+			local name, rank, spellType, spellID, icon = getSpellInfo(j,spellBank)
 
 			local searchName = name
 			if rank then
@@ -465,8 +473,8 @@ function ActionButton:filter_spell(tooltip)
 			end
 
 			repeat -- repeat until true gives breaks of the repeat the functionality of a C continue
-				if IsPassiveSpell(j,bookType) then break end
-				if not IsSpellKnown(spellID,bookType == BOOKTYPE_PET) then break end
+				if C_SpellBook.IsSpellBookItemPassive(j,spellBank) then break end
+				if not IsSpellKnown(spellID) then break end
 
 				if (("SPELL FUTURESPELL"):match(spellType) and spellID) then
 					if tooltip then
@@ -505,7 +513,7 @@ function ActionButton:filter_type()
 			for j=0, 19 do -- go through equip slots
 				local itemId = GetInventoryItemID("player",j)
 				if (itemId and itemId ~= 0) then
-					local name,_,_,_,_,itemType,itemSubType,_,equipLoc =  GetItemInfo(itemId)
+					local name,_,_,_,_,itemType,itemSubType,_,equipLoc =  C_Item.GetItemInfo(itemId)
 					repeat -- repeat until true gives breaks of the repeat the functionality of a C continue
 						if (name) then -- match by name
 							local findIn = "worn "..itemType.." "..itemSubType
@@ -521,10 +529,10 @@ function ActionButton:filter_type()
 				end
 			end
 		else -- bags
-			for j=1, GetContainerNumSlots(i) do
-				local itemId = GetContainerItemID(i,j)
+			for j=1, C_Container.GetContainerNumSlots(i) do
+				local itemId = C_Container.GetContainerItemID(i,j)
 				if (itemId) then
-					local name,_,_,_,_,itemType,itemSubType,_,itemSlot =  GetItemInfo(itemId)
+					local name,_,_,_,_,itemType,itemSubType,_,itemSlot =  C_Item.GetItemInfo(itemId)
 					--itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
 					--itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID,
 					--isCraftingReagent = GetItemInfo(itemID or "itemString" or "itemName" or "itemLink")
@@ -572,7 +580,7 @@ function ActionButton:filter_mount()
 		for i,mountID in ipairs(C_MountJournal.GetMountIDs()) do
 
 			local mountName, mountSpellId, mountTexture, _, canSummon, _, isFavorite = C_MountJournal.GetMountInfoByID(mountID)
-			local spellName = GetSpellInfo(mountSpellId) -- sometimes mount name isn't same as spell name >:O
+			local spellName = C_Spell.GetSpellName(mountSpellId) -- sometimes mount name isn't same as spell name >:O
 
 			mountName = mountName:lower()
 			spellName = spellName:lower()
@@ -630,9 +638,10 @@ function ActionButton:filter_profession()
 				local name, _, _, _, numSpells, offset = GetProfessionInfo(profession)
 				if (index<3 and primaryOnly) or (index>2 and secondaryOnly) or any or (name:lower()):match(arg) then
 					for i=1,numSpells do
-						local _, spellID = GetSpellBookItemInfo(offset+i,"professions")
-						local spellName = GetSpellInfo(spellID)
-						local isPassive = IsPassiveSpell(offset+i,"professions")
+						--profession spells are in the player spell bank since 11.0
+						local spellID = C_SpellBook.GetSpellBookItemInfo(offset+i, Enum.SpellBookSpellBank.Player).spellID
+						local spellName = C_Spell.GetSpellName(spellID)
+						local isPassive = C_SpellBook.IsSpellBookItemPassive(offset+i, Enum.SpellBookSpellBank.Player)
 
 						if not isPassive then
 							table.insert(profSpells, spellName:lower())
@@ -683,7 +692,7 @@ function ActionButton:filter_toy()
 		local favorite = compare(string.lower(arg),"favorite")
 		arg = arg:lower()
 
-		local name= GetItemInfo(arg)
+		local name= C_Item.GetItemInfo(arg)
 
 		if name then
 			data[name] = "item"
@@ -715,7 +724,7 @@ function ActionButton:GetBlizzData()
 		end
 
 		if isKnown and visible then
-			spell = GetSpellInfo(spellID)
+			spell = C_Spell.GetSpellName(spellID)
 
 			data[spell] = "blizz"
 		end
@@ -812,7 +821,7 @@ function ActionButton:Flyout_UpdateData(init)
 					prefix = "/summonpet "
 
 				elseif source == "item" then
-					if IsEquippableItem(spell) then
+					if C_Item.IsEquippableItem(spell) then
 						if self.flyout.keys:find("#%d+") then
 							slot = self.flyout.keys:match("%d+").." "
 						end
@@ -829,7 +838,7 @@ function ActionButton:Flyout_UpdateData(init)
 						button:SetAttribute("prefix", "/use ")
 					end
 
-					local itemname = GetItemInfo(spell)
+					local itemname = C_Item.GetItemInfo(spell)
 
 					button.macroshow = spell
 					button:SetMacroName(itemname)
