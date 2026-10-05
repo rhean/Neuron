@@ -1,20 +1,20 @@
 ## Interface: 120100, 16001
-## Interface-Forever: 16001
 ## Title: Neuron
 ## Notes: A macro-based action bar and object manager add-on
 ## IconTexture: Interface\AddOns\Neuron\Images\static_icon.tga
-## Author: Britt W. Yazel
+## Author: Linus Olsson
+## X-Credits: Britt W. Yazel, Connor H. Chenoweth
 ## Version: @project-version@
 ## DefaultState: enabled
 ## OptionalDeps: Masque
 ## SavedVariables: NeuronProfilesDB
 ## SavedVariablesPerCharacter:
-## X-Credits-Maintainer: Britt W. Yazel
-## X-Email: bwyazel@gmail.com
+## X-Credits-Maintainer: Linus Olsson
+## X-Email: rheab@gaffapower.com
 ## X-License: MIT
-## X-Curse-Project-ID: 279283
-## X-Wago-ID: e56n1AN9
-## X-WoWI-ID: 10636
+## X-Curse-Project-ID: TODO 
+## X-Wago-ID: TODO
+## X-WoWI-ID: TODO
 
 Libs\embeds.xml
 Localizations\Neuron_Localizations.xml
