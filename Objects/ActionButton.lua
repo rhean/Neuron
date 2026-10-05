@@ -8,6 +8,8 @@ local Neuron = addonTable.Neuron
 
 local Spec = addonTable.utilities.Spec
 
+local LCG = LibStub("LibCustomGlow-1.0")
+
 ---@class ActionButton : Button @define class ActionButton inherits from class Button
 local ActionButton = setmetatable({}, {__index = Neuron.Button}) --this is the metatable for our button object
 Neuron.ActionButton = ActionButton
@@ -409,20 +411,18 @@ end
 
 function ActionButton:StartGlow()
 	if self.bar:GetSpellGlow() == "default" then
-		ActionButton_ShowOverlayGlow(self)
+		LCG.AutoCastGlow_Stop(self)
+		LCG.ButtonGlow_Start(self)
 	else
-		self.Shine:Show()
-		AutoCastShine_AutoCastStart(self.Shine);
+		LCG.ButtonGlow_Stop(self)
+		LCG.AutoCastGlow_Start(self)
 	end
 end
 
 function ActionButton:StopGlow()
-	if self.bar:GetSpellGlow() == "default" then
-		ActionButton_HideOverlayGlow(self)
-	else
-		self.Shine:Hide()
-		AutoCastShine_AutoCastStop(self.Shine);
-	end
+	--stop both styles so a glow doesn't linger if the bar's glow setting changed while it was showing
+	LCG.ButtonGlow_Stop(self)
+	LCG.AutoCastGlow_Stop(self)
 end
 
 ------------------------------------------------------------------------------

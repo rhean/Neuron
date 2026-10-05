@@ -316,7 +316,6 @@ function Button:SetSkinned(flyout)
 			Count = self.Count,
 			Name = self.Name,
 			Border = self.Border,
-			Shine = self.Shine,
 			Cooldown = self.Cooldown,
 			AutoCastable = self.AutoCastable,
 			Checked = self.Checked,

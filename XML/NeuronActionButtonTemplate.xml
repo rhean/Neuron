@@ -109,12 +109,6 @@ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI
 		</Layers>
 
 		<Frames>
-			<Frame name="$parentShine" parentKey="Shine" inherits="AutoCastShineTemplate">
-				<Size x="36" y="36"/>
-				<Anchors>
-					<Anchor point="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Frame>
 			<Cooldown name="$parentCooldown" parentKey="Cooldown" inherits="CooldownFrameTemplate" useParentLevel="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="2" y="-3"/>
