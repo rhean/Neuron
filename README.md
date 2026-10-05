@@ -11,5 +11,5 @@ The addon can be downloaded at these places:
 * **[Curseforge](https://wow.curseforge.com/projects/)**
 * **[WowInterface](https://www.wowinterface.com/)**
 
-## Download:
+## Credit:
 This is a continuation of the fantastic work of Britt W. Yazel and Ion Action Bars by Connor H. Chenoweth.
