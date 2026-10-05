@@ -109,55 +109,51 @@ function Neuron:RegisterGUI()
 				TOOLTIPS = true,
 			}
 		},
+		ZoneAbilityBar = {
+			class = "ZoneAbilityBar",
+			generalOptions = {
+				AUTOHIDE = true,
+				SNAPTO = true,
+				CLICKMODE = true,
+				HIDDEN = true,
+			},
+			visualOptions = {
+				BINDTEXT = true,
+				COUNTTEXT = true,
+				CDTEXT = true,
+				CDALPHA = true,
+				TOOLTIPS = true,
+				BORDERSTYLE = true,
+			}
+		},
+		ExtraBar = {
+			class = "ExtraBar",
+			generalOptions = {
+				AUTOHIDE = true,
+				SNAPTO = true,
+				CLICKMODE = true,
+				HIDDEN = true,
+			},
+			visualOptions = {
+				BINDTEXT = true,
+				COUNTTEXT = true,
+				CDTEXT = true,
+				CDALPHA = true,
+				TOOLTIPS = true,
+				BORDERSTYLE = true,
+			}
+		},
+		ExitBar = {
+			class = "ExitBar",
+			generalOptions = {
+				AUTOHIDE = true,
+				SHOWGRID = false,
+				SNAPTO = true,
+				CLICKMODE = true,
+				HIDDEN = true,
+				LOCKBAR = false,
+			}
+		},
 	}
-	if Neuron.isWoWRetail then
-		MergeTable(allBars, {
-			ZoneAbilityBar = {
-				class = "ZoneAbilityBar",
-				generalOptions = {
-					AUTOHIDE = true,
-					SNAPTO = true,
-					CLICKMODE = true,
-					HIDDEN = true,
-				},
-				visualOptions = {
-					BINDTEXT = true,
-					COUNTTEXT = true,
-					CDTEXT = true,
-					CDALPHA = true,
-					TOOLTIPS = true,
-					BORDERSTYLE = true,
-				}
-			},
-			ExtraBar = {
-				class = "ExtraBar",
-				generalOptions = {
-					AUTOHIDE = true,
-					SNAPTO = true,
-					CLICKMODE = true,
-					HIDDEN = true,
-				},
-				visualOptions = {
-					BINDTEXT = true,
-					COUNTTEXT = true,
-					CDTEXT = true,
-					CDALPHA = true,
-					TOOLTIPS = true,
-					BORDERSTYLE = true,
-				}
-			},
-			ExitBar = {
-				class = "ExitBar",
-				generalOptions = {
-					AUTOHIDE = true,
-					SHOWGRID = false,
-					SNAPTO = true,
-					CLICKMODE = true,
-					HIDDEN = true,
-					LOCKBAR = false,
-				}
-			},
-		})
-	end
 	return allBars
 end

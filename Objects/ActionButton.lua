@@ -99,14 +99,9 @@ function ActionButton:InitializeButton()
 	self:SetScript("OnEnter", function() self:UpdateTooltip() end)
 	self:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	if Neuron.isWoWRetail then
-		self:SetAttribute("overrideID_Offset", 204)
-		self:SetAttribute("vehicleID_Offset", 180)
-		self:SetAttribute("dragonridingID_Offset", 120)
-	else
-		self:SetAttribute("overrideID_Offset", 156)
-		self:SetAttribute("vehicleID_Offset", 132)
-	end
+	self:SetAttribute("overrideID_Offset", 204)
+	self:SetAttribute("vehicleID_Offset", 180)
+	self:SetAttribute("dragonridingID_Offset", 120)
 
 	--This is so that hotkeypri works properly with priority/locked buttons
 	self:WrapScript(self, "OnShow", [[
@@ -269,23 +264,21 @@ function ActionButton:SetupEvents()
 	self:RegisterEvent("PLAYER_TARGET_CHANGED", "UpdateAll")
 	self:RegisterEvent("UNIT_PET", "UpdateAll")
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("EQUIPMENT_SETS_CHANGED")
+	self:RegisterEvent("EQUIPMENT_SETS_CHANGED")
 
-		self:RegisterEvent("UNIT_ENTERED_VEHICLE", "UpdateAll")
-		self:RegisterEvent("UNIT_ENTERING_VEHICLE", "UpdateAll")
-		self:RegisterEvent("UNIT_EXITED_VEHICLE", "UpdateAll")
-		self:RegisterEvent("PLAYER_FOCUS_CHANGED", "UpdateAll")
-		self:RegisterEvent("COMPANION_UPDATE", "UpdateAll")
+	self:RegisterEvent("UNIT_ENTERED_VEHICLE", "UpdateAll")
+	self:RegisterEvent("UNIT_ENTERING_VEHICLE", "UpdateAll")
+	self:RegisterEvent("UNIT_EXITED_VEHICLE", "UpdateAll")
+	self:RegisterEvent("PLAYER_FOCUS_CHANGED", "UpdateAll")
+	self:RegisterEvent("COMPANION_UPDATE", "UpdateAll")
 
-		self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "UpdateGlow")
-		self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", "UpdateGlow")
+	self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "UpdateGlow")
+	self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", "UpdateGlow")
 
-		self:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_POSSESS_BAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", "UpdateAll")
-	end
+	self:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_POSSESS_BAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", "UpdateAll")
 end
 
 function ActionButton:OnAttributeChanged(name, value)
@@ -730,9 +723,7 @@ function ActionButton:UpdateAll()
 	--pass to parent UpdateAll function
 	Neuron.Button.UpdateAll(self)
 
-	if Neuron.isWoWRetail then
-		self:UpdateGlow()
-	end
+	self:UpdateGlow()
 end
 
 ---@return {}|{spell: string, spellID: number, unit:string}|{item:string, unit:string}

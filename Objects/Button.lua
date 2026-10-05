@@ -628,7 +628,7 @@ function Button:UpdateUsableItem()
 	--for some reason toys don't show as usable items, so this is a workaround for that
 	if not isUsable then
 		local itemID = GetItemInfoInstant(self.item)
-		if Neuron.isWoWRetail and itemID and PlayerHasToy(itemID) then
+		if itemID and PlayerHasToy(itemID) then
 			isUsable = true
 		end
 	end

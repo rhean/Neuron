@@ -48,10 +48,8 @@ function CastButton:InitializeButton()
 	self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", "OnEvent")
 	self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP", "OnEvent")
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE", "OnEvent")
-		self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "OnEvent")
-	end
+	self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE", "OnEvent")
+	self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "OnEvent")
 
 	self.holdTime = 0
 
@@ -76,12 +74,7 @@ function CastButton:OnEvent(event,...)
 	end
 
 	if event == "UNIT_SPELLCAST_START" then
-		local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible
-		if Neuron.isWoWRetail then
-			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unit)
-		else
-			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = CastingInfo() --classic doesn't have UnitCastingInfo()
-		end
+		local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unit)
 
 		if not name then
 			self:Reset()

@@ -45,9 +45,7 @@ function PetButton:InitializeButton()
 	self:RegisterEvent("PET_BAR_HIDEGRID", "UpdateVisibility")
 	self:RegisterEvent("PET_BAR_SHOWGRID", "UpdateVisibility", true)
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("PET_SPECIALIZATION_CHANGED", "PLAYER_ENTERING_WORLD")
-	end
+	self:RegisterEvent("PET_SPECIALIZATION_CHANGED", "PLAYER_ENTERING_WORLD")
 
 	self.actionID = self.id
 

@@ -82,39 +82,34 @@ function Neuron:RegisterBars(DB)
       objTemplate = Neuron.MirrorButton,
       objMax = 10
     },
+    ZoneAbilityBar = {
+      class = "ZoneAbilityBar",
+      barType = "ZoneAbilityBar",
+      barLabel = L["Zone Action Bar"],
+      objType = "ZoneActionButton",
+      barDB = DB.ZoneAbilityBar,
+      objTemplate = Neuron.ZoneAbilityButton,
+      objMax = 5, true
+    },
+    ExtraBar = {
+      class = "ExtraBar",
+      barType = "ExtraBar",
+      barLabel = L["Extra Action Bar"],
+      objType = "ExtraActionButton",
+      barDB = DB.ExtraBar,
+      objTemplate = Neuron.ExtraButton,
+      objMax = 1
+    },
+    ExitBar = {
+      class = "ExitBar",
+      barType = "ExitBar",
+      barLabel = L["Vehicle Exit Bar"],
+      objType = "VehicleExitButton",
+      barDB = DB.ExitBar,
+      objTemplate = Neuron.ExitButton,
+      objMax = 1
+    },
   }
-
-	if Neuron.isWoWRetail then
-    MergeTable(allBars, {
-      ZoneAbilityBar = {
-        class = "ZoneAbilityBar",
-        barType = "ZoneAbilityBar",
-        barLabel = L["Zone Action Bar"],
-        objType = "ZoneActionButton",
-        barDB = DB.ZoneAbilityBar,
-        objTemplate = Neuron.ZoneAbilityButton,
-        objMax = 5, true
-      },
-      ExtraBar = {
-        class = "ExtraBar",
-        barType = "ExtraBar",
-        barLabel = L["Extra Action Bar"],
-        objType = "ExtraActionButton",
-        barDB = DB.ExtraBar,
-        objTemplate = Neuron.ExtraButton,
-        objMax = 1
-      },
-      ExitBar = {
-        class = "ExitBar",
-        barType = "ExitBar",
-        barLabel = L["Vehicle Exit Bar"],
-        objType = "VehicleExitButton",
-        barDB = DB.ExitBar,
-        objTemplate = Neuron.ExitButton,
-        objMax = 1
-      },
-    })
-  end
 
   return allBars
 end

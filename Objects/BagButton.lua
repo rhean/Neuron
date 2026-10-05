@@ -13,8 +13,7 @@ Neuron.BagButton = BagButton
 Neuron.NUM_BAG_BUTTONS = 6
 
 local blizzBagButtons = {
-	--wow classic has a keyring button
-	Neuron.isWoWRetail and CharacterReagentBag0Slot or KeyRingButton,
+	CharacterReagentBag0Slot,
 	CharacterBag3Slot,
 	CharacterBag2Slot,
 	CharacterBag1Slot,
@@ -50,11 +49,7 @@ function BagButton:InitializeButton()
 		self.hookedButton:ClearAllPoints()
 		self.hookedButton:SetParent(self)
 		self.hookedButton:Show()
-		if not Neuron.isWoWRetail and self.id==1 then --the keyring button should be aligned to the right because it's only 1/3 the width of the other bag buttons
-			self.hookedButton:SetPoint("RIGHT", self, "RIGHT")
-		else
-			self.hookedButton:SetPoint("CENTER", self, "CENTER")
-		end
+		self.hookedButton:SetPoint("CENTER", self, "CENTER")
 	end
 
 	self:InitializeButtonSettings()

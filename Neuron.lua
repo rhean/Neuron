@@ -37,9 +37,9 @@ Neuron.barEditMode = false
 Neuron.buttonEditMode = false
 Neuron.bindingMode = false
 
-Neuron.isWoWClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-Neuron.isWoWWrathClassic = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
-Neuron.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local tocVersion = select(4, GetBuildInfo())
+Neuron.isWoWForever = (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT) or (tocVersion >= 16000 and tocVersion < 20000)
+Neuron.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not Neuron.isWoWForever
 
 Neuron.STRATAS = {
 	[1] = "BACKGROUND",
@@ -252,7 +252,7 @@ function Neuron:LoginMessage()
 	end
 
 	--Shadowlands warning that will show as long as a player has one button on their ZoneAbilityBar for Shadowlands content
-	if Neuron.isWoWRetail and UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
+	if UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
 		print(" ")
 		Neuron:Print(WrapTextInColorCode("IMPORTANT: Shadowlands content now requires multiple Zone Ability Buttons. Please add at least 3 buttons to your Zone Ability Bar to support this new functionality.", "FF00FFEC"))
 		print(" ")
@@ -338,28 +338,26 @@ function Neuron:UpdateSpellCache()
 		end
 	end
 
-	if Neuron.isWoWRetail then
-		for i = 1, select("#", GetProfessions()) do
-			local index = select(i, GetProfessions())
+	for i = 1, select("#", GetProfessions()) do
+		local index = select(i, GetProfessions())
 
-			if index then
-				local _, _, _, _, numSpells, spelloffset = GetProfessionInfo(index)
+		if index then
+			local _, _, _, _, numSpells, spelloffset = GetProfessionInfo(index)
 
-				for j=1,numSpells do
+			for j=1,numSpells do
 
-					local offsetIndex = j + spelloffset
-					local spellName, _ = GetSpellBookItemName(offsetIndex, BOOKTYPE_PROFESSION)
-					local spellType, spellID = GetSpellBookItemInfo(offsetIndex, BOOKTYPE_PROFESSION)
-					local icon
+				local offsetIndex = j + spelloffset
+				local spellName, _ = GetSpellBookItemName(offsetIndex, BOOKTYPE_PROFESSION)
+				local spellType, spellID = GetSpellBookItemInfo(offsetIndex, BOOKTYPE_PROFESSION)
+				local icon
 
-					if spellName and spellType ~= "FUTURESPELL" then
-						icon = GetSpellTexture(spellID)
-						local spellData = Neuron:SetSpellInfo(offsetIndex, BOOKTYPE_PROFESSION, spellType, spellName, spellID, icon,nil,  nil, nil)
+				if spellName and spellType ~= "FUTURESPELL" then
+					icon = GetSpellTexture(spellID)
+					local spellData = Neuron:SetSpellInfo(offsetIndex, BOOKTYPE_PROFESSION, spellType, spellName, spellID, icon,nil,  nil, nil)
 
-						Neuron.spellCache[(spellName):lower()] = spellData
-						Neuron.spellCache[(spellName):lower().."()"] = spellData
+					Neuron.spellCache[(spellName):lower()] = spellData
+					Neuron.spellCache[(spellName):lower().."()"] = spellData
 
-					end
 				end
 			end
 		end

@@ -1,6 +1,5 @@
-## Interface: 120100
-## Interface-Wrath: 30401
-## Interface-Classic: 11403
+## Interface: 120100, 16001
+## Interface-Forever: 16001
 ## Title: Neuron
 ## Notes: A macro-based action bar and object manager add-on
 ## IconTexture: Interface\AddOns\Neuron\Images\static_icon.tga

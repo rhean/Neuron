@@ -600,7 +600,6 @@ end
 
 
 --- Filter handler for professions
---- not WoW Classic
 -- profession:arg filters professions that include arg in the name or arg="primary" or arg="secondary" or arg="all"
 function ActionButton:filter_profession()
 
@@ -650,7 +649,6 @@ function ActionButton:filter_profession()
 end
 
 --- Filter handler for companion pets
---- not WoW Classic
 -- pet:arg filters companion pets that include arg in the name or arg="any" or arg="favorite(s)"
 function ActionButton:filter_pet()
 
@@ -673,7 +671,6 @@ end
 
 
 ---Filter handler for toy items
---- not WoW Classic
 -- toy:arg filters items from the toybox; arg="favorite" "any" or partial name
 function ActionButton:filter_toy()
 	local keys, found, mandatory, optional = self.flyout.keys, 0, 0, 0
@@ -742,13 +739,13 @@ function ActionButton:GetDataList(options)
 			scanData = self:filter_spell(tooltip)
 		elseif types:find("^i") then  --Item
 			scanData = self:filter_item(tooltip)
-		elseif types:find("^c") and Neuron.isWoWRetail then --Companion
+		elseif types:find("^c") then --Companion
 			scanData = self:filter_pet()
-		elseif types:find("^f") and Neuron.isWoWRetail then  --toy
+		elseif types:find("^f") then  --toy
 			scanData = self:filter_toy()
 		elseif types:find("^m") then  --Mount
 			scanData = self:filter_mount()
-		elseif types:find("^p") and Neuron.isWoWRetail then  --Profession
+		elseif types:find("^p") then  --Profession
 			scanData = self:filter_profession()
 		elseif types:find("^t") then  --Item Type
 			scanData = self:filter_type()

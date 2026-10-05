@@ -23,8 +23,9 @@ local function profileOptions()
 	local options = LibStub("AceDBOptions-3.0"):GetOptionsTable(Neuron.db)
 
 	--enhance the database object with per spec profile features
-	if Neuron.isWoWRetail or Neuron.isWoWWrathClassic then
-		local LibDualSpec = LibStub('LibDualSpec-1.0')
+	--LibDualSpec only loads on WOW_PROJECT_MAINLINE, so it's missing on Forever builds that report WOW_PROJECT_CAMELOT
+	local LibDualSpec = LibStub('LibDualSpec-1.0', true)
+	if LibDualSpec then
 		LibDualSpec:EnhanceDatabase(Neuron.db, addonName)
 		LibDualSpec:EnhanceOptions(options, Neuron.db) -- enhance the profiles config panel with per spec profile features
 	end

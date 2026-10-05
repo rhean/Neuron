@@ -101,9 +101,7 @@ end
 
 function Bar:InitializeBar()
 	if self.class == "ActionBar" then
-		if Neuron.isWoWRetail or Neuron.isWoWWrathClassic then
-			self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-		end
+		self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 		self:RegisterEvent("ACTIONBAR_SHOWGRID", "ACTIONBAR_SHOWHIDEGRID", true)
 		self:RegisterEvent("ACTIONBAR_HIDEGRID", "ACTIONBAR_SHOWHIDEGRID")
 	end

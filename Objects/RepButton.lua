@@ -130,11 +130,8 @@ function RepButton:UpdateData(repGainedString)
 
 		if (not isHeader or hasRep) and not IsFactionInactive(i) then
 
-			local friendID, standing, isParagon
-			if Neuron.isWoWRetail then --classic doesn't have Friendships or Paragon, carefull
-				friendID, _, _, _, _, _, standing, _, _ = C_GossipInfo.GetFriendshipReputation(factionID)
-				isParagon = C_Reputation.IsFactionParagon(factionID)
-			end
+			local friendID, _, _, _, _, _, standing, _, _ = C_GossipInfo.GetFriendshipReputation(factionID)
+			local isParagon = C_Reputation.IsFactionParagon(factionID)
 
 			if not isParagon then
 				colors.r, colors.g, colors.b = BAR_REP_DATA[standingID].r, BAR_REP_DATA[standingID].g, BAR_REP_DATA[standingID].b

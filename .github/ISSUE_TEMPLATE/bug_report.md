@@ -20,7 +20,7 @@ assignees: brittyazel
 
 ## Technical info:
  - **Addon Version:** *[e.g., 1.2.1]*
- - **Client:** *[e.g., Retail, Classic, PTR, or Beta]*
+ - **Client:** *[e.g., Retail, Forever, PTR, or Beta]*
  - **Client Patch Version:** *[e.g., 9.0.1]*
  
 ## Additional context:

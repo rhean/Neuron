@@ -5,28 +5,25 @@
 
 local _, addonTable = ...
 local Neuron = addonTable.Neuron
-local Array = addonTable.utilities.Array
 
 
 ---@class MenuButton : Button @define class MenuButton inherits from class Button
 local MenuButton = setmetatable({}, {__index = Neuron.Button})
 Neuron.MenuButton = MenuButton
 
-local blizzMenuButtons = not Neuron.isWoWRetail
-	and Array.initialize(#MICRO_BUTTONS, function(i) return _G[MICRO_BUTTONS[i]] end)
-	or {
-		CharacterMicroButton,
-		SpellbookMicroButton,
-		TalentMicroButton,
-		AchievementMicroButton,
-		QuestLogMicroButton,
-		GuildMicroButton,
-		LFDMicroButton,
-		CollectionsMicroButton,
-		EJMicroButton,
-		StoreMicroButton,
-		MainMenuMicroButton,
-	}
+local blizzMenuButtons = {
+	CharacterMicroButton,
+	SpellbookMicroButton,
+	TalentMicroButton,
+	AchievementMicroButton,
+	QuestLogMicroButton,
+	GuildMicroButton,
+	LFDMicroButton,
+	CollectionsMicroButton,
+	EJMicroButton,
+	StoreMicroButton,
+	MainMenuMicroButton,
+}
 
 ---------------------------------------------------------
 
