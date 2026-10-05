@@ -216,72 +216,38 @@ addonTable.defaultProfile.PetBar = {
 	}
 }
 
----For these two bars we have slightly different configs between classic and retail
-
 -----------------------------------
 ----------- Menu Bar --------------
 -----------------------------------
-if Neuron.isWoWRetail then
-	addonTable.defaultProfile.MenuBar = {
-		[1] = {
-			snapTo = false,
-			snapToFrame = false,
-			snapToPoint = false,
-			point = "BOTTOMRIGHT",
-			x = -357,
-			y = 24,
-			padH = 0,
-			padV = 0,
+addonTable.defaultProfile.MenuBar = {
+	[1] = {
+		snapTo = false,
+		snapToFrame = false,
+		snapToPoint = false,
+		point = "BOTTOMRIGHT",
+		x = -357,
+		y = 24,
+		padH = 0,
+		padV = 0,
 
-			buttons = Array.initialize(11, function() return {} end),
-		}
+		buttons = Array.initialize(11, function() return {} end),
 	}
-else
-	addonTable.defaultProfile.MenuBar = {
-		[1] = {
-			snapTo = false,
-			snapToFrame = false,
-			snapToPoint = false,
-			point = "BOTTOMRIGHT",
-			x = -370,
-			y = 33,
-
-			buttons = Array.initialize(#MICRO_BUTTONS, function() return {} end),
-		}
-	}
-end
+}
 
 -----------------------------------
 ------------ Bag Bar --------------
 -----------------------------------
-if Neuron.isWoWRetail then
-	addonTable.defaultProfile.BagBar = {
-		[1] = {
-			padH = 1,
-			scale = 1.1,
-			snapTo = false,
-			snapToFrame = false,
-			snapToPoint = false,
-			point = "BOTTOMRIGHT",
-			x = -125,
-			y = 24,
+addonTable.defaultProfile.BagBar = {
+	[1] = {
+		padH = 1,
+		scale = 1.1,
+		snapTo = false,
+		snapToFrame = false,
+		snapToPoint = false,
+		point = "BOTTOMRIGHT",
+		x = -125,
+		y = 24,
 
-			buttons = Array.initialize(Neuron.NUM_BAG_BUTTONS, function() return {} end),
-		}
+		buttons = Array.initialize(Neuron.NUM_BAG_BUTTONS, function() return {} end),
 	}
-else
-	addonTable.defaultProfile.BagBar = {
-		[1] = {
-			padH = 4,
-			scale = 1.1,
-			snapTo = false,
-			snapToFrame = false,
-			snapToPoint = false,
-			point = "BOTTOMRIGHT",
-			x = -133,
-			y = 24,
-
-			buttons = Array.initialize(Neuron.NUM_BAG_BUTTONS, function() return {} end),
-		}
-	}
-end
+}

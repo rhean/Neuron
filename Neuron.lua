@@ -37,9 +37,9 @@ Neuron.barEditMode = false
 Neuron.buttonEditMode = false
 Neuron.bindingMode = false
 
-Neuron.isWoWClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-Neuron.isWoWWrathClassic = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
-Neuron.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local tocVersion = select(4, GetBuildInfo())
+Neuron.isWoWForever = (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT) or (tocVersion >= 16000 and tocVersion < 20000)
+Neuron.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not Neuron.isWoWForever
 
 Neuron.STRATAS = {
 	[1] = "BACKGROUND",
@@ -117,7 +117,7 @@ function Neuron:OnEnable()
 	Neuron:RegisterEvent("PLAYER_ENTERING_WORLD")
 	Neuron:RegisterEvent("SPELLS_CHANGED")
 	Neuron:RegisterEvent("CHARACTER_POINTS_CHANGED")
-	Neuron:RegisterEvent("LEARNED_SPELL_IN_TAB")
+	Neuron:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
 
 	Neuron:UpdateStanceStrings()
 
@@ -191,7 +191,7 @@ function Neuron:PLAYER_ENTERING_WORLD()
 	Neuron:UpdateStanceStrings()
 
 	--Fix for Titan causing the Main Bar to not be hidden
-	if IsAddOnLoaded("Titan") then
+	if C_AddOns.IsAddOnLoaded("Titan") then
 		TitanUtils_AddonAdjust("MainMenuBar", true)
 	end
 
@@ -203,7 +203,7 @@ function Neuron:ACTIVE_TALENT_GROUP_CHANGED()
 	Neuron:UpdateStanceStrings()
 end
 
-function Neuron:LEARNED_SPELL_IN_TAB()
+function Neuron:LEARNED_SPELL_IN_SKILL_LINE()
 	Neuron:UpdateSpellCache()
 	Neuron:UpdateStanceStrings()
 end
@@ -234,7 +234,7 @@ end
 function Neuron:LoginMessage()
 	--displays a info window on login for either fresh installs or updates
 	if not DB.updateWarning or DB.updateWarning ~= LATEST_VERSION_NUM  then
-		if not IsAddOnLoaded("Masque") then
+		if not C_AddOns.IsAddOnLoaded("Masque") then
 			print(" ")
 			print("    You do not currently have Masque installed or enabled.")
 			print("    Please consider using Masque for enhancing the visual appearance of Neuron's action buttons.")
@@ -252,7 +252,7 @@ function Neuron:LoginMessage()
 	end
 
 	--Shadowlands warning that will show as long as a player has one button on their ZoneAbilityBar for Shadowlands content
-	if Neuron.isWoWRetail and UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
+	if UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
 		print(" ")
 		Neuron:Print(WrapTextInColorCode("IMPORTANT: Shadowlands content now requires multiple Zone Ability Buttons. Please add at least 3 buttons to your Zone Ability Bar to support this new functionality.", "FF00FFEC"))
 		print(" ")
@@ -290,30 +290,35 @@ end
 ---	If a spell is not displaying its tooltip or cooldown, then the spell in the macro probably is not in the database
 function Neuron:UpdateSpellCache()
 	local sIndexMax = 0
-	local numTabs = GetNumSpellTabs()
+	local numSkillLines = C_SpellBook.GetNumSpellBookSkillLines()
 
-	for i=1,numTabs do
-		local _, _, _, numSlots = GetSpellTabInfo(i)
+	for i=1,numSkillLines do
+		local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(i)
 
-		sIndexMax = sIndexMax + numSlots
+		sIndexMax = sIndexMax + skillLineInfo.numSpellBookItems
 	end
 
 	for i = 1,sIndexMax do
-		local spellName, _ = GetSpellBookItemName(i, BOOKTYPE_SPELL) --this returns the baseSpell name, even if it is augmented by talents. I.e. Roll and Chi Torpedo
-		local spellType, spellID = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+		local spellName, _ = C_SpellBook.GetSpellBookItemName(i, Enum.SpellBookSpellBank.Player) --this returns the baseSpell name, even if it is augmented by talents. I.e. Roll and Chi Torpedo
+		local itemInfo = C_SpellBook.GetSpellBookItemInfo(i, Enum.SpellBookSpellBank.Player)
+		local spellType = itemInfo and itemInfo.itemType
+		local spellID = itemInfo and itemInfo.spellID
 		local isPassive
 		if spellName then
-			isPassive = IsPassiveSpell(i, BOOKTYPE_SPELL)
+			isPassive = C_SpellBook.IsSpellBookItemPassive(i, Enum.SpellBookSpellBank.Player)
 		end
-		local icon = GetSpellTexture(spellID)
+		local icon = spellID and C_Spell.GetSpellTexture(spellID)
 
 		local altName
 		local altSpellID
 		local altIcon
 
-		if (spellName and spellType ~= "FUTURESPELL") and not isPassive then
+		if (spellName and spellType ~= Enum.SpellBookItemType.FutureSpell) and not isPassive then
 
-			altName, _, altIcon, _, _, _, altSpellID = GetSpellInfo(spellName)
+			local altSpellInfo = C_Spell.GetSpellInfo(spellName)
+			if altSpellInfo then
+				altName, altIcon, altSpellID = altSpellInfo.name, altSpellInfo.iconID, altSpellInfo.spellID
+			end
 
 			if spellID == altSpellID then
 				altSpellID = nil
@@ -321,14 +326,14 @@ function Neuron:UpdateSpellCache()
 				altIcon = nil
 			end
 
-			local spellData = Neuron:SetSpellInfo(i, BOOKTYPE_SPELL, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
+			local spellData = Neuron:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
 
 			Neuron.spellCache[(spellName):lower()] = spellData
 			Neuron.spellCache[(spellName):lower().."()"] = spellData
 
 
 			--reverse main and alt so we can put both in the table accurately
-			local altSpellData = Neuron:SetSpellInfo(i, BOOKTYPE_SPELL, spellType, altName, altSpellID, altIcon, spellName, spellID, icon)
+			local altSpellData = Neuron:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, altName, altSpellID, altIcon, spellName, spellID, icon)
 
 			if altName and altName ~= spellName then
 				Neuron.spellCache[(altName):lower()] = altSpellData
@@ -338,28 +343,28 @@ function Neuron:UpdateSpellCache()
 		end
 	end
 
-	if Neuron.isWoWRetail then
-		for i = 1, select("#", GetProfessions()) do
-			local index = select(i, GetProfessions())
+	for i = 1, select("#", GetProfessions()) do
+		local index = select(i, GetProfessions())
 
-			if index then
-				local _, _, _, _, numSpells, spelloffset = GetProfessionInfo(index)
+		if index then
+			local _, _, _, _, numSpells, spelloffset = GetProfessionInfo(index)
 
-				for j=1,numSpells do
+			for j=1,numSpells do
 
-					local offsetIndex = j + spelloffset
-					local spellName, _ = GetSpellBookItemName(offsetIndex, BOOKTYPE_PROFESSION)
-					local spellType, spellID = GetSpellBookItemInfo(offsetIndex, BOOKTYPE_PROFESSION)
-					local icon
+				local offsetIndex = j + spelloffset
+				local spellName, _ = C_SpellBook.GetSpellBookItemName(offsetIndex, Enum.SpellBookSpellBank.Player)
+				local itemInfo = C_SpellBook.GetSpellBookItemInfo(offsetIndex, Enum.SpellBookSpellBank.Player)
+				local spellType = itemInfo and itemInfo.itemType
+				local spellID = itemInfo and itemInfo.spellID
+				local icon
 
-					if spellName and spellType ~= "FUTURESPELL" then
-						icon = GetSpellTexture(spellID)
-						local spellData = Neuron:SetSpellInfo(offsetIndex, BOOKTYPE_PROFESSION, spellType, spellName, spellID, icon,nil,  nil, nil)
+				if spellName and spellID and spellType ~= Enum.SpellBookItemType.FutureSpell then
+					icon = C_Spell.GetSpellTexture(spellID)
+					local spellData = Neuron:SetSpellInfo(offsetIndex, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon,nil,  nil, nil)
 
-						Neuron.spellCache[(spellName):lower()] = spellData
-						Neuron.spellCache[(spellName):lower().."()"] = spellData
+					Neuron.spellCache[(spellName):lower()] = spellData
+					Neuron.spellCache[(spellName):lower().."()"] = spellData
 
-					end
 				end
 			end
 		end
@@ -367,9 +372,7 @@ function Neuron:UpdateSpellCache()
 end
 
 function Neuron:ToggleMainMenu()
-	---need to run the command twice for some reason. The first one only seems to open the Interface panel
-	InterfaceOptionsFrame_OpenToCategory("Neuron");
-	InterfaceOptionsFrame_OpenToCategory("Neuron");
+	Settings.OpenToCategory(Neuron.optionsCategoryID)
 end
 
 function Neuron:ToggleBarEditMode(show)

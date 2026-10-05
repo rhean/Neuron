@@ -62,7 +62,7 @@ function Neuron.UpdateStanceStrings()
 	--- devo aura, priests have shadowform, etc
 	for i=1,GetNumShapeshiftForms() do
 		local _, _, _, spellID = GetShapeshiftFormInfo(i)
-		Neuron.STATES["stance"..i] = GetSpellInfo(spellID) --Get the string name of the shapeshift form (now that shapeshifts are considered spells)
+		Neuron.STATES["stance"..i] = C_Spell.GetSpellName(spellID) --Get the string name of the shapeshift form (now that shapeshifts are considered spells)
 	end
 
 	-- Caster Form is special cased just because that's the way it's been historically

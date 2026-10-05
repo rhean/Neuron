@@ -12,6 +12,7 @@ embedded-libraries:
   - LibDualSpec-1-0
   - LibDBIcon-1-0
   - LibDeflate
+  - LibCustomGlow-1-0
 
 # theoretically we can get rid of the ignore files now that we have the makefile
 ignore:

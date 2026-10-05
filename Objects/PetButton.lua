@@ -6,6 +6,8 @@
 local _, addonTable = ...
 local Neuron = addonTable.Neuron
 
+local LCG = LibStub("LibCustomGlow-1.0")
+
 ---@class PetButton : Button @define class PetButton inherits from class Button
 local PetButton = setmetatable({}, { __index = Neuron.Button })
 Neuron.PetButton = PetButton
@@ -43,9 +45,7 @@ function PetButton:InitializeButton()
 	self:RegisterEvent("PET_BAR_HIDEGRID", "UpdateVisibility")
 	self:RegisterEvent("PET_BAR_SHOWGRID", "UpdateVisibility", true)
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("PET_SPECIALIZATION_CHANGED", "PLAYER_ENTERING_WORLD")
-	end
+	self:RegisterEvent("PET_SPECIALIZATION_CHANGED", "PLAYER_ENTERING_WORLD")
 
 	self.actionID = self.id
 
@@ -244,12 +244,10 @@ function PetButton:UpdateStatus()
 	end
 
 	if enabled then
-		self.Shine:Show()
-		AutoCastShine_AutoCastStart(self.Shine)
+		LCG.AutoCastGlow_Start(self)
 		self.AutoCastable:Hide()
 	else
-		self.Shine:Hide()
-		AutoCastShine_AutoCastStop(self.Shine)
+		LCG.AutoCastGlow_Stop(self)
 
 		if allowed then
 			self.AutoCastable:Show()

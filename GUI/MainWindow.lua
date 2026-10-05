@@ -21,6 +21,11 @@ local currentTab = "bar" --remember which tab we were using between refreshes
 -----------------------------------------------------------------------------
 
 function NeuronGUI:RefreshEditor(defaultTab)
+	--popups can call this after the editor window was closed
+	if not addonTable.NeuronEditor then
+		return
+	end
+
 	addonTable.NeuronEditor:ReleaseChildren()
 
 	if defaultTab then
@@ -82,16 +87,18 @@ end
 
 function NeuronGUI:PopulateEditorWindow()
 	local tabs ={{text="Bar Settings", value="bar"}}
-	if Neuron.currentBar.barType == "ActionBar" then
+	--no bar is selected right after a bar is deleted, the bar tab then picks one
+	local barType = Neuron.currentBar and Neuron.currentBar.barType
+	if barType == "ActionBar" then
 		-- only action bars have editable buttons
 		table.insert(tabs, {text=L["Configure Buttons"], value="button"})
-	elseif Neuron.currentBar.barType == "XPBar" then
+	elseif barType == "XPBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
-	elseif Neuron.currentBar.barType == "RepBar" then
+	elseif barType == "RepBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
-	elseif Neuron.currentBar.barType == "CastBar" then
+	elseif barType == "CastBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
-	elseif Neuron.currentBar.barType == "MirrorBar" then
+	elseif barType == "MirrorBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
 	end
 

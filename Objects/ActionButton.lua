@@ -8,6 +8,8 @@ local Neuron = addonTable.Neuron
 
 local Spec = addonTable.utilities.Spec
 
+local LCG = LibStub("LibCustomGlow-1.0")
+
 ---@class ActionButton : Button @define class ActionButton inherits from class Button
 local ActionButton = setmetatable({}, {__index = Neuron.Button}) --this is the metatable for our button object
 Neuron.ActionButton = ActionButton
@@ -97,14 +99,9 @@ function ActionButton:InitializeButton()
 	self:SetScript("OnEnter", function() self:UpdateTooltip() end)
 	self:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	if Neuron.isWoWRetail then
-		self:SetAttribute("overrideID_Offset", 204)
-		self:SetAttribute("vehicleID_Offset", 180)
-		self:SetAttribute("dragonridingID_Offset", 120)
-	else
-		self:SetAttribute("overrideID_Offset", 156)
-		self:SetAttribute("vehicleID_Offset", 132)
-	end
+	self:SetAttribute("overrideID_Offset", 204)
+	self:SetAttribute("vehicleID_Offset", 180)
+	self:SetAttribute("dragonridingID_Offset", 120)
 
 	--This is so that hotkeypri works properly with priority/locked buttons
 	self:WrapScript(self, "OnShow", [[
@@ -267,23 +264,21 @@ function ActionButton:SetupEvents()
 	self:RegisterEvent("PLAYER_TARGET_CHANGED", "UpdateAll")
 	self:RegisterEvent("UNIT_PET", "UpdateAll")
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("EQUIPMENT_SETS_CHANGED")
+	self:RegisterEvent("EQUIPMENT_SETS_CHANGED")
 
-		self:RegisterEvent("UNIT_ENTERED_VEHICLE", "UpdateAll")
-		self:RegisterEvent("UNIT_ENTERING_VEHICLE", "UpdateAll")
-		self:RegisterEvent("UNIT_EXITED_VEHICLE", "UpdateAll")
-		self:RegisterEvent("PLAYER_FOCUS_CHANGED", "UpdateAll")
-		self:RegisterEvent("COMPANION_UPDATE", "UpdateAll")
+	self:RegisterEvent("UNIT_ENTERED_VEHICLE", "UpdateAll")
+	self:RegisterEvent("UNIT_ENTERING_VEHICLE", "UpdateAll")
+	self:RegisterEvent("UNIT_EXITED_VEHICLE", "UpdateAll")
+	self:RegisterEvent("PLAYER_FOCUS_CHANGED", "UpdateAll")
+	self:RegisterEvent("COMPANION_UPDATE", "UpdateAll")
 
-		self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "UpdateGlow")
-		self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", "UpdateGlow")
+	self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "UpdateGlow")
+	self:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", "UpdateGlow")
 
-		self:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_POSSESS_BAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR", "UpdateAll")
-		self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", "UpdateAll")
-	end
+	self:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_POSSESS_BAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR", "UpdateAll")
+	self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", "UpdateAll")
 end
 
 function ActionButton:OnAttributeChanged(name, value)
@@ -392,11 +387,11 @@ function ActionButton:UpdateGlow()
 		--Swipe(Cat): 106785
 		--Swipe(NoForm): 213764
 
-		if self.spell and self.spell:lower() == "thrash()" and IsSpellOverlayed(106830) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
+		if self.spell and self.spell:lower() == "thrash()" and C_SpellActivationOverlay.IsSpellOverlayed(106830) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
 			self:StartGlow()
-		elseif self.spell and self.spell:lower() == "swipe()" and IsSpellOverlayed(106785) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
+		elseif self.spell and self.spell:lower() == "swipe()" and C_SpellActivationOverlay.IsSpellOverlayed(106785) then --this is a hack for feral druids (Legion patch 7.3.0. Bug reported)
 			self:StartGlow()
-		elseif IsSpellOverlayed(self.spellID) then --this is the default "true" condition
+		elseif C_SpellActivationOverlay.IsSpellOverlayed(self.spellID) then --this is the default "true" condition
 			self:StartGlow()
 		else --this is the default "false" condition
 			self:StopGlow()
@@ -409,20 +404,18 @@ end
 
 function ActionButton:StartGlow()
 	if self.bar:GetSpellGlow() == "default" then
-		ActionButton_ShowOverlayGlow(self)
+		LCG.AutoCastGlow_Stop(self)
+		LCG.ButtonGlow_Start(self)
 	else
-		self.Shine:Show()
-		AutoCastShine_AutoCastStart(self.Shine);
+		LCG.ButtonGlow_Stop(self)
+		LCG.AutoCastGlow_Start(self)
 	end
 end
 
 function ActionButton:StopGlow()
-	if self.bar:GetSpellGlow() == "default" then
-		ActionButton_HideOverlayGlow(self)
-	else
-		self.Shine:Hide()
-		AutoCastShine_AutoCastStop(self.Shine);
-	end
+	--stop both styles so a glow doesn't linger if the bar's glow setting changed while it was showing
+	LCG.ButtonGlow_Stop(self)
+	LCG.AutoCastGlow_Stop(self)
 end
 
 ------------------------------------------------------------------------------
@@ -570,7 +563,8 @@ function ActionButton:AutoWriteMacro(spell)
 			spell = spellName
 		end
 	else
-		_,_,_,_,_,_,spellID = GetSpellInfo(spell)
+		local spellInfo = C_Spell.GetSpellInfo(spell)
+		spellID = spellInfo and spellInfo.spellID
 	end
 
 	local modifier, modKey = " ", nil
@@ -730,9 +724,7 @@ function ActionButton:UpdateAll()
 	--pass to parent UpdateAll function
 	Neuron.Button.UpdateAll(self)
 
-	if Neuron.isWoWRetail then
-		self:UpdateGlow()
-	end
+	self:UpdateGlow()
 end
 
 ---@return {}|{spell: string, spellID: number, unit:string}|{item:string, unit:string}
@@ -782,16 +774,16 @@ function ActionButton.ExtractMacroData(macro)
 		elseif abilityOrItem and #abilityOrItem > 0 then
 			if Neuron.itemCache[abilityOrItem:lower()] then --if our abilityOrItem is actually an item in our cache, amend it as such
 				item = abilityOrItem
-			elseif GetItemInfo(abilityOrItem) then
+			elseif C_Item.GetItemInfo(abilityOrItem) then
 				item = abilityOrItem
 			elseif tonumber(abilityOrItem) and GetInventoryItemLink("player", abilityOrItem) then --in case abilityOrItem is a number and corresponds to a valid inventory item
 				item = GetInventoryItemLink("player", abilityOrItem)
 			elseif Neuron.spellCache[abilityOrItem:lower()] then
 				spell = abilityOrItem
 				spellID = Neuron.spellCache[abilityOrItem:lower()].spellID
-			elseif GetSpellInfo(abilityOrItem) then
+			elseif C_Spell.GetSpellInfo(abilityOrItem) then
 				spell = abilityOrItem
-				_,_,_,_,_,_,spellID = GetSpellInfo(abilityOrItem)
+				spellID = C_Spell.GetSpellInfo(abilityOrItem).spellID
 			end
 		end
 	end
@@ -922,7 +914,7 @@ function ActionButton.GetSpellAppearance(spell)
 	local border = nil
 
 	---@type number|string|nil
-	local texture = GetSpellTexture(spell)
+	local texture = C_Spell.GetSpellTexture(spell)
 
 	if not texture then
 		if Neuron.spellCache[spell:lower()] then
@@ -941,11 +933,11 @@ end
 function ActionButton.GetItemAppearance(item)
 	local border = nil
 	---@type number|string|nil
-	local texture = GetItemIcon(item)
+	local texture = C_Item.GetItemIconByID(item)
 
 	if not texture then
 		if Neuron.itemCache[item:lower()] then
-			texture = GetItemIcon("item:"..Neuron.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
+			texture = C_Item.GetItemIconByID("item:"..Neuron.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
 		end
 	end
 
@@ -953,7 +945,7 @@ function ActionButton.GetItemAppearance(item)
 		texture = "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK"
 	end
 
-	if IsEquippedItem(item) then --makes the border green when item is equipped and dragged to a button
+	if C_Item.IsEquippedItem(item) then --makes the border green when item is equipped and dragged to a button
 		border = {0, 1.0, 0, 0.2}
 	end
 

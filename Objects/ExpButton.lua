@@ -48,11 +48,9 @@ function ExpButton:InitializeButton()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnEvent")
 	self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED", "OnEvent")
 
-	if Neuron.isWoWRetail then
-		self:RegisterEvent("COVENANT_SANCTUM_RENOWN_LEVEL_CHANGED", "OnEvent")
-		self:RegisterEvent("AZERITE_ITEM_EXPERIENCE_CHANGED", "OnEvent")
-		self:RegisterEvent("HONOR_XP_UPDATE", "OnEvent")
-	end
+	self:RegisterEvent("COVENANT_SANCTUM_RENOWN_LEVEL_CHANGED", "OnEvent")
+	self:RegisterEvent("AZERITE_ITEM_EXPERIENCE_CHANGED", "OnEvent")
+	self:RegisterEvent("HONOR_XP_UPDATE", "OnEvent")
 
 	self.StatusBar:Show()
 	self.typeString = L["XP Bar"]
@@ -186,41 +184,37 @@ function ExpButton:InitializeDropDown() -- initialize the dropdown menu for chos
 		checked = self:GetXPType() == "player_xp",
 	})
 
-	--wow classic doesn't have Honor points nor Azerite, careful
-	if Neuron.isWoWRetail then
-
-		--add Renown tracking for Covenants
-		if C_Covenants.GetActiveCovenantID() ~= 0 then
-			table.insert(menu, {
-				arg1 = self,
-				arg2 = "covenant_renown",
-				text = L["Track Covenant Renown"],
-				func = function(dropdown, self, newXPType) self:SetXPType(newXPType) end,
-				checked = self:GetXPType() == "covenant_renown",
-			})
-		end
-
-		--add Heart of Azeroth option
-		local azeriteItem = C_AzeriteItem.FindActiveAzeriteItem()
-		if azeriteItem and azeriteItem:IsEquipmentSlot() and C_AzeriteItem.IsAzeriteItemEnabled(azeriteItem) then --only show this button if they player has the Heart of Azeroth
-			table.insert(menu, {
-				arg1 = self,
-				arg2 = "azerite_xp",
-				text = L["Track Azerite Power"],
-				func = function(dropdown, self, newXPType) self:SetXPType(newXPType) end,
-				checked = self:GetXPType() == "azerite_xp",
-			})
-		end
-
-		--add PvP Honor option
+	--add Renown tracking for Covenants
+	if C_Covenants.GetActiveCovenantID() ~= 0 then
 		table.insert(menu, {
 			arg1 = self,
-			arg2 = "honor_points",
-			text = L["Track Honor Points"],
+			arg2 = "covenant_renown",
+			text = L["Track Covenant Renown"],
 			func = function(dropdown, self, newXPType) self:SetXPType(newXPType) end,
-			checked = self:GetXPType() == "honor_points",
+			checked = self:GetXPType() == "covenant_renown",
 		})
 	end
+
+	--add Heart of Azeroth option
+	local azeriteItem = C_AzeriteItem.FindActiveAzeriteItem()
+	if azeriteItem and azeriteItem:IsEquipmentSlot() and C_AzeriteItem.IsAzeriteItemEnabled(azeriteItem) then --only show this button if they player has the Heart of Azeroth
+		table.insert(menu, {
+			arg1 = self,
+			arg2 = "azerite_xp",
+			text = L["Track Azerite Power"],
+			func = function(dropdown, self, newXPType) self:SetXPType(newXPType) end,
+			checked = self:GetXPType() == "azerite_xp",
+		})
+	end
+
+	--add PvP Honor option
+	table.insert(menu, {
+		arg1 = self,
+		arg2 = "honor_points",
+		text = L["Track Honor Points"],
+		func = function(dropdown, self, newXPType) self:SetXPType(newXPType) end,
+		checked = self:GetXPType() == "honor_points",
+	})
 
 	--this is a spacer between everything else and close
 	table.insert(menu,	{

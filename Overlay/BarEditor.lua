@@ -59,7 +59,11 @@ local function updateAppearance(overlay)
 		overlay.frame.MessageBG:SetHeight(overlay.frame.Message:GetHeight()*1.1)
 	end
 
-	overlay.frame:SetAllPoints(overlay.bar)
+	--don't re-anchor to the bar mid-drag (OnEnter/OnLeave fire when the cursor crosses the edge),
+	--it pins the overlay back to the bar while StartMoving drags one corner and stretches it
+	if not overlay.frame.isDragging then
+		overlay.frame:SetAllPoints(overlay.bar)
+	end
 end
 
 -- forward declare it so the event handlers can use it
@@ -82,6 +86,7 @@ local function onDragStart(overlay, button)
 	overlay.bar.data.snapToPoint = false
 	overlay.bar.data.snapToFrame = false
 
+	overlay.frame.isDragging = true
 	overlay.frame:StartMoving()
 end
 
@@ -91,6 +96,7 @@ local function onDragStop(overlay)
 
 	local point
 	overlay.frame:StopMovingOrSizing()
+	overlay.frame.isDragging = false
 
 	for _,v in pairs(Neuron.bars) do
 		if not point and overlay.bar:GetSnapTo() and v:GetSnapTo() and overlay.bar ~= v then
@@ -122,6 +128,9 @@ local function onDragStop(overlay)
 
 	overlay.bar:SetPosition()
 	overlay.bar:UpdateBarStatus()
+
+	--re-attach the overlay to the bar at its new position
+	updateAppearance(overlay)
 end
 
 ---@param overlay BarOverlay

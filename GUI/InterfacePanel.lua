@@ -23,8 +23,9 @@ local function profileOptions()
 	local options = LibStub("AceDBOptions-3.0"):GetOptionsTable(Neuron.db)
 
 	--enhance the database object with per spec profile features
-	if Neuron.isWoWRetail or Neuron.isWoWWrathClassic then
-		local LibDualSpec = LibStub('LibDualSpec-1.0')
+	--LibDualSpec only loads on WOW_PROJECT_MAINLINE, so it's missing on Forever builds that report WOW_PROJECT_CAMELOT
+	local LibDualSpec = LibStub('LibDualSpec-1.0', true)
+	if LibDualSpec then
 		LibDualSpec:EnhanceDatabase(Neuron.db, addonName)
 		LibDualSpec:EnhanceOptions(options, Neuron.db) -- enhance the profiles config panel with per spec profile features
 	end
@@ -177,7 +178,9 @@ function NeuronGUI:LoadInterfaceOptions()
 	-- set up the top level panel
 	LibStub("AceConfigRegistry-3.0"):ValidateOptionsTable(mainPanel, addonName)
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(addonName, mainPanel)
-	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addonName, addonName)
+	--keep the category ID so Neuron:ToggleMainMenu() can open the panel with Settings.OpenToCategory
+	local _, categoryID = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addonName, addonName)
+	Neuron.optionsCategoryID = categoryID
 
 	-- set up the tree of child panels
 	for _,options in ipairs(subPanels) do
