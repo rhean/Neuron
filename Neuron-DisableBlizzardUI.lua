@@ -56,6 +56,7 @@ function Neuron:HideBlizzardUI(profileDatabase)
 
 		--disable main blizzard bar and graphics
 		disableBarFrame(MainMenuBar)
+		disableBarFrame(MainActionBar)
 		disableBarFrame(MainMenuBarArtFrame)
 		disableBarFrame(MainMenuBarArtFrameBackground)
 		disableFrameSlidingAnimation(MainMenuBar)

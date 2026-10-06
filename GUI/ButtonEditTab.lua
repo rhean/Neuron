@@ -195,9 +195,9 @@ function NeuronGUI:ButtonsEditPanel(topContainer)
 
 	--the default tree comes first. it is the fallback for every spec
 	--and state below it, and the only tree when multiSpec is off
-	local trees = {{index = "default", name = L["Default"]}}
+	local trees = {{index = "default", name = Neuron.isWoWForever and L["Spec 1"] or L["Default"]}}
 	if multiSpec then
-		for specIndex, specName in ipairs(Spec.names(multiSpec)) do
+		for specIndex, specName in pairs(Spec.names(multiSpec)) do
 			table.insert(trees, {index = specIndex, name = specName})
 		end
 	end

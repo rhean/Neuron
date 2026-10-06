@@ -60,6 +60,34 @@ Neuron.DEBUG = true
 --------------------Start of Functions-----------------------------------
 -------------------------------------------------------------------------
 
+--- EasyMenu was removed in 11.0. This shows a menu table in the old EasyMenu
+--- format with MenuUtil instead. Spacers (disabled entries) become dividers
+---@param menuList table
+function Neuron.EasyMenu(menuList)
+	local function build(parent, list)
+		for _, entry in ipairs(list) do
+			local text = entry.colorCode and entry.colorCode..entry.text.."|r" or entry.text
+			local onClick = function() entry.func(entry, entry.arg1, entry.arg2) end
+
+			if entry.isTitle then
+				parent:CreateTitle(text)
+			elseif entry.disabled then
+				parent:CreateDivider()
+			elseif entry.hasArrow then
+				build(parent:CreateButton(text), entry.menuList)
+			elseif entry.notCheckable then
+				parent:CreateButton(text, onClick)
+			else
+				parent:CreateRadio(text, function() return entry.checked end, onClick)
+			end
+		end
+	end
+
+	MenuUtil.CreateContextMenu(UIParent, function(_, rootDescription)
+		build(rootDescription, menuList)
+	end)
+end
+
 --- **OnInitialize**, which is called directly after the addon is fully loaded.
 --- do init tasks here, like loading the Saved Variables
 --- or setting up slash commands.
@@ -248,7 +276,7 @@ function Neuron:LoginMessage()
 
 
 	--Shadowlands warning that will show as long as a player has one button on their ZoneAbilityBar for Shadowlands content
-	if UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
+	if not Neuron.isWoWForever and UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
 		print(" ")
 		Neuron:Print(WrapTextInColorCode("IMPORTANT: Shadowlands content now requires multiple Zone Ability Buttons. Please add at least 3 buttons to your Zone Ability Bar to support this new functionality.", "FF00FFEC"))
 		print(" ")

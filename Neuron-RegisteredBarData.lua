@@ -112,5 +112,12 @@ function Neuron:RegisterBars(DB)
     },
   }
 
+  --Forever has no vehicles, extra action buttons or zone abilities
+  if Neuron.isWoWForever then
+    allBars.ExitBar = nil
+    allBars.ExtraBar = nil
+    allBars.ZoneAbilityBar = nil
+  end
+
   return allBars
 end

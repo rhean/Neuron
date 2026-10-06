@@ -1,12 +1,18 @@
-tag a5b4ce7dbb705cc1351553b1269c848bf58ef4a2 v1.22.1
+tag e8cf40e3cc7049d077495a6d06f75449954e09c6 v1.34.0
 Author:	Kyle Buller <bullerk@gmail.com>
-Date:	Sun May 7 19:05:52 2023 -0500
+Date:	Sat Sep 19 18:05:07 2026 -0500
 
-Tagging as v1.22.1
+Tagging as v1.34.0
 
-commit 375df2c52cae7773f5c708857c2bcc06d8510e29
+commit b00ceac99030dbc6892c9c9d97f78f9bc3eb5f81
 Author: Kyle Buller <bullerk@gmail.com>
-Date:   Sun May 7 19:05:18 2023 -0500
+Date:   Sat Sep 19 18:03:27 2026 -0500
 
-    Update TOC for 10.1 and 3.4.1
+    Quick fix for BCC
+
+commit 5d0e9a847e2924239f0a48cf2bb7433c41737ab9
+Author: Kyle Buller <bullerk@gmail.com>
+Date:   Sat Sep 19 09:59:48 2026 -0500
+
+    Don't use the deprecated `GetSpecialization`
 

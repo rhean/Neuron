@@ -1411,6 +1411,12 @@ function Bar:SetState(msg, gui, checked)
 			end
 		end
 
+		if state == "pet" and self.data.pet then
+			self.data.paged = false
+			self.data.stance = false
+			self.data.remap = false
+		end
+
 		if state == "custom" then
 			if self.data.custom then
 				local count, newstates = 0, ""

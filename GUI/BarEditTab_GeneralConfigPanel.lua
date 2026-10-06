@@ -175,7 +175,7 @@ function NeuronGUI:PopulateGeneralBarOptions(scrollFrame, registeredGUIData)
 		scrollFrame:AddChild(multiSpecCheckboxContainer)
 
 		local multiSpecCheckbox = AceGUI:Create("CheckBox")
-		multiSpecCheckbox:SetLabel(L["Multi Spec"])
+		multiSpecCheckbox:SetLabel(Neuron.isWoWForever and L["Dual Spec"] or L["Multi Spec"])
 		multiSpecCheckbox:SetRelativeWidth(INNER_WIDGET_RATIO)
 		multiSpecCheckbox:SetValue(Neuron.currentBar:GetMultiSpec())
 		multiSpecCheckbox:SetCallback("OnValueChanged", function(self)

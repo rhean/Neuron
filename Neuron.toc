@@ -10,7 +10,7 @@
 ## SavedVariables: NeuronProfilesDB
 ## SavedVariablesPerCharacter:
 ## X-Credits-Maintainer: Linus Olsson
-## X-Email: rheab@gaffapower.com
+## X-Email: rhean@gaffapower.com
 ## X-License: MIT
 ## X-Curse-Project-ID: TODO 
 ## X-Wago-ID: TODO
