@@ -14,45 +14,25 @@ local AceGUI = LibStub("AceGUI-3.0")
 local Array = addonTable.utilities.Array
 
 
----@return Frame @a dropdown widget
-local function actionPrimaryBarKindOptions()
-  local barKinds =
-    Array.map(
-      function(state) return state[1] end,
-    Array.fromIterator(pairs(Neuron.MANAGED_HOME_STATES)))
-  local currentKind = Array.foldl(
-    function (kind, candidate)
-      return Neuron.currentBar.data[candidate] and candidate or kind
-    end,
-    "none",
-    barKinds
-  )
-  local kindList = Array.foldl(
-    function (list, kind)
-      list[kind] = Neuron.MANAGED_HOME_STATES[kind].localizedName
-      return list
-    end,
-    {none = L["None"]},
-    barKinds
-  )
+---@return Frame @a group containing checkboxes
+local function actionHomeStateOptions()
+  local homeStatesContainer = AceGUI:Create("SimpleGroup")
+  homeStatesContainer:SetFullWidth(true)
+  homeStatesContainer:SetLayout("Flow")
 
-  local barKindDropdown = AceGUI:Create("Dropdown")
-  barKindDropdown:SetLabel(L["Home State"])
-  barKindDropdown:SetList(kindList)
-  barKindDropdown:SetFullWidth(false)
-  barKindDropdown:SetFullHeight(false)
-  barKindDropdown:SetValue(currentKind)
-  barKindDropdown:SetCallback("OnValueChanged", function(_, _, key)
-    if key == "none" then
-      for _,kind in ipairs(barKinds) do
-        Neuron.currentBar:SetState(kind, true, false)
-      end
-    else
-      Neuron.currentBar:SetState(key, true, true)
-    end
-  end)
+  for _,state in ipairs({"paged", "stance", "pet"}) do
+    local checkbox = AceGUI:Create("CheckBox")
+    checkbox:SetLabel(Neuron.MANAGED_HOME_STATES[state].localizedName)
+    checkbox:SetValue(Neuron.currentBar.data[state])
+    checkbox:SetCallback("OnValueChanged", function(_,_,value)
+      --only one of these can be active, so SetState turns the others off
+      Neuron.currentBar:SetState(state, true, value)
+      NeuronGUI:RefreshEditor()
+    end)
+    homeStatesContainer:AddChild(checkbox)
+  end
 
-  return barKindDropdown
+  return homeStatesContainer
 end
 
 ---@return Frame @a group containing checkboxes
@@ -94,7 +74,7 @@ function NeuronGUI:BarStatesPanel(tabFrame)
 	settingContainer:SetFullWidth(true)
 	settingContainer:SetLayout("Flow")
 
-  settingContainer:AddChild(actionPrimaryBarKindOptions())
+  settingContainer:AddChild(actionHomeStateOptions())
   settingContainer:AddChild(actionSecondaryStateOptions())
 
   tabFrame:AddChild(settingContainer)

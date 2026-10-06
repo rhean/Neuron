@@ -244,7 +244,7 @@ function ActionButton:PlaceSpell(action1, action2, spellID)
 
 	self:SetMacroText(self:AutoWriteMacro(spell))
 	self:SetMacroIcon() --will pull icon automatically unless explicitly overridden
-	self:SetMacroName(spellName)
+	self:SetMacroName()
 	self:SetMacroNote()
 	self:SetMacroUseNote()
 	self:SetMacroBlizzMacro()
