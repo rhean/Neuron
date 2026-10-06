@@ -18,3 +18,4 @@ embedded-libraries:
 ignore:
   - README.md
   - dist
+  - Tools
