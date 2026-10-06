@@ -48,13 +48,25 @@ function Neuron.UpdateStanceStrings()
 		override1 = L["Override Bar"],
 		extrabar0 = L["No Extra Bar"],
 		extrabar1 = L["Extra Bar"],
-		target0 = L["Has Target"],
-		target1 = L["No Target"],
+		indoors1 = L["Indoors"],
+		outdoors1 = L["Outdoors"],
+		mounted0 = L["Not Mounted"],
+		mounted1 = L["Mounted"],
+		help1 = L["Help"],
+		harm1 = L["Harm"],
+		target0 = L["No Target"],
+		target1 = L["Has Target"],
+		resting0 = L["Not Resting"],
+		resting1 = L["Resting"],
+		swimming0 = L["Not Swimming"],
+		swimming1 = L["Swimming"],
 	}
 	Neuron.STATES = {
 		homestate = L["Home State"],
 		laststate = L["Last State"],
 		custom0 = L["Custom States"],
+		-- the pet bar state uses pet2 for "pet exists", unlike the visibility pet1
+		pet2 = L["Pet Exists"],
 	}
 	MergeTable(Neuron.STATES, Neuron.VISIBILITY_STATES)
 
@@ -261,14 +273,6 @@ function Neuron.UpdateStanceStrings()
 			rangeStart = 1,
 			rangeStop = 1,
 			localizedName = L["Mounted"],
-		},
-		flying = {
-			modifier = "flying",
-			states = "[flying] flying1; laststate",
-			visibility = "[noflying] flying0; [flying] flying1",
-			rangeStart = 1,
-			rangeStop = 1,
-			localizedName = L["Flying"],
 		},
 		help = {
 			modifier = "help",

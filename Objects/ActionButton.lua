@@ -162,7 +162,13 @@ function ActionButton:InitializeButton()
 					else
 						if not self:GetAttribute(msg.."-actionID") then
 							self:SetAttribute("type", "macro")
-							self:SetAttribute("*macrotext*", self:GetAttribute(msg.."-macro_Text"))
+
+							--states without data of their own fall back to the default tree's homestate
+							local macroText = self:GetAttribute(msg.."-macro_Text")
+							if not macroText or #macroText == 0 then
+								macroText = self:GetAttribute("fallback-macro_Text")
+							end
+							self:SetAttribute("*macrotext*", macroText)
 
 							--if there is a macro present, or if showGrid is enabled, show the button. If not, hide it. This works in combat.
 							if (self:GetAttribute("*macrotext*") and #self:GetAttribute("*macrotext*") > 0) or self:GetAttribute("showGrid") then
@@ -322,6 +328,7 @@ function ActionButton:OnAttributeChanged(name, value)
 
 				--swap out our data with the data stored for the particular state
 				self.data = self.statedata[value]
+				self.activeState = value
 				self:ClearButton()
 			end
 
@@ -843,7 +850,6 @@ function ActionButton:UpdateIcon()
 		return
 	end
 
-	local spec = Spec.active(self.bar:GetMultiSpec())
 	local state = self.bar.handler:GetAttribute("activestate") or "homestate"
 
 	-- if we have any issues with flyouts or other edge cases, then
@@ -852,8 +858,8 @@ function ActionButton:UpdateIcon()
 	-- so that we can use it in other contexts: like the settings dialog
 	---@type GenericSpecData
 	local data = (
-		self.DB
-		and CopyTable(self.DB[spec][state], true)
+		self.statedata
+		and CopyTable(self:GetResolvedData(state), true)
 		or {macro_Text = self:GetMacroText(), macro_Icon = self:GetMacroIcon()}
 	)
 	data.actionID = self.actionID -- this is for vehicle, possession, etc
