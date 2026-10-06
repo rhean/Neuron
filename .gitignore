@@ -3,3 +3,5 @@
 .libcache
 .luarc.json
 dist
+Tools/LayoutEditor/index.html
+Tools/LayoutEditor/save-server.py

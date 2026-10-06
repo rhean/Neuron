@@ -352,6 +352,16 @@ L["On Click"] = true
 L["On Release"] = true
 L["Multi Spec"] = true
 L["Dual Spec"] = true
+
+-- New for the updated GUI
+L["Color"] = true
+L["Delete Bar"] = true
+L["General Configuration"] = true
+L["Bar Visibility"] = true
+L["Secondary States"] = true
+L["Text"] = true
+L["Dangerous"] = true
+
 L["Spec 1"] = true
 L["Spec 2"] = true
 L["No Spec"] = true
