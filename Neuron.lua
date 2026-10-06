@@ -246,11 +246,6 @@ function Neuron:LoginMessage()
 
 	DB.updateWarning = LATEST_VERSION_NUM
 
-	if Spec.active(true) > 4 then
-		print(" ")
-		Neuron:Print("Warning: You do not currently have a specialization selected. Changes to any buttons which have 'Multi Spec' set will not persist.")
-		print(" ")
-	end
 
 	--Shadowlands warning that will show as long as a player has one button on their ZoneAbilityBar for Shadowlands content
 	if UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then

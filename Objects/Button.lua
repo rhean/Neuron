@@ -21,6 +21,11 @@ LibStub("AceHook-3.0"):Embed(Button)
 
 local ButtonEditor = addonTable.overlay.ButtonEditor
 
+--a state's data counts as set once it has a macro or a fixed action
+local function hasMacro(data)
+	return data ~= nil and ((data.macro_Text ~= nil and data.macro_Text ~= "") or not not data.actionID)
+end
+
 local DEFAULT_VIRTUAL_KEY = "LeftButton"
 local NEURON_VIRTUAL_KEY = "Hotkey"
 
@@ -280,14 +285,88 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 	if self.class ~= "ActionBar" then
 		self.data = self.DB.data
 	else
-		self.statedata = self.DB[curSpec] --all of the states for a given spec
-		self.data = self.statedata[curState] --loads a single state of a single spec into self.data
+		self:MigrateDefaultData()
 
-		for state, data in pairs(self.statedata) do
+		--without multiSpec every spec shares the default tree
+		self.statedata = self.bar:GetMultiSpec() and self.DB[curSpec] or self.DB.default --all of the states for a given spec
+		self.activeState = curState or "homestate"
+		self.data = self.statedata[self.activeState] --loads a single state of a single spec into self.data
+
+		--clear attributes left over from a previously loaded spec
+		for state in pairs(self.macroStates or {}) do
+			self:SetAttribute(state.."-macro_Text", nil)
+			self:SetAttribute(state.."-actionID", nil)
+		end
+
+		self.macroStates = {}
+		for _, states in ipairs({self.DB.default, self.statedata}) do
+			for state in pairs(states) do
+				self.macroStates[state] = true
+			end
+		end
+
+		for state in pairs(self.macroStates) do
+			local data = self:GetResolvedData(state)
 			self:SetAttribute(state.."-macro_Text", data.macro_Text)
 			self:SetAttribute(state.."-actionID", data.actionID)
 		end
+
+		--used by the secure state switch for states that have no data anywhere
+		local defaultHome = rawget(self.DB.default, "homestate")
+		self:SetAttribute("fallback-macro_Text", hasMacro(defaultHome) and defaultHome.macro_Text or nil)
 	end
+end
+
+---buttons on bars without multiSpec used to keep their data in spec 1,
+---which is now the default tree. move it there once
+function Button:MigrateDefaultData()
+	if self.DB.defaultMigrated then
+		return
+	end
+
+	if not self.bar:GetMultiSpec() then
+		for state, data in pairs(self.DB[1]) do
+			local target = self.DB.default[state]
+			for k, v in pairs(data) do
+				target[k] = v
+			end
+		end
+		wipe(self.DB[1])
+	end
+
+	self.DB.defaultMigrated = true
+end
+
+---the data a state shows: its own, then the default tree's same state,
+---then the default tree's homestate
+---@param state string
+---@return GenericSpecData
+function Button:GetResolvedData(state)
+	local own = rawget(self.statedata, state)
+	if hasMacro(own) then
+		return own
+	end
+
+	local default = rawget(self.DB.default, state)
+	if hasMacro(default) then
+		return default
+	end
+
+	local defaultHome = rawget(self.DB.default, "homestate")
+	if hasMacro(defaultHome) then
+		return defaultHome
+	end
+
+	return own or self.statedata[state]
+end
+
+---the data the button currently shows, which may come from the default tree
+---@return GenericSpecData
+function Button:GetActiveData()
+	if self.statedata and self.activeState then
+		return self:GetResolvedData(self.activeState)
+	end
+	return self.data
 end
 
 function Button:SetDefaults(defaults)
@@ -852,7 +931,7 @@ function Button:SetMacroIcon(newIcon)
 end
 
 function Button:GetMacroIcon()
-	return self.data.macro_Icon
+	return self:GetActiveData().macro_Icon
 end
 
 
@@ -866,7 +945,7 @@ function Button:SetMacroText(newText)
 end
 
 function Button:GetMacroText()
-	return self.data.macro_Text
+	return self:GetActiveData().macro_Text
 end
 
 
@@ -880,7 +959,7 @@ function Button:SetMacroName(newName)
 end
 
 function Button:GetMacroName()
-	return self.data.macro_Name
+	return self:GetActiveData().macro_Name
 end
 
 
@@ -894,7 +973,7 @@ function Button:SetMacroNote(newNote)
 end
 
 function Button:GetMacroNote()
-	return self.data.macro_Note
+	return self:GetActiveData().macro_Note
 end
 
 
@@ -908,7 +987,7 @@ function Button:SetMacroUseNote(newUseNote)
 end
 
 function Button:GetMacroUseNote()
-	return self.data.macro_UseNote
+	return self:GetActiveData().macro_UseNote
 end
 
 
@@ -922,7 +1001,7 @@ function Button:SetMacroBlizzMacro(newBlizzMacro)
 end
 
 function Button:GetMacroBlizzMacro()
-	return self.data.macro_BlizzMacro
+	return self:GetActiveData().macro_BlizzMacro
 end
 
 
@@ -936,5 +1015,5 @@ function Button:SetMacroEquipmentSet(newEquipmentSet)
 end
 
 function Button:GetMacroEquipmentSet()
-	return self.data.macro_EquipmentSet
+	return self:GetActiveData().macro_EquipmentSet
 end

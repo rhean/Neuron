@@ -53,30 +53,49 @@ local function makeScrollFrame(parent, height, layout)
 		return scroll
 end
 
---our states come from the VISIBILITY_STATES but we only show the states that
---are enabled for the bar _and_ that are in the states field of the
---corresponding MANAGED_BAR_STATES entry
+--home bar states are listed first, the secondary ones after alphabetically
+local HOME_STATE_ORDER = {paged = 1, stance = 2, pet = 3}
+
+--our states are the results of the states field of every MANAGED_BAR_STATES
+--entry enabled for the bar, minus its homestate. states without a name are
+--dropped, which also drops stance slots the class doesn't have
 local function getStateList()
-	local barData = Neuron.currentButton.bar.data
+	local bar = Neuron.currentButton.bar
+	local barData = bar.data
 
-	local barStates =
-		Array.filter(function(state) return barData[state] end,
-		Array.map(function(state) return state[1] end,
-		Array.fromIterator(pairs(Neuron.MANAGED_BAR_STATES))))
+	local stateList = {}
+	for barState, stateInfo in pairs(Neuron.MANAGED_BAR_STATES) do
+		if barData[barState] and barState ~= "custom" then
+			local driver = stateInfo.states
+			if barData.remap and (barState == "paged" or barState == "stance") then
+				driver = driver.."; "..bar:BuildStateMap(barState)
+			end
 
-	local visibilityStates =
-		Array.filter(
-			function(visibilityState)
-				return Array.find(
-					function(barState)
-						local match = Neuron.MANAGED_BAR_STATES[barState].states:find(visibilityState)
-						return not not match and Neuron.MANAGED_BAR_STATES[barState].homestate ~= visibilityState
-					end,
-					barStates
-				)
-			end,
-		Array.map(function(state) return state[1] end,
-		Array.fromIterator(pairs(Neuron.VISIBILITY_STATES))))
+			local seen = {}
+			for state in driver:gmatch("%a+%d+") do
+				if not seen[state]
+					and state:match("^"..barState.."%d+$")
+					and state ~= stateInfo.homestate
+					and Neuron.STATES[state]
+				then
+					seen[state] = true
+					table.insert(stateList, {state = state, barState = barState, num = tonumber(state:match("%d+$"))})
+				end
+			end
+		end
+	end
+
+	table.sort(stateList, function(a, b)
+		local orderA, orderB = HOME_STATE_ORDER[a.barState] or 99, HOME_STATE_ORDER[b.barState] or 99
+		if orderA ~= orderB then
+			return orderA < orderB
+		elseif a.barState ~= b.barState then
+			return a.barState < b.barState
+		end
+		return a.num < b.num
+	end)
+
+	local visibilityStates = Array.map(function(entry) return entry.state end, stateList)
 
 	--TODO: custom states? or nah?
 	--[[
@@ -174,10 +193,17 @@ function NeuronGUI:ButtonsEditPanel(topContainer)
 
 	local multiSpec = Neuron.currentButton.bar:GetMultiSpec()
 
-	local specs = Spec.names(multiSpec)
-	specs[5] =  L["No Spec"]
+	--the default tree comes first. it is the fallback for every spec
+	--and state below it, and the only tree when multiSpec is off
+	local trees = {{index = "default", name = L["Default"]}}
+	if multiSpec then
+		for specIndex, specName in ipairs(Spec.names(multiSpec)) do
+			table.insert(trees, {index = specIndex, name = specName})
+		end
+	end
 
-	for specIndex, specName in pairs(specs) do
+	for _, tree in ipairs(trees) do
+		local specIndex, specName = tree.index, tree.name
 		local specData = Neuron.currentButton.DB[specIndex]
 
 		local buttonTree = {
@@ -206,7 +232,7 @@ function NeuronGUI:ButtonsEditPanel(topContainer)
 					specData[state][k] = v
 				end
 
-				if Spec.active(multiSpec) ~= specIndex then
+				if specIndex ~= "default" and Spec.active(multiSpec) ~= specIndex then
 					-- don't update the button if the modified spec isn't active
 					return
 				end

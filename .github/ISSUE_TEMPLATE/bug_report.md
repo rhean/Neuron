@@ -3,7 +3,7 @@ name: Bug report
 about: Create a report to help us improve
 title: ''
 labels: bug
-assignees: brittyazel
+assignees: rhean
 
 ---
 *When reporting, please verify the issue with only **this** addon enabled and no others unless explicitly reporting an incompatibility between this addon an another. Likewise, please fill in the below information to the best of your ability — this information helps us a great deal.*
@@ -21,7 +21,7 @@ assignees: brittyazel
 ## Technical info:
  - **Addon Version:** *[e.g., 1.2.1]*
  - **Client:** *[e.g., Retail, Forever, PTR, or Beta]*
- - **Client Patch Version:** *[e.g., 9.0.1]*
+ - **Client Patch Version:** *[e.g., 12.0.1]*
  
 ## Additional context:
 *Add any other context about the problem here.*

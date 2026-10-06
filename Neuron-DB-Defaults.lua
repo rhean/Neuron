@@ -366,8 +366,8 @@ addonTable.databaseDefaults.profile.ActionBar['*'].buttons = {
 		[2] = {['**'] = CopyTable(genericSpecData), ['homestate'] = {}},
 		[3] = {['**'] = CopyTable(genericSpecData), ['homestate'] = {}},
 		[4] = {['**'] = CopyTable(genericSpecData), ['homestate'] = {}},
-		--any time a player is without spec, it is not treated as spec 5
-		[5] = {['**'] = CopyTable(genericSpecData), ['homestate'] = {}}, --we need this or we will error out on new character creation
+		--fallback for every spec and state whose macro is empty, and the only data used when multiSpec is off
+		['default'] = {['**'] = CopyTable(genericSpecData), ['homestate'] = {}},
 	}
 }
 
