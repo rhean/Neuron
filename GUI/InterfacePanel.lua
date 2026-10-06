@@ -123,6 +123,8 @@ local function guiOptions()
 		},
 	}
 	for bar, _ in pairs(changes) do
+		--skip bars that aren't registered on this client, like the vehicle exit bar on Forever
+		if Neuron.registeredBarData[bar] then
 		args[bar] = {
 			order = 2,
 			name = Neuron.registeredBarData[bar].barLabel,
@@ -136,6 +138,7 @@ local function guiOptions()
 			end,
 			width = "full",
 		}
+		end
 	end
 
 	args.NeuronMinimapButton = {

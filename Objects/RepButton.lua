@@ -344,7 +344,7 @@ function RepButton:InitializeDropDown() --Initialize the dropdown menu for choos
 	})
 
 	--build the EasyMenu with the newly created menu table "menu"
-	EasyMenu(menu, menuFrame, "cursor", 0, 0, "MENU", 1)
+	Neuron.EasyMenu(menu)
 end
 
 

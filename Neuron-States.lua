@@ -327,6 +327,25 @@ function Neuron.UpdateStanceStrings()
 		},
 	}
 
+	--Forever has no vehicles or dragonriding or extra bars
+	if Neuron.isWoWForever then
+		Neuron.MANAGED_SECONDARY_STATES.dragonriding = nil
+		Neuron.VISIBILITY_STATES.dragonriding0 = nil
+		Neuron.VISIBILITY_STATES.dragonriding1 = nil
+		Neuron.STATES.dragonriding0 = nil
+		Neuron.STATES.dragonriding1 = nil
+		Neuron.MANAGED_SECONDARY_STATES.vehicle = nil
+		Neuron.VISIBILITY_STATES.vehicle0 = nil
+		Neuron.VISIBILITY_STATES.vehicle1 = nil
+		Neuron.STATES.vehicle0 = nil
+		Neuron.STATES.vehicle1 = nil
+		Neuron.MANAGED_OTHER_STATES.extrabar = nil
+		Neuron.VISIBILITY_STATES.extrabar0 = nil
+		Neuron.VISIBILITY_STATES.extrabar1 = nil
+		Neuron.STATES.extrabar0 = nil
+		Neuron.STATES.extrabar1 = nil
+	end
+
 	Neuron.MANAGED_BAR_STATES = {}
 	MergeTable(Neuron.MANAGED_BAR_STATES, Neuron.MANAGED_HOME_STATES)
 	MergeTable(Neuron.MANAGED_BAR_STATES, Neuron.MANAGED_SECONDARY_STATES)
