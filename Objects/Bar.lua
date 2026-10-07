@@ -114,6 +114,13 @@ end
 -----------------------------------
 
 function Bar:ACTIVE_TALENT_GROUP_CHANGED()
+	--this also fires on level up, which can happen in combat where attributes can't be set, so wait until combat ends
+	if InCombatLockdown() then
+		self:RegisterEvent("PLAYER_REGEN_ENABLED", "ACTIVE_TALENT_GROUP_CHANGED")
+		return
+	end
+	self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+
 	if self.handler:GetAttribute("assertstate") then
 		self.handler:SetAttribute("state-"..self.handler:GetAttribute("assertstate"), self.handler:GetAttribute("activestate") or "homestate")
 	end
