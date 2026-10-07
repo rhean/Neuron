@@ -132,7 +132,15 @@ function Button:SetCooldownTimer(start, duration, enable, modrate, showCountdown
 		return
 	end
 
-	if start and start > 0 and duration > 0 and enable > 0 then
+	--the cooldown APIs return 'enable' as a boolean on newer clients and as a number (0/1) on older ones, so accept both forms
+	local isEnabled
+	if type(enable) == "number" then
+		isEnabled = enable > 0
+	else
+		isEnabled = enable == true
+	end
+
+	if start and start > 0 and duration > 0 and enabled then
 
 		if duration > 2 then --sets non GCD cooldowns
 			if charges and charges > 0 and maxCharges > 1 then

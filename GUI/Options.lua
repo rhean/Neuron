@@ -96,6 +96,8 @@ end
 --built each time the options are shown, so ranges follow the current bar
 local function barDefinitions()
 	local numObjects = bar():GetNumObjects()
+	--a menu bar is either empty or holds every micro button, a partial menu leaves blizzard's menu half taken
+	local allOrNothing = bar().class == "MenuBar"
 
 	return {
 		barName = {
@@ -128,7 +130,7 @@ local function barDefinitions()
 			min = 0,
 			max = bar().objMax or 132,
 			softMax = math.min(bar().objMax or 132, 24),
-			step = 1,
+			step = allOrNothing and (bar().objMax or 1) or 1,
 			get = function() return bar():GetNumObjects() end,
 			set = function(_, value)
 				while bar():GetNumObjects() < value do

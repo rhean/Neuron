@@ -20,7 +20,7 @@ function Neuron:RegisterBars(DB)
       objTemplate = Neuron.ActionButton,
       objMax = 250
     },
-    --[[BagBar = {
+    BagBar = {
       class = "BagBar",
       barType = "BagBar",
       barLabel = L["Bag Bar"],
@@ -28,16 +28,16 @@ function Neuron:RegisterBars(DB)
       barDB = DB.BagBar,
       objTemplate = Neuron.BagButton,
       objMax = Neuron.NUM_BAG_BUTTONS
-    },]]
-   --[[MenuBar = {
+    },
+    MenuBar = {
       class = "MenuBar",
       barType = "MenuBar",
       barLabel = L["Menu Bar"],
       objType = "MenuButton",
       barDB = DB.MenuBar,
       objTemplate = Neuron.MenuButton,
-      objMax = 11
-    },]]
+      objMax = Neuron.NUM_MENU_BUTTONS
+    },
     PetBar = {
       class = "PetBar",
       barType = "PetBar",

@@ -231,7 +231,7 @@ addonTable.defaultProfile.MenuBar = {
 		padH = 0,
 		padV = 0,
 
-		buttons = Array.initialize(11, function() return {} end),
+		buttons = Array.initialize(Neuron.NUM_MENU_BUTTONS, function() return {} end),
 	}
 }
 

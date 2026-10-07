@@ -288,7 +288,7 @@ function ActionButton:PlaceItem(action1, action2)
 	end
 
 	self:SetMacroIcon() --will pull icon automatically unless explicitly overridden
-	self:SetMacroName(item)
+	self:SetMacroName()
 	self:SetMacroNote()
 	self:SetMacroUseNote()
 	self:SetMacroBlizzMacro()

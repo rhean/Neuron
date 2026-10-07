@@ -162,7 +162,11 @@ function Bar:CreateNewBar(class)
 
 	local newBar = Bar.new(class, barID) --create new bar
 
-	newBar.objTemplate.new(newBar, 1) --add at least 1 button to a new bar
+	--add at least 1 button to a new bar, a menu bar gets all of them since it can't hold part of the menu
+	local numButtons = class == "MenuBar" and newBar.objMax or 1
+	for buttonID = 1, numButtons do
+		newBar.objTemplate.new(newBar, buttonID)
+	end
 	newBar:Load() --load the bar
 
 	--overlays are only allocated when edit mode is turned on, so a bar created while editing needs its own
