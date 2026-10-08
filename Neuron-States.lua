@@ -78,9 +78,11 @@ function Neuron.UpdateStanceStrings()
 		Neuron.STATES["stance"..i] = C_Spell.GetSpellName(spellID) --Get the string name of the shapeshift form (now that shapeshifts are considered spells)
 	end
 
-	-- Caster Form is special cased just because that's the way it's been historically
+	-- out of form is a page too, see Bar.FormsArePages
 	if Neuron.class == "DRUID" then
-		Neuron.STATES["stance0"] = L["Caster Form"]
+		Neuron.STATES["stance0"] = L["No Form"]
+	else
+		Neuron.STATES["stance0"] = L["No Stance"]
 	end
 
 	-- stealth shows up with the GetShapeshiftFormInfo, but not the others

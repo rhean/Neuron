@@ -303,6 +303,7 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 		self.data = self.DB.data
 	else
 		self:MigrateDefaultData()
+		self:MoveDefaultToSpec(curSpec)
 
 		--without multiSpec every spec shares the default tree
 		self.statedata = self.bar:GetMultiSpec() and self.DB[curSpec] or self.DB.default --all of the states for a given spec
@@ -313,6 +314,7 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 		for state in pairs(self.macroStates or {}) do
 			self:SetAttribute(state.."-macro_Text", nil)
 			self:SetAttribute(state.."-actionID", nil)
+			self:SetAttribute(state.."-own", nil)
 		end
 
 		self.macroStates = {}
@@ -326,11 +328,12 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 			local data = self:GetResolvedData(state)
 			self:SetAttribute(state.."-macro_Text", data.macro_Text)
 			self:SetAttribute(state.."-actionID", data.actionID)
+			self:SetAttribute(state.."-own", hasMacro(rawget(self.statedata, state)) or nil)
 		end
 
-		--used by the secure state switch for states that have no data anywhere
-		local defaultHome = rawget(self.DB.default, "homestate")
-		self:SetAttribute("fallback-macro_Text", hasMacro(defaultHome) and defaultHome.macro_Text or nil)
+		--for states with no data anywhere
+		local fallback = self:GetResolvedData("homestate")
+		self:SetAttribute("fallback-macro_Text", hasMacro(fallback) and fallback.macro_Text or nil)
 	end
 end
 
@@ -354,14 +357,62 @@ function Button:MigrateDefaultData()
 	self.DB.defaultMigrated = true
 end
 
----the data a state shows: its own, then the default tree's same state,
----then the default tree's homestate
+---with multiSpec the default tree is only used until a spec is picked, then it moves into that spec
+---where the spec has no macro. Forever keeps it as spec 1
+---@param curSpec number|string
+function Button:MoveDefaultToSpec(curSpec)
+	if Neuron.isWoWForever or not self.bar:GetMultiSpec() or type(curSpec) ~= "number" then
+		return
+	end
+
+	--the button editor's added modifiers, by row on the bar
+	local key = tostring(curSpec)
+	for _, rowModifiers in pairs(self.bar.data.modifiers or {}) do
+		if rowModifiers.default then
+			rowModifiers[key] = rowModifiers[key] or {}
+			for modifier in pairs(rowModifiers.default) do
+				rowModifiers[key][modifier] = true
+			end
+			rowModifiers.default = nil
+		end
+	end
+
+	for state, data in pairs(self.DB.default) do
+		if hasMacro(data) and not hasMacro(rawget(self.DB[curSpec], state)) then
+			local target = self.DB[curSpec][state]
+			for k, v in pairs(data) do
+				target[k] = v
+			end
+		end
+	end
+	wipe(self.DB.default)
+end
+
+---the data a state shows: its own, the spec's homestate, the default tree's same state, then its homestate.
+---a form's page (stance1_alt1) first tries the default's (alt1), then the form's
 ---@param state string
+---@param statedata? table @a spec's states, the loaded spec when left out
 ---@return GenericSpecData
-function Button:GetResolvedData(state)
-	local own = rawget(self.statedata, state)
+function Button:GetResolvedData(state, statedata)
+	statedata = statedata or self.statedata
+
+	local own = rawget(statedata, state)
 	if hasMacro(own) then
 		return own
+	end
+
+	local form, secondary = state:match("^(stance%d+)_(.+)$")
+	if form then
+		local plain = rawget(statedata, secondary)
+		if hasMacro(plain) then
+			return plain
+		end
+		return self:GetResolvedData(form, statedata)
+	end
+
+	local specHome = rawget(statedata, "homestate")
+	if hasMacro(specHome) then
+		return specHome
 	end
 
 	local default = rawget(self.DB.default, state)
@@ -374,7 +425,7 @@ function Button:GetResolvedData(state)
 		return defaultHome
 	end
 
-	return own or self.statedata[state]
+	return own or statedata[state]
 end
 
 ---the data the button currently shows, which may come from the default tree

@@ -526,19 +526,29 @@ function Bar:UpdateBarVisibility(driver)
 	end
 end
 
+---out of form (stance0) is a page like any form instead of the home state, and each form
+---gets its own secondary state pages (stance1_alt1), see ActionButton _childupdate
+---@param barState string
+---@return boolean
+function Bar.FormsArePages(barState)
+	return barState == "stance"
+end
+
 function Bar:BuildStateMap(remapState)
 	local statemap, state, map, remap, homestate = "", remapState:gsub("paged", "bar")
+	local formsArePages = Bar.FormsArePages(remapState)
 	for states in gmatch(self.data.remap, "[^;]+") do
 		map, remap = (":"):split(states)
 		if remapState == "stance" and Neuron.class == "ROGUE" and map == "1" then
 			--map = "2"
 		end
-		if not homestate then
+		if not homestate and not formsArePages then
 			statemap = statemap.."["..state..":"..map.."] homestate; "; homestate = true
 		else
 			local newstate = remapState..remap
 
-			if Neuron.MANAGED_BAR_STATES[remapState] and
+			if not formsArePages and
+					Neuron.MANAGED_BAR_STATES[remapState] and
 					Neuron.MANAGED_BAR_STATES[remapState].homestate and
 					Neuron.MANAGED_BAR_STATES[remapState].homestate == newstate then
 				statemap = statemap.."["..state..":"..map.."] homestate; "
@@ -557,7 +567,7 @@ function Bar:AddStates(handler, state, conditions)
 		if Neuron.MANAGED_BAR_STATES[state] then
 			RegisterAttributeDriver(handler, "state-"..state, conditions);
 		end
-		if Neuron.MANAGED_BAR_STATES[state].homestate then
+		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.FormsArePages(state) then
 			handler:SetAttribute("handler-homestate", Neuron.MANAGED_BAR_STATES[state].homestate)
 		end
 		self[state].registered = true
@@ -667,7 +677,8 @@ function Bar:CreateHandler()
 		if self:GetAttribute("state-priority") then
 			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-priority"))
 		else
-			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-last") or "homestate")
+			--with the form, for its own page of this state
+			control:ChildUpdate("<MODIFIER>", (self:GetAttribute("state-last") or "homestate")..":"..(self:GetAttribute("state-stance") or ""))
 		end
 
 	elseif self:GetAttribute("state-<MODIFIER>") then
@@ -690,7 +701,7 @@ function Bar:CreateHandler()
 		if self:GetAttribute("state-priority") then
 			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-priority"))
 		else
-			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-<MODIFIER>"))
+			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-<MODIFIER>")..":"..(self:GetAttribute("state-stance") or ""))
 		end
 
 	end
@@ -780,7 +791,9 @@ function Bar:CreateHandler()
 				if self:GetAttribute("state-priority") then
 					control:ChildUpdate("homestate", self:GetAttribute("state-priority"))
 				else
-					control:ChildUpdate("homestate", "homestate")
+					--keep the secondary state on top, with its page for the new form
+					local front = (";"):split(self:GetAttribute("statestack"))
+					control:ChildUpdate("stance", front..":"..(self:GetAttribute("state-stance") or ""))
 				end
 
 			end
@@ -1207,6 +1220,22 @@ function Bar:SetRemap_Stance()
 		if Neuron.class == "ROGUE" then
 			self.data.remap = self.data.remap..";2:2"
 		end
+	end
+end
+
+---the remap is saved when stance is turned on, so a form learned later has no page until it's rebuilt.
+---not in combat
+function Bar:UpdateStanceRemap()
+	if not self.data.stance then
+		return
+	end
+
+	local oldRemap = self.data.remap
+	self:SetRemap_Stance()
+
+	if self.data.remap ~= oldRemap and self.stance and self.stance.registered then
+		self:ClearStates(self.handler, "stance")
+		self:UpdateStates(self.handler)
 	end
 end
 
