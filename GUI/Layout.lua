@@ -89,14 +89,9 @@ addonTable.guiLayout = {
 			}},
 		}},
 		{ id = "states", name = "Bar States", groups = {
-			{ id = "home", name = "Home State", rows = {
+			{ id = "states", name = "", rows = {
 				{
-					{ id = "homeStates", width = "normal" },
-				},
-			}},
-			{ id = "secondary", name = "Secondary States", rows = {
-				{
-					{ id = "secondaryStates", width = "normal" },
+					{ id = "barStates", width = "normal" },
 				},
 			}},
 		}},

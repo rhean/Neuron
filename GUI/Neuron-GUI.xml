@@ -10,11 +10,10 @@ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI
 	<Script file="RegisteredGUIData.lua"/>
 	<Script file="MainWindow.lua"/>
 	<Script file="InterfacePanel.lua"/>
-	<!-- the bar and status bar settings: Layout.lua places the options defined in Options.lua -->
 	<Script file="Layout.lua"/>
 	<Script file="Options.lua"/>
 	<Script file="BarEditTab.lua"/>
-	<Script file="ButtonEditTab.lua"/>
+	<Script file="ButtonEditorWindow.lua"/>
 	<Script file="ButtonStatusEditTab.lua"/>
 	<Script file="IconSelectorPanel.lua"/>
 </Ui>

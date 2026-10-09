@@ -124,7 +124,8 @@ function ActionButton:InitializeButton()
 	self:SetAttribute("_childupdate",
 			[[
 				if message then
-					local msg = (":"):split(message)
+					--"state:form", the form being the bar's current stance
+					local msg, form = (":"):split(message)
 
 					if msg:find("vehicle") then
 						if not self:GetAttribute(msg.."-actionID") then
@@ -160,10 +161,22 @@ function ActionButton:InitializeButton()
 						self:Show()
 
 					else
+						--a secondary state in a form: the form's page for it (stance1_alt1), else the default's (alt1), else the form's own
+						if form and form:find("^stance%d") and msg ~= "homestate"
+							and not msg:find("^stance") and not msg:find("^paged") and not msg:find("^pet")
+						then
+							local combo = form.."_"..msg
+							if self:GetAttribute(combo.."-macro_Text") or self:GetAttribute(combo.."-actionID") then
+								msg = combo
+							elseif not self:GetAttribute(msg.."-own") then
+								msg = form
+							end
+						end
+
 						if not self:GetAttribute(msg.."-actionID") then
 							self:SetAttribute("type", "macro")
 
-							--states without data of their own fall back to the default tree's homestate
+							--see GetResolvedData
 							local macroText = self:GetAttribute(msg.."-macro_Text")
 							if not macroText or #macroText == 0 then
 								macroText = self:GetAttribute("fallback-macro_Text")
@@ -294,7 +307,8 @@ function ActionButton:OnAttributeChanged(name, value)
 			--Part 2 of Druid Prowl overwrite fix (part 1 below)
 			-----------------------------------------------------
 			--breaks out of the loop due to flag set below
-			if Neuron.class == "DRUID" and self.ignoreNextOverrideStance == true and value == "homestate" then
+			--caster form is stance0 on stance bars
+			if Neuron.class == "DRUID" and self.ignoreNextOverrideStance == true and (value == "homestate" or value == "stance0" or value:find("^stance0_")) then
 				self.ignoreNextOverrideStance = nil
 				self.bar:SetState("stealth") --have to add this in otherwise the button icons change but still retain the homestate ability actions
 				return
@@ -320,7 +334,7 @@ function ActionButton:OnAttributeChanged(name, value)
 				---------------------------------------------------
 				--druids have an issue where once stance will get immediately overwritten by another. I.E. stealth immediately getting overwritten by homestate if they go immediately into prowl from caster form
 				--this conditional sets a flag to ignore the next most stance flag, as that one is most likely in error and should be ignored
-				if Neuron.class == "DRUID" and value == "stealth1" then
+				if Neuron.class == "DRUID" and value:find("stealth1$") then --also a form's, like stance2_stealth1
 					self.ignoreNextOverrideStance = true
 				end
 				------------------------------------------------------
@@ -850,8 +864,6 @@ function ActionButton:UpdateIcon()
 		return
 	end
 
-	local state = self.bar.handler:GetAttribute("activestate") or "homestate"
-
 	-- if we have any issues with flyouts or other edge cases, then
 	-- then we can build our data from our ActionButton instead of using
 	-- the database values. but we need to keep GetAppearance stateless
@@ -859,7 +871,7 @@ function ActionButton:UpdateIcon()
 	---@type GenericSpecData
 	local data = (
 		self.statedata
-		and CopyTable(self:GetResolvedData(state), true)
+		and CopyTable(self:GetActiveData(), true)
 		or {macro_Text = self:GetMacroText(), macro_Icon = self:GetMacroIcon()}
 	)
 	data.actionID = self.actionID -- this is for vehicle, possession, etc

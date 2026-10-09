@@ -288,7 +288,7 @@ function ActionButton:PlaceItem(action1, action2)
 	end
 
 	self:SetMacroIcon() --will pull icon automatically unless explicitly overridden
-	self:SetMacroName(item)
+	self:SetMacroName()
 	self:SetMacroNote()
 	self:SetMacroUseNote()
 	self:SetMacroBlizzMacro()
@@ -499,9 +499,12 @@ function ActionButton:SetMouseCursor()
 			return
 		end
 
-		C_Item.PickupItem(C_Item.GetItemInfoInstant(self.item))
-		if GetCursorInfo() then
-			return
+		local itemID = C_Item.GetItemInfoInstant(self.item) --nil for items the client doesn't know, like "Unknown Reward"
+		if itemID then
+			C_Item.PickupItem(itemID)
+			if GetCursorInfo() then
+				return
+			end
 		end
 
 		if Neuron.itemCache[self.item:lower()] then --try to pull the spellID from our ItemCache as a last resort

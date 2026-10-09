@@ -26,6 +26,12 @@ local Spec; Spec = {
     end
 
     local index = C_SpecializationInfo.GetSpecialization()
+
+    --no spec picked yet (or a starter one), use the default tree
+    if multiSpec and (not index or index < 1 or index > GetNumSpecializations()) then
+      return "default", L["Default"]
+    end
+
     local _, name = C_SpecializationInfo.GetSpecializationInfo(index)
 
     index = multiSpec and index or 1

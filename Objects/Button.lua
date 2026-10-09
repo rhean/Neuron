@@ -26,6 +26,9 @@ local function hasMacro(data)
 	return data ~= nil and ((data.macro_Text ~= nil and data.macro_Text ~= "") or not not data.actionID)
 end
 
+--in combat the client hands tainted code "secret" numbers that can't be compared or used in arithmetic
+local issecretvalue = issecretvalue or function() return false end
+
 local DEFAULT_VIRTUAL_KEY = "LeftButton"
 local NEURON_VIRTUAL_KEY = "Hotkey"
 
@@ -132,7 +135,21 @@ function Button:SetCooldownTimer(start, duration, enable, modrate, showCountdown
 		return
 	end
 
-	if start and start > 0 and duration > 0 and enable > 0 then
+	--the cooldown APIs return 'enable' as a boolean on newer clients and as a number (0/1) on older ones, so accept both forms
+	local isEnabled
+	if type(enable) == "number" then
+		isEnabled = enable > 0
+	else
+		isEnabled = enable == true
+	end
+
+	--secret values can't be inspected or passed to SetCooldown from tainted code, so skip them here (spells and actions use duration objects instead)
+	if issecretvalue(start) or issecretvalue(duration) then
+		self:CancelCooldownTimer(false)
+		return
+	end
+
+	if start and start > 0 and duration > 0 and isEnabled then
 
 		if duration > 2 then --sets non GCD cooldowns
 			if charges and charges > 0 and maxCharges > 1 then
@@ -286,6 +303,7 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 		self.data = self.DB.data
 	else
 		self:MigrateDefaultData()
+		self:MoveDefaultToSpec(curSpec)
 
 		--without multiSpec every spec shares the default tree
 		self.statedata = self.bar:GetMultiSpec() and self.DB[curSpec] or self.DB.default --all of the states for a given spec
@@ -296,6 +314,7 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 		for state in pairs(self.macroStates or {}) do
 			self:SetAttribute(state.."-macro_Text", nil)
 			self:SetAttribute(state.."-actionID", nil)
+			self:SetAttribute(state.."-own", nil)
 		end
 
 		self.macroStates = {}
@@ -309,11 +328,12 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 			local data = self:GetResolvedData(state)
 			self:SetAttribute(state.."-macro_Text", data.macro_Text)
 			self:SetAttribute(state.."-actionID", data.actionID)
+			self:SetAttribute(state.."-own", hasMacro(rawget(self.statedata, state)) or nil)
 		end
 
-		--used by the secure state switch for states that have no data anywhere
-		local defaultHome = rawget(self.DB.default, "homestate")
-		self:SetAttribute("fallback-macro_Text", hasMacro(defaultHome) and defaultHome.macro_Text or nil)
+		--for states with no data anywhere
+		local fallback = self:GetResolvedData("homestate")
+		self:SetAttribute("fallback-macro_Text", hasMacro(fallback) and fallback.macro_Text or nil)
 	end
 end
 
@@ -337,14 +357,62 @@ function Button:MigrateDefaultData()
 	self.DB.defaultMigrated = true
 end
 
----the data a state shows: its own, then the default tree's same state,
----then the default tree's homestate
+---with multiSpec the default tree is only used until a spec is picked, then it moves into that spec
+---where the spec has no macro. Forever keeps it as spec 1
+---@param curSpec number|string
+function Button:MoveDefaultToSpec(curSpec)
+	if Neuron.isWoWForever or not self.bar:GetMultiSpec() or type(curSpec) ~= "number" then
+		return
+	end
+
+	--the button editor's added modifiers, by row on the bar
+	local key = tostring(curSpec)
+	for _, rowModifiers in pairs(self.bar.data.modifiers or {}) do
+		if rowModifiers.default then
+			rowModifiers[key] = rowModifiers[key] or {}
+			for modifier in pairs(rowModifiers.default) do
+				rowModifiers[key][modifier] = true
+			end
+			rowModifiers.default = nil
+		end
+	end
+
+	for state, data in pairs(self.DB.default) do
+		if hasMacro(data) and not hasMacro(rawget(self.DB[curSpec], state)) then
+			local target = self.DB[curSpec][state]
+			for k, v in pairs(data) do
+				target[k] = v
+			end
+		end
+	end
+	wipe(self.DB.default)
+end
+
+---the data a state shows: its own, the spec's homestate, the default tree's same state, then its homestate.
+---a form's page (stance1_alt1) first tries the default's (alt1), then the form's
 ---@param state string
+---@param statedata? table @a spec's states, the loaded spec when left out
 ---@return GenericSpecData
-function Button:GetResolvedData(state)
-	local own = rawget(self.statedata, state)
+function Button:GetResolvedData(state, statedata)
+	statedata = statedata or self.statedata
+
+	local own = rawget(statedata, state)
 	if hasMacro(own) then
 		return own
+	end
+
+	local form, secondary = state:match("^(stance%d+)_(.+)$")
+	if form then
+		local plain = rawget(statedata, secondary)
+		if hasMacro(plain) then
+			return plain
+		end
+		return self:GetResolvedData(form, statedata)
+	end
+
+	local specHome = rawget(statedata, "homestate")
+	if hasMacro(specHome) then
+		return specHome
 	end
 
 	local default = rawget(self.DB.default, state)
@@ -357,7 +425,7 @@ function Button:GetResolvedData(state)
 		return defaultHome
 	end
 
-	return own or self.statedata[state]
+	return own or statedata[state]
 end
 
 ---the data the button currently shows, which may come from the default tree
@@ -576,6 +644,11 @@ function Button:UpdateSpellCount()
 	local chargeInfo = C_Spell.GetSpellCharges(self.spell)
 	local count = C_Spell.GetSpellCastCount(self.spell)
 
+	--secret values can't be compared, so leave the current text alone until they're readable again
+	if issecretvalue(count) or (chargeInfo and issecretvalue(chargeInfo.maxCharges)) then
+		return
+	end
+
 	if chargeInfo and chargeInfo.maxCharges > 1 then
 		self.Count:SetText(chargeInfo.currentCharges)
 	elseif count and count > 0 then
@@ -632,13 +705,24 @@ function Button:UpdateSpellCooldown()
 
 		if not cooldownInfo then
 			self:CancelCooldownTimer(true)
-		elseif chargeInfo and chargeInfo.maxCharges > 0 and chargeInfo.currentCharges < chargeInfo.maxCharges then
+		elseif issecretvalue(cooldownInfo.startTime) then
+			self:SetSecretCooldown(C_Spell.GetSpellCooldownDuration(self.spell))
+		elseif chargeInfo and not issecretvalue(chargeInfo.maxCharges) and chargeInfo.maxCharges > 0 and chargeInfo.currentCharges < chargeInfo.maxCharges then
 			self:SetCooldownTimer(chargeInfo.cooldownStartTime, chargeInfo.cooldownDuration, cooldownInfo.isEnabled, chargeInfo.chargeModRate, self.bar:GetShowCooldownText(), self.bar:GetCooldownColor1(), self.bar:GetCooldownColor2(), self.bar:GetShowCooldownAlpha(), chargeInfo.currentCharges, chargeInfo.maxCharges) --only evoke charge cooldown (outer border) if charges are present and less than maxCharges (this is the case with the GCD)
 		else
 			self:SetCooldownTimer(cooldownInfo.startTime, cooldownInfo.duration, cooldownInfo.isEnabled, cooldownInfo.modRate, self.bar:GetShowCooldownText(), self.bar:GetCooldownColor1(), self.bar:GetCooldownColor2(), self.bar:GetShowCooldownAlpha()) --call standard cooldown, handles both abilty cooldowns and GCD
 		end
 	else
 		self:CancelCooldownTimer(true)
+	end
+end
+
+---in combat cooldown times are secret, so let the cooldown widget read them from a duration object (no countdown text/alpha)
+function Button:SetSecretCooldown(durationObject)
+	self:CancelCooldownTimer(false)
+	if durationObject then
+		self.Cooldown:SetDrawSwipe(true)
+		self.Cooldown:SetCooldownFromDurationObject(durationObject)
 	end
 end
 
@@ -661,6 +745,10 @@ function Button:UpdateActionCooldown()
 	if self.actionID and self.isShown then
 		if HasAction(self.actionID) then
 			local start, duration, enable, modrate = GetActionCooldown(self.actionID)
+			if issecretvalue(start) then
+				self:SetSecretCooldown(C_ActionBar.GetActionCooldownDuration(self.actionID))
+				return
+			end
 			self:SetCooldownTimer(start, duration, enable, modrate, self.bar:GetShowCooldownText(), self.bar:GetCooldownColor1(), self.bar:GetCooldownColor2(), self.bar:GetShowCooldownAlpha())
 		end
 	else
@@ -719,9 +807,11 @@ function Button:UpdateUsableItem()
 	if notEnoughMana and self.bar:GetManaColor() then
 		self.Icon:SetVertexColor(self.bar:GetManaColor()[1], self.bar:GetManaColor()[2], self.bar:GetManaColor()[3])
 	elseif isUsable then
-		if self.bar:GetShowRangeIndicator() and C_Item.IsItemInRange(self.item, self.unit) == false then
+		--C_Item.IsItemInRange is protected in combat, so skip the range check there
+		local checkRange = self.bar:GetShowRangeIndicator() and not InCombatLockdown()
+		if checkRange and C_Item.IsItemInRange(self.item, self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
-		elseif Neuron.itemCache[self.item:lower()] and self.bar:GetShowRangeIndicator() and C_Item.IsItemInRange(Neuron.itemCache[self.item:lower()], self.unit) == false then
+		elseif checkRange and Neuron.itemCache[self.item:lower()] and C_Item.IsItemInRange(Neuron.itemCache[self.item:lower()], self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
 		else
 			self.Icon:SetVertexColor(1.0, 1.0, 1.0)

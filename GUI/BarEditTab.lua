@@ -47,7 +47,7 @@ function NeuronGUI:BarEditPanel(tabFrame)
 	local barListDropdown = AceGUI:Create("Dropdown")
 	barListDropdown:SetWidth(180)
 	barListDropdown:SetLabel("Switch selected bar:")
-	barListDropdown:SetText(Neuron.currentBar:GetBarName() or "")
+	barListDropdown:SetText(Neuron.currentBar and Neuron.currentBar:GetBarName() or "")
 	barListDropdown:SetList(barList) --assign the bar type table to the dropdown menu
 	barListDropdown:SetCallback("OnValueChanged", function(self, callBackType, key) Neuron.Bar.ChangeSelectedBar(key); NeuronGUI:RefreshEditor() end)
 	topRow:AddChild(barListDropdown)
@@ -117,8 +117,9 @@ function NeuronGUI:BarEditPanel(tabFrame)
 		NeuronGUI:OpenBarOptions(optionsContainer)
 	else
 		local selectBarMessage = AceGUI:Create("Label")
-		selectBarMessage:SetText("Please select a bar to continue")
-		selectBarMessage:SetFont("Fonts\\FRIZQT__.TTF", 30)
+		selectBarMessage:SetText(next(Neuron.bars) and "Please select a bar to continue" or "Create a bar to continue")
+		selectBarMessage:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
+		selectBarMessage:SetFullWidth(true)
 		tabFrame:AddChild(selectBarMessage)
 	end
 end

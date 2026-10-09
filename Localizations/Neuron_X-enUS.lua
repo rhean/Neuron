@@ -250,6 +250,8 @@ L["Custom States"] = true
 
 ---class specific state names
 L["Caster Form"] = true
+L["No Form"] = true
+L["No Stance"] = true
 L["Healer Form"] = true
 L["Melee"] = true
 L["Shadow Dance"] = true
@@ -262,6 +264,21 @@ L["Configure Bars"] = true
 L["Configure Buttons"] = true
 L["Configure Buttons"] = true
 L["Configure Appearance"] = true
+
+---button editor window
+L["Button Editor"] = true
+L["Specialization"] = true
+L["Modifiers"] = true
+L["ButtonEditor_Location"] = "Button %d - Row %d"
+L["ButtonEditor_Button"] = "Button %d"
+L["Add Modifier"] = true
+L["Remove Modifier"] = true
+L["ButtonEditor_RemoveModifier"] = "Remove %s from every button in %s? Their macros for it are cleared, on the default and every form."
+L["ButtonEditor_RowOfSpec"] = "row %d of %s"
+L["ButtonEditor_Status"] = "|cffffd200%s|r|cFFFFFFFF button %d is selected. Click another button to edit it."
+L["ButtonEditor_SelectButton"] = "Click an action button to edit it."
+L["ButtonEditor_Inherits"] = "No macro of its own, this page uses %s. Type a macro to give it one."
+L["ButtonEditor_Empty"] = "No macro yet. Type one below."
 
 L["Toggle Keybind Mode"] = true
 L["Open the Interface Menu"] = true

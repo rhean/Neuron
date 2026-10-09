@@ -90,10 +90,8 @@ function NeuronGUI:PopulateEditorWindow()
 	local tabs ={{text="Bar Settings", value="bar"}}
 	--no bar is selected right after a bar is deleted, the bar tab then picks one
 	local barType = Neuron.currentBar and Neuron.currentBar.barType
-	if barType == "ActionBar" then
-		-- only action bars have editable buttons
-		table.insert(tabs, {text=L["Configure Buttons"], value="button"})
-	elseif barType == "XPBar" then
+	-- action bar buttons have their own window, see ButtonEditorWindow.lua
+	if barType == "XPBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
 	elseif barType == "RepBar" then
 		table.insert(tabs, {text=L["Configure Appearance"], value="status"})
@@ -127,10 +125,6 @@ function NeuronGUI:SelectTab(tabFrame, _, value)
 	tabFrame:ReleaseChildren()
 	if value == "bar" then
 		NeuronGUI:BarEditPanel(tabFrame)
-	elseif value == "button" then
-		-- whenever we change a button, RefreshEditor is called upstream
-		-- so we don't need to keep track of updating currentButton here
-		NeuronGUI:ButtonsEditPanel(tabFrame)
 	elseif value == "status" then
 		NeuronGUI:ButtonStatusEditPanel(tabFrame)
 	else

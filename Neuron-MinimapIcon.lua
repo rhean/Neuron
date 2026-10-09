@@ -79,17 +79,10 @@ function Neuron:Minimap_OnClickHandler(button)
 			end
 		else
 			if not Neuron.buttonEditMode then
-				Neuron:ToggleButtonEditMode(true)
-				if not addonTable.NeuronEditor then
-					Neuron.NeuronGUI:CreateEditor("button")
-				else
-					Neuron.NeuronGUI:RefreshEditor("button")
-				end
+				Neuron.NeuronGUI:OpenButtonEditor()
 			else
 				Neuron:ToggleButtonEditMode(false)
-				if addonTable.NeuronEditor then
-					Neuron.NeuronGUI:DestroyEditor()
-				end
+				Neuron.NeuronGUI:CloseButtonEditor()
 			end
 		end
 	end

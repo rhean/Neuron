@@ -147,6 +147,7 @@ function Neuron:OnEnable()
 	Neuron:RegisterEvent("SPELLS_CHANGED")
 	Neuron:RegisterEvent("CHARACTER_POINTS_CHANGED")
 	Neuron:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
+	Neuron:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 
 	Neuron:UpdateStanceStrings()
 
@@ -217,7 +218,7 @@ function Neuron:PLAYER_ENTERING_WORLD()
 	DB.firstRun = false
 
 	Neuron:UpdateSpellCache()
-	Neuron:UpdateStanceStrings()
+	Neuron:UPDATE_SHAPESHIFT_FORMS() --catches up bars saved before a form was learned
 
 	--Fix for Titan causing the Main Bar to not be hidden
 	if C_AddOns.IsAddOnLoaded("Titan") then
@@ -245,6 +246,22 @@ end
 function Neuron:SPELLS_CHANGED()
 	Neuron:UpdateSpellCache()
 	Neuron:UpdateStanceStrings()
+end
+
+--a newly learned form needs a page on every stance bar
+function Neuron:UPDATE_SHAPESHIFT_FORMS()
+	Neuron:UpdateStanceStrings()
+
+	--level ups happen in combat, where the drivers can't be changed
+	if InCombatLockdown() then
+		Neuron:RegisterEvent("PLAYER_REGEN_ENABLED", "UPDATE_SHAPESHIFT_FORMS")
+		return
+	end
+	Neuron:UnregisterEvent("PLAYER_REGEN_ENABLED")
+
+	for _, bar in pairs(Neuron.bars) do
+		bar:UpdateStanceRemap()
+	end
 end
 
 -------------------------------------------------------------------------
@@ -492,6 +509,11 @@ function Neuron:ToggleButtonEditMode(show)
 						Neuron.Button.ChangeSelectedButton(btn)
 						if addonTable.NeuronEditor then
 							Neuron.NeuronGUI:RefreshEditor()
+						end
+						if isActionBar(btn.bar) then
+							Neuron.NeuronGUI:OpenButtonEditor()
+						else
+							Neuron.NeuronGUI:RefreshButtonEditor()
 						end
 					end
 				)

@@ -96,6 +96,8 @@ end
 --built each time the options are shown, so ranges follow the current bar
 local function barDefinitions()
 	local numObjects = bar():GetNumObjects()
+	--a menu bar is either empty or holds every micro button, a partial menu leaves blizzard's menu half taken
+	local allOrNothing = bar().class == "MenuBar"
 
 	return {
 		barName = {
@@ -128,7 +130,7 @@ local function barDefinitions()
 			min = 0,
 			max = bar().objMax or 132,
 			softMax = math.min(bar().objMax or 132, 24),
-			step = 1,
+			step = allOrNothing and (bar().objMax or 1) or 1,
 			get = function() return bar():GetNumObjects() end,
 			set = function(_, value)
 				while bar():GetNumObjects() < value do
@@ -204,32 +206,29 @@ end
 
 --settings that expand into one option per state, as {key, option} pairs
 local barDynamic = {
-	--only one home state can be active, SetState turns the others off
-	homeStates = function()
-		return Array.map(function(state)
-			return {"home_"..state, {
-				type = "toggle",
-				name = Neuron.MANAGED_HOME_STATES[state].localizedName,
-				get = function() return not not bar().data[state] end,
-				set = function(_, value) bar():SetState(state, true, value) end,
-			}}
+	barStates = function()
+		local states = Array.map(function(state)
+			return {state = state, name = Neuron.MANAGED_HOME_STATES[state].localizedName}
 		end, {"paged", "stance", "pet"})
-	end,
 
-	secondaryStates = function()
-		local states = {}
+		local secondary = {}
 		for state, info in pairs(Neuron.MANAGED_SECONDARY_STATES) do
 			--rogues get stealth as their home stance state instead
 			if not (Neuron.class == "ROGUE" and state == "stealth") then
-				table.insert(states, {state = state, name = info.localizedName})
+				table.insert(secondary, {state = state, name = info.localizedName})
 			end
 		end
-		table.sort(states, function(a, b) return a.name < b.name end)
+		table.sort(secondary, function(a, b) return a.name < b.name end)
+		for _, entry in ipairs(secondary) do
+			table.insert(states, entry)
+		end
 
 		return Array.map(function(entry)
-			return {"secondary_"..entry.state, {
+			return {"state_"..entry.state, {
 				type = "toggle",
 				name = entry.name,
+				--off for now: they share data.remap with stance, and the handler can't run two home states
+				disabled = entry.state == "paged" or entry.state == "pet",
 				get = function() return not not bar().data[entry.state] end,
 				set = function(_, value) bar():SetState(entry.state, true, value) end,
 			}}
