@@ -9,173 +9,198 @@ local Neuron = addonTable.Neuron
 
 local NeuronGUI = Neuron.NeuronGUI
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
-local AceGUI = LibStub("AceGUI-3.0")
-
-local iconSelector
-local iconList = {}
-
-local MAX_ICONS_PER_PAGE = 120
-local curIconPage = 1
+local UI = addonTable.ui
+local Style = UI.Style
 
 -----------------------------------------------------------------------------
 --------------------------Icon Selector--------------------------------------
 -----------------------------------------------------------------------------
+--a grid of every spell, item and macro icon. only the rows in view have
+--buttons, scrolling gives them other icons
 
-function NeuronGUI:IconFrame_OnClick()
-	NeuronGUI:CreateIconSelector()
-end
+local ICON_SIZE = 36
+local SPACING = 4
+local STEP = ICON_SIZE + SPACING
 
-function NeuronGUI:CreateIconSelector()
-	iconSelector = AceGUI:Create("Frame")
-	iconSelector:SetTitle("Select an icon")
-	iconSelector:SetCallback("OnClose", function() iconSelector:Release() end)
-	iconSelector:SetWidth(610)
-	iconSelector:SetHeight(500)
-	iconSelector:EnableResize(true)
-	if iconSelector.frame.SetResizeBounds then -- WoW 10.0
-		iconSelector.frame:SetResizeBounds(610,450)
-	else
-		iconSelector.frame:SetMinResize(610,450)
-	end
-	iconSelector:SetLayout("Flow") -- important!
+local window, search, grid, bar
+--every icon, {icon, names}. names are the known spells and items using it, lowercased, for searching
+local allIcons = {}
+--the ones matching the search
+local iconList = {}
+local buttons = {}
+local firstRow = 0
+local onPick
 
-	NeuronGUI:GenerateIconList()
-
-	NeuronGUI:CreateIconSelectorInternals()
-
-end
-
-function NeuronGUI:RefreshIconSelector()
-	iconSelector:ReleaseChildren()
-	NeuronGUI:CreateIconSelectorInternals()
-end
-
-function NeuronGUI:CreateIconSelectorInternals()
-
-	--------------------------------------------------
-	------------------- Pagination -------------------
-	--------------------------------------------------
-
-	--container group for pagination
-	local paginationContainer = AceGUI:Create("SimpleGroup")
-	paginationContainer:SetLayout("Flow") -- important!
-	paginationContainer:SetFullWidth(true)
-	paginationContainer:SetHeight(80)
-	iconSelector:AddChild(paginationContainer)
-
-	--back button
-	local backButton = AceGUI:Create("Button")
-	backButton:SetRelativeWidth(0.15)
-	backButton:SetText("Previous")
-	backButton:SetCallback("OnClick", function()
-		if curIconPage > 1 then
-			curIconPage = curIconPage-1
+local function generateIconList()
+	wipe(allIcons)
+	local byIcon = {}
+	local function add(icon, name)
+		if not icon then
+			return
 		end
-		NeuronGUI:RefreshIconSelector()
-	end)
-	--disable button if we are on th first page
-	if curIconPage > 1 then
-		backButton:SetDisabled(false)
-	else
-		backButton:SetDisabled(true)
-	end
-	paginationContainer:AddChild(backButton)
-
-	--pagination slider
-	local paginationSlider = AceGUI:Create("Slider")
-	paginationSlider:SetRelativeWidth(0.68)
-	paginationSlider:SetSliderValues(1,ceil(#iconList/MAX_ICONS_PER_PAGE),1)
-	paginationSlider:SetLabel("Page")
-	paginationSlider:SetValue(curIconPage)
-	paginationSlider:SetCallback("OnValueChanged", function(self)
-		curIconPage = self:GetValue()
-		NeuronGUI:RefreshIconSelector()
-	end)
-	paginationContainer:AddChild(paginationSlider)
-
-	--forward button
-	local forwardButton = AceGUI:Create("Button")
-	forwardButton:SetRelativeWidth(0.15)
-	forwardButton:SetText("Next")
-	forwardButton:SetCallback("OnClick",function()
-		if curIconPage < ceil(#iconList/MAX_ICONS_PER_PAGE) then
-			curIconPage = curIconPage + 1
+		local entry = byIcon[icon]
+		if not entry then
+			entry = {icon = icon, names = ""}
+			byIcon[icon] = entry
+			table.insert(allIcons, entry)
 		end
-		NeuronGUI:RefreshIconSelector()
-	end)
-	--disable button if we are on the last page
-	if curIconPage < ceil(#iconList/MAX_ICONS_PER_PAGE) then
-		forwardButton:SetDisabled(false)
-	else
-		forwardButton:SetDisabled(true)
+		if name then
+			entry.names = entry.names.."\n"..name:lower()
+		end
 	end
-	paginationContainer:AddChild(forwardButton)
 
-	--------------------------------------------------
-	--------------- Icon Scroll Frame ----------------
-	--------------------------------------------------
-	local scrollContainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-	scrollContainer:SetLayout("Fill") -- important!
-	scrollContainer:SetFullWidth(true)
-	scrollContainer:SetFullHeight(true)
-	iconSelector:AddChild(scrollContainer)
+	for _, spell in pairs(Neuron.spellCache) do
+		add(spell.icon, spell.spellName)
+	end
+	--item names to item ids
+	for name, itemID in pairs(Neuron.itemCache) do
+		add(C_Item.GetItemIconByID(itemID), name)
+	end
 
-	local iconScroll = AceGUI:Create("ScrollFrame")
-	iconScroll:SetLayout("Flow") -- probably?
-	scrollContainer:AddChild(iconScroll)
-
-	--this is temporary. We need to populate a list of icons here
-
-	local start = (curIconPage*MAX_ICONS_PER_PAGE)-(MAX_ICONS_PER_PAGE-1)
-	local stop = (curIconPage*MAX_ICONS_PER_PAGE)
-
-	for i=start,stop do
-		local iconFrame=AceGUI:Create("Icon")
-		iconFrame:SetImage(iconList[i])
-		iconFrame:SetImageSize(40,40)
-		iconFrame:SetWidth(50)
-		iconFrame:SetCallback("OnClick", function()
-			Neuron.currentButton:SetMacroIcon(iconList[i])
-			Neuron.currentButton:UpdateIcon()
-			iconSelector:Hide()
-			NeuronGUI:RefreshEditor()
-		end)
-		iconScroll:AddChild(iconFrame)
+	--blizzard's macro icons have no names, they only show without a search
+	local macroIcons = {}
+	GetLooseMacroIcons(macroIcons)
+	GetLooseMacroItemIcons(macroIcons)
+	GetMacroIcons(macroIcons)
+	GetMacroItemIcons(macroIcons)
+	for _, icon in ipairs(macroIcons) do
+		add(icon)
 	end
 end
 
------------------------------------------------------------
------------------------------------------------------------
-
-function NeuronGUI:GenerateIconList()
+local function applySearch()
 	wipe(iconList)
-	--we need a quick function to check if a table contains a value already
-	local function tContains(table, item)
-		local index = 1;
-		while table[index] do
-			if item == table[index] then
-				return 1;
-			end
-			index = index + 1;
-		end
-		return nil;
-	end
-
-	for _,v in pairs(Neuron.spellCache) do
-		if v.icon and not tContains(iconList, v.icon) then
-			table.insert(iconList, v.icon)
+	local text = search:GetText():lower()
+	for _, entry in ipairs(allIcons) do
+		if text == "" or entry.names:find(text, 1, true) then
+			table.insert(iconList, entry.icon)
 		end
 	end
+end
 
-	for _,v in pairs(Neuron.itemCache) do
-		if v.icon and not tContains(iconList, v.icon) then
-			table.insert(iconList, v.icon)
+local function createIcon()
+	local button = CreateFrame("Button", nil, grid)
+	Style.Flat(button, Style.field)
+	button:SetSize(ICON_SIZE, ICON_SIZE)
+
+	button.icon = button:CreateTexture(nil, "ARTWORK")
+	button.icon:SetPoint("TOPLEFT", 1, -1)
+	button.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+
+	local hover = button:CreateTexture(nil, "HIGHLIGHT")
+	hover:SetAllPoints()
+	hover:SetColorTexture(unpack(Style.hover))
+
+	button:SetScript("OnClick", function(self)
+		local pick = onPick
+		window:Hide()
+		pick(self.texture)
+	end)
+	return button
+end
+
+--lays the grid's buttons out for its size and fills them from firstRow
+local updating
+local function refresh()
+	if updating then
+		return
+	end
+	updating = true
+
+	local columns = math.max(1, math.floor((grid:GetWidth() + SPACING) / STEP))
+	local rows = math.max(1, math.floor((grid:GetHeight() + SPACING) / STEP))
+	local maxFirst = math.max(0, math.ceil(#iconList / columns) - rows)
+	firstRow = math.min(firstRow, maxFirst)
+
+	bar:SetMinMaxValues(0, maxFirst)
+	bar:SetValue(firstRow)
+	bar:SetShown(maxFirst > 0)
+
+	for i = 1, columns * rows do
+		local button = buttons[i]
+		if not button then
+			button = createIcon()
+			buttons[i] = button
 		end
+		button:ClearAllPoints()
+		button:SetPoint("TOPLEFT", ((i - 1) % columns) * STEP, -math.floor((i - 1) / columns) * STEP)
+
+		local texture = iconList[firstRow * columns + i]
+		button.texture = texture
+		button.icon:SetTexture(texture)
+		button:SetShown(texture ~= nil)
+	end
+	for i = columns * rows + 1, #buttons do
+		buttons[i]:Hide()
 	end
 
-	GetLooseMacroIcons( iconList );
-	GetLooseMacroItemIcons( iconList );
-	GetMacroIcons( iconList );
-	GetMacroItemIcons( iconList );
+	updating = false
+end
+
+local function createWindow()
+	window = UI.Window("NeuronIconSelectorFrame", "Select an icon")
+	window:SetSize(610, 500)
+	window:SetMinSize(300, 250)
+
+	--by spell or item name
+	search = UI.EditBox(window.content, function()
+		applySearch()
+		firstRow = 0
+		refresh()
+	end)
+	search:SetPoint("TOPLEFT")
+	search:SetPoint("TOPRIGHT")
+	search:SetPlaceholder(SEARCH)
+
+	grid = CreateFrame("Frame", nil, window.content)
+	grid:SetPoint("TOPLEFT", search, "BOTTOMLEFT", 0, -Style.padding)
+	grid:SetPoint("BOTTOMRIGHT", -12, 0)
+	grid:SetScript("OnSizeChanged", refresh)
+
+	bar = CreateFrame("Slider", nil, window.content)
+	bar:SetPoint("TOPRIGHT", grid, "TOPRIGHT", 12, 0)
+	bar:SetPoint("BOTTOMRIGHT")
+	bar:SetWidth(6)
+	bar:SetOrientation("VERTICAL")
+	bar:SetValueStep(1)
+	bar:SetObeyStepOnDrag(true)
+	bar:EnableMouse(true)
+	local thumb = bar:CreateTexture(nil, "OVERLAY")
+	thumb:SetColorTexture(1, 1, 1, 0.25)
+	thumb:SetSize(6, 30)
+	bar:SetThumbTexture(thumb)
+	bar:SetScript("OnValueChanged", function(_, value)
+		value = math.floor(value + 0.5)
+		if value ~= firstRow then
+			firstRow = value
+			refresh()
+		end
+	end)
+
+	window.content:EnableMouseWheel(true)
+	window.content:SetScript("OnMouseWheel", function(_, delta)
+		bar:SetValue(firstRow - delta * 2)
+	end)
+end
+
+---shows every icon and calls pick with the one clicked
+---@param pick fun(icon: number|string)
+function NeuronGUI:OpenIconSelector(pick)
+	if not window then
+		createWindow()
+	end
+	onPick = pick
+	generateIconList()
+	search:SetText("")
+	applySearch()
+	firstRow = 0
+	window:Show()
+	window:Raise()
+	refresh()
+end
+
+function NeuronGUI:CloseIconSelector()
+	if window then
+		window:Hide()
+	end
 end

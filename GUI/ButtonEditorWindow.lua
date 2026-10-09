@@ -10,9 +10,10 @@ local Neuron = addonTable.Neuron
 local NeuronGUI = Neuron.NeuronGUI
 
 local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
-local AceGUI = LibStub("AceGUI-3.0")
 
 local Spec = addonTable.utilities.Spec
+local UI = addonTable.ui
+local Style = UI.Style
 
 -----------------------------------------------------------------------------
 --------------------------Button Editor Window-------------------------------
@@ -22,126 +23,32 @@ local Spec = addonTable.utilities.Spec
 
 local window
 local render
---lets a delayed scroll tell its widgets were released
-local renderCount = 0
 
 --kept while the window is open, so clicking another button keeps the place
 local selected = {}
+
+--what is on show: pages in order, their editors by page, how to remove each modifier page
+--and the modifiers that can be added
+local view = {pages = {}, editors = {}, removers = {}, available = {}}
+
+--modifier pages opened or folded by hand, by spec and page, while the same button is edited.
+--the rest start folded when they have no text
+local expanded, expandedButton = {}, nil
+
+--made with the window, see createWindow
+local specRow, specLabel, specDropdown, tabs, body, emptyText
+local addButton, removeButton, rowPool
+local editors, editorPool
 
 --blizzard's action bars take over the buttons in these, so there is no macro to edit
 local ACTION_BAR_STATES = {vehicle = true, dragonriding = true, possess = true, override = true, extrabar = true}
 
 local HOME_STATE_ORDER = {paged = 1, stance = 2, pet = 3}
 
---AceGUI's List with 5px between the rows
-AceGUI:RegisterLayout("NeuronSpacedList", function(content, children)
-	local height = 0
-	local width = content.width or content:GetWidth() or 0
-	for i = 1, #children do
-		local child = children[i]
-
-		local frame = child.frame
-		frame:ClearAllPoints()
-		frame:Show()
-		if i == 1 then
-			frame:SetPoint("TOPLEFT", content)
-		else
-			frame:SetPoint("TOPLEFT", children[i-1].frame, "BOTTOMLEFT", 0, -5)
-			height = height + 5
-		end
-
-		if child.width == "fill" then
-			child:SetWidth(width)
-			frame:SetPoint("RIGHT", content)
-
-			if child.DoLayout then
-				child:DoLayout()
-			end
-		elseif child.width == "relative" then
-			child:SetWidth(width * child.relWidth)
-
-			if child.DoLayout then
-				child:DoLayout()
-			end
-		end
-
-		height = height + (frame.height or frame:GetHeight() or 0)
-	end
-	if content.obj.LayoutFinished then
-		content.obj:LayoutFinished(nil, height)
-	end
-end)
-
---list on the left, macros filling the rest, both from the top.
---Flow centers a row, which pushes the macros out of the window once they are taller than the list
-AceGUI:RegisterLayout("NeuronColumns", function(content, children)
-	local width = content.width or content:GetWidth() or 0
-	local left, right = children[1], children[2]
-
-	if left then
-		local leftWidth = width * (left.relWidth or 0.3)
-		left.frame:ClearAllPoints()
-		left.frame:SetPoint("TOPLEFT", content)
-		left.frame:Show()
-		left:SetWidth(leftWidth)
-		if left.DoLayout then
-			left:DoLayout()
-		end
-
-		if right then
-			right.frame:ClearAllPoints()
-			right.frame:SetPoint("TOPLEFT", left.frame, "TOPRIGHT", 5, 0)
-			right.frame:SetPoint("BOTTOMRIGHT", content)
-			right.frame:Show()
-			right:SetWidth(width - leftWidth - 5)
-			right:SetHeight(content.height or content:GetHeight() or 0)
-			if right.DoLayout then
-				right:DoLayout()
-			end
-		end
-	end
-end)
-
---location, divider and modifier list. the location lines up with the list's title, which InlineGroup indents 14px
-AceGUI:RegisterLayout("NeuronLeftColumn", function(content, children)
-	local width = content.width or content:GetWidth() or 0
-	local location, divider, list = children[1], children[2], children[3]
-	local height = 0
-
-	if location then
-		location.frame:ClearAllPoints()
-		location.frame:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -5)
-		location.frame:Show()
-		location:SetWidth(width - 14)
-		height = 5 + (location.frame:GetHeight() or 0)
-	end
-
-	if divider then
-		divider.frame:ClearAllPoints()
-		divider.frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -height)
-		divider.frame:Show()
-		divider:SetWidth(width)
-		height = height + (divider.frame:GetHeight() or 0)
-	end
-
-	if list then
-		list.frame:ClearAllPoints()
-		list.frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -height)
-		list.frame:Show()
-		list:SetWidth(width)
-		if list.DoLayout then
-			list:DoLayout()
-		end
-		height = height + (list.frame:GetHeight() or 0)
-	end
-
-	if content.obj.LayoutFinished then
-		content.obj:LayoutFinished(nil, height)
-	end
-end)
+local ICON_SIZE = 42
 
 --data is what to do on yes
-StaticPopupDialogs["NEURON_REMOVE_MODIFIER"] = {
+StaticPopupDialogs["NEURON_REMOVE_MODIFIER"] = UI.RaisePopup{
 	text = L["ButtonEditor_RemoveModifier"],
 	button1 = YES,
 	button2 = NO,
@@ -156,9 +63,9 @@ local function hasMacro(data)
 	return data ~= nil and ((data.macro_Text ~= nil and data.macro_Text ~= "") or not not data.actionID)
 end
 
---rebuilding releases the widget whose callback is running, so wait a frame
-local function deferRender()
-	C_Timer.After(0, render)
+--a macro or a label
+local function hasText(data)
+	return hasMacro(data) or (data ~= nil and data.macro_Name ~= nil and data.macro_Name ~= "")
 end
 
 ---the bar's forms or pages and every modifier, enabled on the bar or not.
@@ -291,41 +198,256 @@ local function sourceName(button, specData, specName, data)
 	end
 end
 
---gold border over the group's own. made once per group and hidden on release, groups are recycled
-local function highlight(group)
-	if not group.neuronHighlight then
-		local border = group.content:GetParent()
-		group.neuronHighlight = CreateFrame("Frame", nil, border)
-		group.neuronHighlight:SetAllPoints(border)
-		group.neuronHighlight:SetFrameLevel(border:GetFrameLevel() + 5)
-
-		--the border art doesn't get thicker when scaled, so draw it twice
-		for inset = 0, 2, 2 do
-			local line = CreateFrame("Frame", nil, group.neuronHighlight, "BackdropTemplate")
-			line:SetPoint("TOPLEFT", inset, -inset)
-			line:SetPoint("BOTTOMRIGHT", -inset, inset)
-			line:SetBackdrop({edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16})
-			line:SetBackdropBorderColor(1, 0.82, 0)
-		end
-	end
-	group.neuronHighlight:Show()
-
-	group:SetCallback("OnRelease", function(widget)
-		widget.neuronHighlight:Hide()
-	end)
+--alt1 on the default, stance1_alt1 on a form
+local function pageState(tab, modifier)
+	return tab == "homestate" and modifier or tab.."_"..modifier
 end
 
----@param onRemove? fun() @only modifier pages can be removed
-local function pageEditor(button, specIndex, specName, page, onRemove)
+-------------------------------- selection --------------------------------
+
+---marks the page in the list and its editor. scroll brings the editor to the top
+local function selectPage(page, scroll)
+	selected.page = page
+
+	for _, row in ipairs(rowPool.used) do
+		local isSelected = row.page == page
+		row.bg:SetShown(isSelected)
+		row.marker:SetShown(isSelected)
+		row.label:SetTextColor(unpack(isSelected and Style.text or Style.dim))
+	end
+
+	for editorPage, editor in pairs(view.editors) do
+		local isSelected = editorPage == page
+		editor.selectedBg:SetShown(isSelected)
+		editor.marker:SetShown(isSelected)
+	end
+
+	removeButton:SetEnabled(view.removers[page] ~= nil)
+
+	if scroll and view.editors[page] then
+		editors:ScrollTo(view.editors[page].offset)
+	end
+end
+
+-------------------------------- page editor --------------------------------
+
+local function createRow(parent)
+	local row = CreateFrame("Button", nil, parent)
+	row:SetHeight(Style.rowHeight)
+
+	row.bg = row:CreateTexture(nil, "BACKGROUND")
+	row.bg:SetAllPoints()
+	row.bg:SetColorTexture(unpack(Style.selected))
+
+	row.marker = row:CreateTexture(nil, "ARTWORK")
+	row.marker:SetColorTexture(unpack(Style.accent))
+	row.marker:SetPoint("TOPLEFT")
+	row.marker:SetPoint("BOTTOMLEFT")
+	row.marker:SetWidth(2)
+
+	local hover = row:CreateTexture(nil, "HIGHLIGHT")
+	hover:SetAllPoints()
+	hover:SetColorTexture(unpack(Style.hover))
+
+	row.label = UI.Text(row)
+	row.label:SetPoint("LEFT", 8, 0)
+	row.label:SetPoint("RIGHT", -4, 0)
+	row.label:SetWordWrap(false)
+
+	row:SetScript("OnClick", function(self)
+		local editor = view.editors[self.page]
+		if editor and editor.collapsed then
+			editor.onToggle()
+		end
+		selectPage(self.page, true)
+	end)
+	return row
+end
+
+local function createPageEditor(parent)
+	local editor = CreateFrame("Frame", nil, parent)
+	Style.Flat(editor, Style.panel)
+
+	--selected like a row in the page list
+	editor.selectedBg = editor:CreateTexture(nil, "BACKGROUND", nil, -7)
+	editor.selectedBg:SetAllPoints()
+	editor.selectedBg:SetColorTexture(unpack(Style.selected))
+
+	editor.marker = editor:CreateTexture(nil, "ARTWORK")
+	editor.marker:SetColorTexture(unpack(Style.accent))
+	editor.marker:SetPoint("TOPLEFT")
+	editor.marker:SetPoint("BOTTOMLEFT")
+	editor.marker:SetWidth(2)
+
+	--the title row, which folds a modifier page away
+	editor.header = CreateFrame("Button", nil, editor)
+	editor.header:SetHeight(Style.rowHeight)
+	editor.header:SetScript("OnClick", function()
+		editor.onToggle()
+	end)
+
+	editor.arrow = UI.Text(editor.header, Style.fontLarge, Style.dim)
+	editor.arrow:SetPoint("LEFT")
+	editor.arrow:SetWidth(12)
+	editor.arrow:SetJustifyH("CENTER")
+
+	editor.title = UI.Text(editor.header, nil, Style.accent)
+	editor.title:SetWordWrap(false)
+
+
+	editor.notice = UI.Text(editor, Style.fontSmall, Style.dim)
+	editor.notice:SetWordWrap(true)
+
+	--opens the icon selector
+	editor.iconFrame = CreateFrame("Button", nil, editor)
+	Style.Flat(editor.iconFrame, Style.field)
+	editor.iconFrame:SetSize(ICON_SIZE, ICON_SIZE)
+	editor.icon = editor.iconFrame:CreateTexture(nil, "ARTWORK")
+	editor.icon:SetPoint("TOPLEFT", 1, -1)
+	editor.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+	local iconHover = editor.iconFrame:CreateTexture(nil, "HIGHLIGHT")
+	iconHover:SetAllPoints()
+	iconHover:SetColorTexture(unpack(Style.hover))
+	editor.iconFrame:SetScript("OnClick", function()
+		selectPage(editor.page)
+		NeuronGUI:OpenIconSelector(function(icon)
+			editor.onIcon(icon)
+		end)
+	end)
+
+	editor.labelCaption = UI.Text(editor, Style.fontSmall, Style.dim)
+	editor.labelCaption:SetText("Edit Label")
+	editor.labelBox = UI.EditBox(editor, function(text)
+		editor.onLabel(text)
+	end)
+
+	editor.macroCaption = UI.Text(editor, Style.fontSmall, Style.dim)
+	editor.macroCaption:SetText("Edit Macro")
+	editor.macroBox = UI.MultiLineEditBox(editor, 4, function(text)
+		editor.onMacro(text)
+	end)
+
+	editor.resetIcon = UI.Button(editor, "Reset Icon", function()
+		editor.onResetIcon()
+	end)
+
+	--everything under the title row
+	editor.parts = {
+		editor.notice, editor.iconFrame, editor.labelCaption, editor.labelBox,
+		editor.macroCaption, editor.macroBox, editor.resetIcon,
+	}
+
+	---collapsible pages show + or - and fold on a click on their title
+	function editor:SetCollapsed(collapsible, collapsed)
+		self.collapsed = collapsible and collapsed
+		self.arrow:SetShown(collapsible)
+		self.arrow:SetText(self.collapsed and "+" or "-")
+		self.header:EnableMouse(collapsible)
+		if self.collapsed then
+			self.labelBox:ClearFocus()
+			self.macroBox.editBox:ClearFocus()
+		end
+	end
+
+	--working in a page selects it, where it is
+	for _, box in ipairs({editor.labelBox, editor.macroBox.editBox}) do
+		box:HookScript("OnEditFocusGained", function()
+			selectPage(editor.page)
+		end)
+	end
+	editor:EnableMouse(true)
+	editor:SetScript("OnMouseDown", function()
+		selectPage(editor.page)
+	end)
+
+	function editor:OnRelease()
+		self.labelBox:ClearFocus()
+		self.macroBox.editBox:ClearFocus()
+	end
+
+	return editor
+end
+
+---places the editor's parts for a width and returns its height
+local function layoutPageEditor(editor, width)
+	local pad, gap = Style.padding, Style.gap
+	local y = pad
+
+	editor.header:ClearAllPoints()
+	editor.header:SetPoint("TOPLEFT", pad, -y)
+	editor.header:SetPoint("TOPRIGHT", -pad, -y)
+	editor.title:ClearAllPoints()
+	editor.title:SetPoint("LEFT", editor.header, "LEFT", editor.arrow:IsShown() and 16 or 0, 0)
+	editor.title:SetPoint("RIGHT", editor.header, "RIGHT")
+	y = y + Style.rowHeight
+
+	for _, part in ipairs(editor.parts) do
+		part:SetShown(not editor.collapsed)
+	end
+	if editor.collapsed then
+		y = y + pad
+		editor:SetHeight(y)
+		return y
+	end
+	editor.notice:SetShown(editor.showNotice)
+	y = y + gap
+
+	if editor.showNotice then
+		editor.notice:ClearAllPoints()
+		editor.notice:SetPoint("TOPLEFT", pad, -y)
+		editor.notice:SetWidth(width - 2 * pad)
+		y = y + editor.notice:GetStringHeight() + gap
+	end
+
+	editor.iconFrame:ClearAllPoints()
+	editor.iconFrame:SetPoint("TOPLEFT", pad, -y)
+	editor.labelCaption:ClearAllPoints()
+	editor.labelCaption:SetPoint("TOPLEFT", pad + ICON_SIZE + gap, -y)
+	editor.labelBox:ClearAllPoints()
+	editor.labelBox:SetPoint("TOPLEFT", editor.labelCaption, "BOTTOMLEFT", 0, -3)
+	editor.labelBox:SetWidth(width - 2 * pad - ICON_SIZE - gap)
+	y = y + ICON_SIZE + gap
+
+	editor.macroCaption:ClearAllPoints()
+	editor.macroCaption:SetPoint("TOPLEFT", pad, -y)
+	y = y + editor.macroCaption:GetStringHeight() + 3
+	editor.macroBox:ClearAllPoints()
+	editor.macroBox:SetPoint("TOPLEFT", pad, -y)
+	editor.macroBox:SetWidth(width - 2 * pad)
+	y = y + editor.macroBox:GetHeight() + gap
+
+	editor.resetIcon:ClearAllPoints()
+	editor.resetIcon:SetPoint("TOPLEFT", pad, -y)
+	y = y + Style.rowHeight + pad
+
+	editor:SetHeight(y)
+	return y
+end
+
+---stacks the editors in the scroll area, remembering where each starts
+local function layoutEditors()
+	local width = editors:GetContentWidth()
+	local y = 0
+	for _, page in ipairs(view.pages) do
+		local editor = view.editors[page]
+		editor:ClearAllPoints()
+		editor:SetPoint("TOPLEFT", 0, -y)
+		editor:SetWidth(width)
+		editor.offset = y
+		y = y + layoutPageEditor(editor, width) + Style.gap
+	end
+	editors:SetContentHeight(math.max(0, y - Style.gap))
+end
+
+---@param collapsible boolean @modifier pages fold
+local function bindPageEditor(editor, button, specIndex, specName, page, collapsible)
 	local bar = button.bar
 	local multiSpec = bar:GetMultiSpec()
 	local specData = button.DB[specIndex]
 	local own = rawget(specData, page)
 
-	local editor = AceGUI:Create("InlineGroup")
-	editor:SetTitle(specIndex == "default" and pageName(page) or specName.." - "..pageName(page))
-	editor:SetFullWidth(true)
-	editor:SetLayout("Flow")
+	editor.page = page
+	editor.title:SetText(specIndex == "default" and pageName(page) or specName.." - "..pageName(page))
 
 	local function update(fields)
 		local data = specData[page]
@@ -342,85 +464,73 @@ local function pageEditor(button, specIndex, specName, page, onRemove)
 		bar:Load()
 	end
 
-	if not hasMacro(own) then
-		local fallback = button:GetResolvedData(page, specData)
-		local notice = AceGUI:Create("Label")
-		notice:SetFullWidth(true)
-		notice:SetColor(0.6, 0.6, 0.6)
-		local source = hasMacro(fallback) and sourceName(button, specData, specName, fallback)
-		notice:SetText(source and string.format(L["ButtonEditor_Inherits"], source) or L["ButtonEditor_Empty"])
-		editor:AddChild(notice)
-	end
-
-	local icon = AceGUI:Create("Icon")
-	icon:SetImageSize(48, 48)
-	icon:SetWidth(60)
 	local function refreshIcon()
 		local data = rawget(specData, page)
 		if not hasMacro(data) then
 			data = button:GetResolvedData(page, specData)
 		end
-		icon:SetImage(button:GetAppearance(data) or "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK")
+		editor.icon:SetTexture(button:GetAppearance(data) or "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK")
 	end
 	refreshIcon()
-	editor:AddChild(icon)
 
-	local labelBox = AceGUI:Create("EditBox")
-	labelBox:SetLabel("Edit Label")
-	labelBox:SetRelativeWidth(0.75)
-	labelBox:SetText(own and own.macro_Name or "")
-	labelBox:DisableButton(true)
-	labelBox:SetCallback("OnTextChanged", function(_, _, text)
-		update{macro_Name = text}
-	end)
-	editor:AddChild(labelBox)
-
-	local macroBox = AceGUI:Create("MultiLineEditBox")
-	macroBox:SetLabel("Edit Macro")
-	macroBox:SetFullWidth(true)
-	macroBox:SetNumLines(4)
-	macroBox:SetText(own and type(own.macro_Text) == "string" and own.macro_Text or "")
-	macroBox:DisableButton(true)
-	macroBox:SetCallback("OnTextChanged", function(_, _, text)
-		update{macro_Text = text}
-		refreshIcon()
-	end)
-	editor:AddChild(macroBox)
-
-	local resetIconButton = AceGUI:Create("Button")
-	resetIconButton:SetText("Reset Icon")
-	resetIconButton:SetWidth(140)
-	resetIconButton:SetCallback("OnClick", function()
-		update{macro_Icon = false}
-		refreshIcon()
-	end)
-	editor:AddChild(resetIconButton)
-
-	if onRemove then
-		local removeButton = AceGUI:Create("Button")
-		removeButton:SetText(L["Remove Modifier"])
-		removeButton:SetWidth(140)
-		removeButton:SetCallback("OnClick", onRemove)
-		editor:AddChild(removeButton)
+	--without a macro of its own, the one it uses shows grayed out
+	local fallback
+	editor.showNotice = not hasMacro(own)
+	if editor.showNotice then
+		fallback = button:GetResolvedData(page, specData)
+		local source = hasMacro(fallback) and sourceName(button, specData, specName, fallback)
+		editor.notice:SetText(source and string.format(L["ButtonEditor_Inherits"], source) or L["ButtonEditor_Empty"])
+		if not source then
+			fallback = nil
+		end
 	end
 
-	return editor
+	editor.labelBox:SetText(own and own.macro_Name or "")
+	editor.labelBox:SetPlaceholder(fallback and fallback.macro_Name)
+	editor.macroBox:SetText(own and type(own.macro_Text) == "string" and own.macro_Text or "")
+	editor.macroBox:SetPlaceholder(fallback and type(fallback.macro_Text) == "string" and fallback.macro_Text)
+
+	editor.onLabel = function(text)
+		update{macro_Name = text}
+	end
+	editor.onMacro = function(text)
+		update{macro_Text = text}
+		refreshIcon()
+	end
+	editor.onResetIcon = function()
+		update{macro_Icon = false}
+		refreshIcon()
+	end
+	editor.onIcon = function(icon)
+		update{macro_Icon = icon}
+		refreshIcon()
+	end
+	--modifier pages fold, and start folded without text
+	local key = specIndex..":"..page
+	local isExpanded = expanded[key]
+	if isExpanded == nil then
+		isExpanded = hasText(own)
+	end
+	editor:SetCollapsed(collapsible, not isExpanded)
+	editor.onToggle = function()
+		expanded[key] = editor.collapsed
+		editor:SetCollapsed(true, not editor.collapsed)
+		layoutEditors()
+		selectPage(page)
+	end
 end
 
---alt1 on the default, stance1_alt1 on a form
-local function pageState(tab, modifier)
-	return tab == "homestate" and modifier or tab.."_"..modifier
-end
+-------------------------------- tab --------------------------------
 
 ---the default's or a form's own page, then a page per modifier the row uses
-local function fillTab(container, button, specIndex, specName, forms, modifiers)
+local function fillTab(button, specIndex, specName, forms, modifiers)
 	local bar = button.bar
 	local multiSpec = bar:GetMultiSpec()
 	local tab = selected.tab
 	local tabStates = {"homestate", unpack(forms)}
 
 	--a circle's buttons are all one row
-	local position, row = buttonPosition(button)
+	local _, row = buttonPosition(button)
 	local rowButtons = {}
 	for _, other in ipairs(bar.buttons) do
 		if select(2, buttonPosition(other)) == row then
@@ -458,93 +568,54 @@ local function fillTab(container, button, specIndex, specName, forms, modifiers)
 	end
 
 	local pages, modifierOf = {tab}, {}
-	local available, availableOrder = {}, {}
+	view.available = {}
 	for _, modifier in ipairs(modifiers) do
 		if inUse(modifier) then
 			local state = pageState(tab, modifier)
 			table.insert(pages, state)
 			modifierOf[state] = modifier
 		else
-			available[modifier] = stateName(modifier)
-			table.insert(availableOrder, modifier)
+			table.insert(view.available, modifier)
 		end
 	end
+	view.pages = pages
 
 	if not tContains(pages, selected.page) then
 		selected.page = tab
 	end
 
-	-------------------------------- page list --------------------------------
-	local leftColumn = AceGUI:Create("SimpleGroup")
-	leftColumn:SetRelativeWidth(0.28)
-	leftColumn:SetLayout("NeuronLeftColumn")
-
-	local location = AceGUI:Create("Label")
-	local font, size, flags = GameFontNormal:GetFont()
-	location:SetFont(font, size + 2, flags)
-	location:SetColor(NORMAL_FONT_COLOR:GetRGB())
-	location:SetText(row and string.format(L["ButtonEditor_Location"], position, row) or string.format(L["ButtonEditor_Button"], position))
-	leftColumn:AddChild(location)
-
-	local divider = AceGUI:Create("Heading")
-	divider:SetText("")
-	leftColumn:AddChild(divider)
-
-	local pageList = AceGUI:Create("InlineGroup")
-	pageList:SetTitle(L["Modifiers"])
-	pageList:SetLayout("NeuronSpacedList")
-
-	for _, page in ipairs(pages) do
-		local item = AceGUI:Create("InteractiveLabel")
-		item:SetFullWidth(true)
-		--labels set a color on creation, which covers the font's gold
-		item:SetFontObject(GameFontNormal)
-		if page == selected.page then
-			item:SetColor(1, 1, 1)
-		else
-			item:SetColor(NORMAL_FONT_COLOR:GetRGB())
+	view.addModifier = function(modifier)
+		--the pages only work with the modifier on for the bar
+		local barState = modifier:match("^%a+")
+		if not bar.data[barState] then
+			bar:SetState(barState, true, true)
 		end
-		item:SetText(stateName(modifierOf[page] or tab))
-		item:SetHighlight("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-		item:SetCallback("OnClick", function()
-			selected.page = page
-			deferRender()
-		end)
-		pageList:AddChild(item)
+
+		setAdded(modifier, true)
+		selected.page = pageState(tab, modifier)
+		expanded[specIndex..":"..selected.page] = true
+		render()
 	end
 
-	if #availableOrder > 0 then
-		local addDropdown = AceGUI:Create("Dropdown")
-		addDropdown:SetFullWidth(true)
-		addDropdown:SetLabel(L["Add Modifier"])
-		addDropdown:SetList(available, availableOrder)
-		addDropdown:SetCallback("OnValueChanged", function(_, _, modifier)
-			--the pages only work with the modifier on for the bar
-			local barState = modifier:match("^%a+")
-			if not bar.data[barState] then
-				bar:SetState(barState, true, true)
-			end
-
-			setAdded(modifier, true)
-			selected.page = pageState(tab, modifier)
-			deferRender()
-		end)
-		pageList:AddChild(addDropdown)
+	-------------------------------- page list --------------------------------
+	local previous
+	for _, page in ipairs(pages) do
+		local item = rowPool:Acquire()
+		item.page = page
+		item.label:SetText(stateName(modifierOf[page] or tab))
+		if previous then
+			item:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -2)
+			item:SetPoint("TOPRIGHT", previous, "BOTTOMRIGHT", 0, -2)
+		else
+			item:SetPoint("TOPLEFT")
+			item:SetPoint("TOPRIGHT")
+		end
+		previous = item
 	end
 
-	leftColumn:AddChild(pageList)
-	container:AddChild(leftColumn)
+	addButton:SetEnabled(#view.available > 0)
 
 	-------------------------------- macros --------------------------------
-	local macros = AceGUI:Create("SimpleGroup")
-	macros:SetLayout("Fill")
-	container:AddChild(macros)
-
-	local scroll = AceGUI:Create("ScrollFrame")
-	scroll:SetLayout("Flow")
-	macros:AddChild(scroll)
-
-	local selectedEditor
 	for _, page in ipairs(pages) do
 		--clears the modifier on every button in the row, the default and every form
 		local modifier = modifierOf[page]
@@ -565,49 +636,158 @@ local function fillTab(container, button, specIndex, specName, forms, modifiers)
 			end)
 		end or nil
 
-		local editor = pageEditor(button, specIndex, specName, page, onRemove)
-		if page == selected.page then
-			highlight(editor)
-			selectedEditor = editor
-		end
-		scroll:AddChild(editor)
+		local editor = editorPool:Acquire()
+		bindPageEditor(editor, button, specIndex, specName, page, modifier ~= nil)
+		view.editors[page] = editor
+		view.removers[page] = onRemove
 	end
 
-	--once the layout has its height
-	if selectedEditor and selected.page ~= tab then
-		local count = renderCount
-		C_Timer.After(0, function()
-			if count ~= renderCount then
-				return
-			end
-			local viewHeight, height = scroll.scrollframe:GetHeight(), scroll.content:GetHeight()
-			if height > viewHeight then
-				local offset = scroll.content:GetTop() - selectedEditor.frame:GetTop()
-				scroll.scrollbar:SetValue(math.min(1000, math.floor(offset / (height - viewHeight) * 1000)))
-			end
-		end)
+	layoutEditors()
+	selectPage(selected.page, true)
+end
+
+-------------------------------- window --------------------------------
+
+---the tabs are only there when there are forms
+local function placeBody()
+	local top = 0
+	if specRow:IsShown() then
+		top = top + specRow:GetHeight() + Style.gap
 	end
+	if tabs:IsShown() then
+		tabs:ClearAllPoints()
+		tabs:SetPoint("TOPLEFT", 0, -top)
+		tabs:SetPoint("TOPRIGHT", 0, -top)
+		top = top + tabs:GetHeight() + Style.gap
+	end
+	body:ClearAllPoints()
+	body:SetPoint("TOPLEFT", 0, -top)
+	body:SetPoint("BOTTOMRIGHT")
+end
+
+local function createWindow()
+	window = UI.Window("NeuronButtonEditorFrame", L["Button Editor"])
+	window:SetSize(660, 700)
+	window:SetMinSize(560, 420)
+	window:SetScript("OnHide", function()
+		NeuronGUI:CloseIconSelector()
+		if Neuron.buttonEditMode then
+			Neuron:ToggleButtonEditMode(false)
+		end
+	end)
+
+	local content = window.content
+
+	emptyText = UI.Text(content, nil, Style.dim)
+	emptyText:SetPoint("TOPLEFT")
+	emptyText:SetText(L["ButtonEditor_SelectButton"])
+
+	-------------------------------- spec and modifiers --------------------------------
+	specRow = CreateFrame("Frame", nil, content)
+	specRow:SetPoint("TOPLEFT")
+	specRow:SetPoint("TOPRIGHT")
+	specRow:SetHeight(Style.rowHeight)
+
+	specLabel = UI.Text(specRow, nil, Style.dim)
+	specLabel:SetPoint("LEFT")
+	specLabel:SetText(L["Specialization"])
+
+	specDropdown = UI.Dropdown(specRow, function(value)
+		selected.spec = value
+		render()
+	end)
+	specDropdown:SetPoint("LEFT", specLabel, "RIGHT", Style.gap * 2, 0)
+	specDropdown:SetWidth(220)
+
+	addButton = UI.MenuButton(specRow, L["Add Modifier"], function(root)
+		for _, modifier in ipairs(view.available) do
+			root:CreateButton(stateName(modifier), function()
+				view.addModifier(modifier)
+			end)
+		end
+	end)
+	--room for the arrow
+	addButton:SetWidth(addButton:GetFontString():GetStringWidth() + 40)
+
+	--removes the selected page's modifier
+	removeButton = UI.Button(specRow, L["Remove Modifier"], function()
+		view.removers[selected.page]()
+	end)
+	removeButton:SetPoint("LEFT", addButton, "RIGHT", Style.gap, 0)
+
+	-------------------------------- default and forms --------------------------------
+	tabs = UI.Tabs(content, function(value)
+		selected.tab = value
+		selected.page = nil
+		render()
+	end)
+
+	body = CreateFrame("Frame", nil, content)
+
+	-------------------------------- page list --------------------------------
+	local left = CreateFrame("Frame", nil, body)
+	left:SetPoint("TOPLEFT")
+	left:SetPoint("BOTTOMLEFT")
+
+	rowPool = UI.Pool(function()
+		return createRow(left)
+	end)
+
+	-------------------------------- macros --------------------------------
+	editors = UI.ScrollArea(body)
+	editors:SetPoint("TOPLEFT", left, "TOPRIGHT", Style.padding, 0)
+	editors:SetPoint("BOTTOMRIGHT")
+	editorPool = UI.Pool(function()
+		return createPageEditor(editors.child)
+	end)
+
+	--the selected page stays in view as the window gets its size
+	editors.OnResize = function()
+		layoutEditors()
+		if selected.page then
+			selectPage(selected.page, true)
+		end
+	end
+
+	body:SetScript("OnSizeChanged", function(_, width)
+		left:SetWidth(math.floor(width * 0.28))
+	end)
 end
 
 function render()
-	if not window then
+	if not window or not window:IsShown() then
 		return
 	end
-	renderCount = renderCount + 1
-	window:ReleaseChildren()
+
+	--a pick would go to a page that is no longer on show
+	NeuronGUI:CloseIconSelector()
+
+	rowPool:ReleaseAll()
+	editorPool:ReleaseAll()
+	wipe(view.editors)
+	wipe(view.removers)
+	view.pages = {}
 
 	local button = Neuron.currentButton
 	if not button or button.bar.class ~= "ActionBar" then
-		window:SetStatusText(L["ButtonEditor_SelectButton"])
-		local label = AceGUI:Create("Label")
-		label:SetFullWidth(true)
-		label:SetText(L["ButtonEditor_SelectButton"])
-		window:AddChild(label)
+		window:SetStatus(L["ButtonEditor_SelectButton"])
+		specRow:Hide()
+		tabs:Hide()
+		body:Hide()
+		emptyText:Show()
 		return
 	end
 
+	emptyText:Hide()
+	body:Show()
+
+	if button ~= expandedButton then
+		wipe(expanded)
+		expandedButton = button
+	end
+
 	local bar = button.bar
-	window:SetStatusText(string.format(L["ButtonEditor_Status"], bar:GetBarName(), button.id))
+	window:SetStatus(string.format(L["ButtonEditor_Status"], bar:GetBarName(), button.id))
 
 	-------------------------------- spec --------------------------------
 	local specs, activeSpec = getSpecs(bar)
@@ -623,27 +803,25 @@ function render()
 	spec = spec or active or specs[1]
 	selected.spec = spec.index
 
-	if #specs > 1 then
-		local list, order = {}, {}
+	local hasSpecs = #specs > 1
+	if hasSpecs then
+		local items = {}
 		for _, candidate in ipairs(specs) do
-			list[tostring(candidate.index)] = candidate.name
-			table.insert(order, tostring(candidate.index))
+			table.insert(items, {value = candidate.index, text = candidate.name})
 		end
+		specDropdown:SetItems(items)
+		specDropdown:SetValue(spec.index)
+	end
+	specLabel:SetShown(hasSpecs)
+	specDropdown:SetShown(hasSpecs)
+	specRow:Show()
 
-		local specDropdown = AceGUI:Create("Dropdown")
-		specDropdown:SetLabel(L["Specialization"])
-		specDropdown:SetWidth(220)
-		specDropdown:SetList(list, order)
-		specDropdown:SetValue(tostring(spec.index))
-		specDropdown:SetCallback("OnValueChanged", function(_, _, key)
-			for _, candidate in ipairs(specs) do
-				if tostring(candidate.index) == key then
-					selected.spec = candidate.index
-				end
-			end
-			deferRender()
-		end)
-		window:AddChild(specDropdown)
+	--right of the spec, or first in the row without one
+	addButton:ClearAllPoints()
+	if hasSpecs then
+		addButton:SetPoint("LEFT", specDropdown, "RIGHT", Style.gap * 2, 0)
+	else
+		addButton:SetPoint("LEFT")
 	end
 
 	-------------------------------- default and forms --------------------------------
@@ -656,39 +834,23 @@ function render()
 		end
 	end
 
-	local tabs = {{text = L["Default"], value = "homestate"}}
-	for _, form in ipairs(forms) do
-		table.insert(tabs, {text = stateName(form), value = form})
-	end
-
 	if not tContains(forms, selected.tab) then
 		selected.tab = "homestate"
 	end
 
-	if #tabs > 1 then
-		local tabGroup = AceGUI:Create("TabGroup")
-		tabGroup:SetFullWidth(true)
-		tabGroup:SetFullHeight(true)
-		tabGroup:SetLayout("NeuronColumns")
-		tabGroup:SetTabs(tabs)
-		tabGroup:SetCallback("OnGroupSelected", function(container, _, value)
-			if value ~= selected.tab then
-				selected.tab = value
-				selected.page = nil
-			end
-			container:ReleaseChildren()
-			fillTab(container, button, spec.index, spec.name, forms, modifiers)
-		end)
-		window:AddChild(tabGroup)
-		tabGroup:SelectTab(selected.tab)
+	if #forms > 0 then
+		local tabList = {{text = L["Default"], value = "homestate"}}
+		for _, form in ipairs(forms) do
+			table.insert(tabList, {text = stateName(form), value = form})
+		end
+		tabs:SetTabs(tabList, selected.tab)
+		tabs:Show()
 	else
-		local group = AceGUI:Create("SimpleGroup")
-		group:SetFullWidth(true)
-		group:SetFullHeight(true)
-		group:SetLayout("NeuronColumns")
-		window:AddChild(group)
-		fillTab(group, button, spec.index, spec.name, forms, modifiers)
+		tabs:Hide()
 	end
+
+	placeBody()
+	fillTab(button, spec.index, spec.name, forms, modifiers)
 end
 
 function NeuronGUI:OpenButtonEditor()
@@ -697,45 +859,19 @@ function NeuronGUI:OpenButtonEditor()
 	end
 
 	if not window then
-		window = AceGUI:Create("Frame")
-		window:SetTitle(L["Button Editor"])
-		window:EnableResize(true)
-		if window.frame.SetResizeBounds then -- WoW 10.0
-			window.frame:SetResizeBounds(560, 420)
-		else
-			window.frame:SetMinResize(560, 420)
-		end
-		window:SetWidth(660)
-		window:SetHeight(520)
-		window:SetLayout("Flow")
-		window:SetCallback("OnClose", function(widget)
-			window = nil
-			_G.NeuronButtonEditorFrame = nil
-			AceGUI:Release(widget)
-
-			if Neuron.buttonEditMode then
-				Neuron:ToggleButtonEditMode(false)
-			end
-		end)
-
-		--closable with escape
-		_G.NeuronButtonEditorFrame = window.frame
-		if not tContains(UISpecialFrames, "NeuronButtonEditorFrame") then
-			tinsert(UISpecialFrames, "NeuronButtonEditorFrame")
-		end
+		createWindow()
 	end
+	window:Show()
 
 	render()
 end
 
 function NeuronGUI:RefreshButtonEditor()
-	if window then
-		render()
-	end
+	render()
 end
 
 function NeuronGUI:CloseButtonEditor()
 	if window then
-		window:Hide() --fires OnClose
+		window:Hide() --leaves button edit mode, see createWindow
 	end
 end

@@ -885,6 +885,9 @@ end
 ---@alias Border {[1]:number,[2]:number,[3]:number,[4]:number}|nil
 ---@alias TextureRef number|string
 
+--blizzard's question mark macro icon, which means take the icon from the macro
+local QUESTION_MARK = {[134400] = true, ["interface\\icons\\inv_misc_questionmark"] = true}
+
 --- @param data GenericSpecData
 --- @return TextureRef, Border an icon texture, and an rgb tuple, both nilable
 function ActionButton:GetAppearance(data)
@@ -898,11 +901,13 @@ function ActionButton:GetAppearance(data)
 		texture, border = self.GetSpellAppearance(spell)
 	elseif item then
 		texture, border = self.GetItemAppearance(item)
-	-- macro must go after spells and items, for blizz macro #showtooltip to work
-	elseif data.macro_Icon then
-		texture, border = data.macro_Icon, nil
-	else
-		texture, border = nil, nil
+	end
+
+	-- a picked icon wins over the macro's spell or item, as on blizzard's macros.
+	-- the question mark only shows when the macro has neither, for blizz macro #showtooltip to work
+	local icon = data.macro_Icon
+	if icon and (not texture or not QUESTION_MARK[type(icon) == "string" and icon:lower() or icon]) then
+		texture = icon
 	end
 
 	return texture, border
