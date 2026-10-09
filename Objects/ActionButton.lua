@@ -864,8 +864,6 @@ function ActionButton:UpdateIcon()
 		return
 	end
 
-	local state = self.bar.handler:GetAttribute("activestate") or "homestate"
-
 	-- if we have any issues with flyouts or other edge cases, then
 	-- then we can build our data from our ActionButton instead of using
 	-- the database values. but we need to keep GetAppearance stateless
@@ -873,7 +871,7 @@ function ActionButton:UpdateIcon()
 	---@type GenericSpecData
 	local data = (
 		self.statedata
-		and CopyTable(self:GetResolvedData(state), true)
+		and CopyTable(self:GetActiveData(), true)
 		or {macro_Text = self:GetMacroText(), macro_Icon = self:GetMacroIcon()}
 	)
 	data.actionID = self.actionID -- this is for vehicle, possession, etc
