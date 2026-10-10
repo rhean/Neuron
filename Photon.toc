@@ -1,13 +1,13 @@
 ## Interface: 120100, 16001
-## Title: Neuron
+## Title: Photon
 ## Notes: A macro-based action bar and object manager add-on
-## IconTexture: Interface\AddOns\Neuron\Images\static_icon.tga
+## IconTexture: Interface\AddOns\Photon\Images\static_icon.tga
 ## Author: Linus Olsson
 ## X-Credits: Britt W. Yazel, Connor H. Chenoweth
 ## Version: @project-version@
 ## DefaultState: enabled
 ## OptionalDeps: Masque
-## SavedVariables: NeuronProfilesDB
+## SavedVariables: PhotonProfilesDB
 ## SavedVariablesPerCharacter:
 ## X-Credits-Maintainer: Linus Olsson
 ## X-Email: rhean@gaffapower.com
@@ -17,7 +17,7 @@
 ## X-WoWI-ID: TODO
 
 Libs\embeds.xml
-Localizations\Neuron_Localizations.xml
+Localizations\Photon_Localizations.xml
 
 Utilities\Array.lua
 Utilities\Spec.lua
@@ -27,10 +27,10 @@ Overlay\ButtonBinder.lua
 Overlay\ButtonEditor.lua
 Overlay\BarEditor.lua
 
-Neuron-DB-Defaults.lua
-Neuron.lua
-Neuron-States.lua
-Neuron-RegisteredBarData.lua
+Photon-DB-Defaults.lua
+Photon.lua
+Photon-States.lua
+Photon-RegisteredBarData.lua
 
 Objects\Button.lua
 Objects\Bar.lua
@@ -50,17 +50,17 @@ Objects\RepButton.lua
 Objects\CastButton.lua
 Objects\MirrorButton.lua
 
-Neuron-DisableBlizzardUI.lua
-Neuron-Console.lua
-Neuron-MinimapIcon.lua
+Photon-DisableBlizzardUI.lua
+Photon-Console.lua
+Photon-MinimapIcon.lua
 
-XML\NeuronActionButtonTemplate.xml
-XML\NeuronAnchorButtonTemplate.xml
-XML\NeuronBarTemplate.xml
-XML\NeuronOverlayFrameTemplate.xml
-XML\NeuronStatusBarTemplate.xml
+XML\PhotonActionButtonTemplate.xml
+XML\PhotonAnchorButtonTemplate.xml
+XML\PhotonBarTemplate.xml
+XML\PhotonOverlayFrameTemplate.xml
+XML\PhotonStatusBarTemplate.xml
 
-Neuron-Default-Profile.lua
-Neuron-Startup.lua
+Photon-Default-Profile.lua
+Photon-Startup.lua
 
-GUI\Neuron-GUI.xml
+GUI\Photon-GUI.xml

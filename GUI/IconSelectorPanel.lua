@@ -1,13 +1,13 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local NeuronGUI = Neuron.NeuronGUI
+local PhotonGUI = Photon.PhotonGUI
 
 local UI = addonTable.ui
 local Style = UI.Style
@@ -36,10 +36,10 @@ local builtFor
 
 local function generateIconList()
 	local known = 0
-	for _ in pairs(Neuron.spellCache) do
+	for _ in pairs(Photon.spellCache) do
 		known = known + 1
 	end
-	for _ in pairs(Neuron.itemCache) do
+	for _ in pairs(Photon.itemCache) do
 		known = known + 1
 	end
 	if known == builtFor then
@@ -66,14 +66,14 @@ local function generateIconList()
 
 	--a spell is in the cache under its name and name()
 	local seen = {}
-	for _, spell in pairs(Neuron.spellCache) do
+	for _, spell in pairs(Photon.spellCache) do
 		if not seen[spell] then
 			seen[spell] = true
 			add(spell.icon, spell.spellName)
 		end
 	end
 	--item names to item ids
-	for name, itemID in pairs(Neuron.itemCache) do
+	for name, itemID in pairs(Photon.itemCache) do
 		add(C_Item.GetItemIconByID(itemID), name)
 	end
 
@@ -155,7 +155,7 @@ local function refresh()
 end
 
 local function createWindow()
-	window = UI.Window("NeuronIconSelectorFrame", "Select an icon")
+	window = UI.Window("PhotonIconSelectorFrame", "Select an icon")
 	window:SetSize(610, 500)
 	window:SetMinSize(300, 250)
 
@@ -195,7 +195,7 @@ end
 
 ---shows every icon and calls pick with the one clicked
 ---@param pick fun(icon: number|string)
-function NeuronGUI:OpenIconSelector(pick)
+function PhotonGUI:OpenIconSelector(pick)
 	if not window then
 		createWindow()
 	end
@@ -209,7 +209,7 @@ function NeuronGUI:OpenIconSelector(pick)
 	refresh()
 end
 
-function NeuronGUI:CloseIconSelector()
+function PhotonGUI:CloseIconSelector()
 	if window then
 		window:Hide()
 	end

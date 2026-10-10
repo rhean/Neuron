@@ -1,13 +1,13 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 --------------------------------------------
 --------------Slash Functions --------------
@@ -59,13 +59,13 @@ local slashFunctions = {
 }
 
 --New Slash functionality
-function Neuron:slashHandler(input)
+function Photon:slashHandler(input)
 	if string.len(input)==0 or input:lower() == "help" then
-		Neuron:printSlashHelp()
+		Photon:printSlashHelp()
 		return
 	end
 
-	local commandAndArgs = {Neuron:GetArgs(input, 3, 1)} --split the input into the command and the arguments
+	local commandAndArgs = {Photon:GetArgs(input, 3, 1)} --split the input into the command and the arguments
 	local command = commandAndArgs[1]:lower()
 	local args = {}
 	for i = 2,#commandAndArgs do
@@ -73,13 +73,13 @@ function Neuron:slashHandler(input)
 	end
 
 	--somewhat of a hack to insert a "true" as an arg if trying to toggle the edit modes
-	if command == "config" and Neuron.barEditMode == false then
+	if command == "config" and Photon.barEditMode == false then
 		args[1] = true
 	end
-	if command == "edit" and Neuron.buttonEditMode == false then
+	if command == "edit" and Photon.buttonEditMode == false then
 		args[1] = true
 	end
-	if command == "bind" and Neuron.bindingMode == false then
+	if command == "bind" and Photon.bindingMode == false then
 		args[1] = true
 	end
 
@@ -87,11 +87,11 @@ function Neuron:slashHandler(input)
 
 		if command == slashFunctions[i][1]:lower() then
 			local func = slashFunctions[i][3]
-			local bar = Neuron.currentBar
+			local bar = Photon.currentBar
 
 			if func == "ChangeBar" then --intercept our bar assignment and reassign to the new bar, if it exists
 				local newBar
-				for _,v in pairs(Neuron.BarIndex) do
+				for _,v in pairs(Photon.BarIndex) do
 					if v.data.name == args[1] then
 						newBar = v
 						break
@@ -104,39 +104,39 @@ function Neuron:slashHandler(input)
 				end
 			end
 
-			if Neuron[func] then
-				Neuron[func](Neuron, args[1])
+			if Photon[func] then
+				Photon[func](Photon, args[1])
 			elseif bar and bar[func] then
 				--because we're calling a variable func name, we can't use the ":" notation, so we have to explicitly state the parent object as the first param
 				bar[func](bar, args[1]) --not sure what to do for more than 1 arg input
 			else
-				Neuron:Print(L["No bar selected or command invalid"])
+				Photon:Print(L["No bar selected or command invalid"])
 			end
 			return
 		end
 	end
 end
 
-function Neuron:printSlashHelp()
+function Photon:printSlashHelp()
 
-	Neuron:Print("---------------------------------------------------")
-	Neuron:Print(L["How to use"]..":   ".."/neuron".." <"..L["Command"]:lower().."> <"..L["Option"]:lower()..">")
-	Neuron:Print(L["Command List"]..":")
-	Neuron:Print("---------------------------------------------------")
+	Photon:Print("---------------------------------------------------")
+	Photon:Print(L["How to use"]..":   ".."/photon".." <"..L["Command"]:lower().."> <"..L["Option"]:lower()..">")
+	Photon:Print(L["Command List"]..":")
+	Photon:Print("---------------------------------------------------")
 
 	for i = 1,#slashFunctions do
 		--formats the output to be the command name and then the description
-		Neuron:Print(slashFunctions[i][1].." - " .."("..slashFunctions[i][2]..")")
+		Photon:Print(slashFunctions[i][1].." - " .."("..slashFunctions[i][2]..")")
 	end
 
 end
 
-function Neuron:PrintStateList()
+function Photon:PrintStateList()
 	local data = {}
 	local list
 
 	local count = 1
-	for _,v in pairs(Neuron.MANAGED_BAR_STATES) do
+	for _,v in pairs(Photon.MANAGED_BAR_STATES) do
 		data[count] = v.localizedName
 		count = count + 1
 	end
@@ -150,15 +150,15 @@ function Neuron:PrintStateList()
 		end
 	end
 
-	Neuron:Print(list..L["Custom_Option"])
+	Photon:Print(list..L["Custom_Option"])
 end
 
-function Neuron:PrintBarTypes()
-	Neuron:Print("---------------------------------------------------")
-	Neuron:Print("     "..L["How to use"]..":   ".."/neuron".." "..L["Create"]:lower().." <"..L["Option"]:lower()..">")
-	Neuron:Print("---------------------------------------------------")
+function Photon:PrintBarTypes()
+	Photon:Print("---------------------------------------------------")
+	Photon:Print("     "..L["How to use"]..":   ".."/photon".." "..L["Create"]:lower().." <"..L["Option"]:lower()..">")
+	Photon:Print("---------------------------------------------------")
 
-	for k,v in pairs(Neuron.registeredBarData) do
-		Neuron:Print("    |cff00ff00"..k..":|r "..v.barLabel)
+	for k,v in pairs(Photon.registeredBarData) do
+		Photon:Print("    |cff00ff00"..k..":|r "..v.barLabel)
 	end
 end

@@ -1,4 +1,4 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
@@ -7,7 +7,7 @@ local _, addonTable = ...
 -----------------------------------------------------------------------------
 --------------------------------- Style -------------------------------------
 -----------------------------------------------------------------------------
---the flat look of Neuron's own widgets, see Widgets.lua.
+--the flat look of Photon's own widgets, see Widgets.lua.
 --colors are {r, g, b, a}
 
 local Style = {
@@ -45,7 +45,7 @@ local SIDES = {"TOP", "BOTTOM", "LEFT", "RIGHT"}
 ---@param color? table @Style.panel when left out
 ---@param borderColor? table @Style.border when left out
 function Style.Flat(frame, color, borderColor)
-	local skin = frame.neuronFlat
+	local skin = frame.photonFlat
 	if not skin then
 		skin = {bg = frame:CreateTexture(nil, "BACKGROUND", nil, -8)}
 		skin.bg:SetAllPoints()
@@ -64,7 +64,7 @@ function Style.Flat(frame, color, borderColor)
 		skin.RIGHT:SetPoint("TOPRIGHT")
 		skin.RIGHT:SetPoint("BOTTOMRIGHT")
 		skin.RIGHT:SetWidth(1)
-		frame.neuronFlat = skin
+		frame.photonFlat = skin
 	end
 
 	skin.bg:SetColorTexture(unpack(color or Style.panel))
@@ -74,7 +74,7 @@ end
 ---recolors the border Style.Flat made
 function Style.SetBorder(frame, color)
 	for _, side in ipairs(SIDES) do
-		frame.neuronFlat[side]:SetColorTexture(unpack(color))
+		frame.photonFlat[side]:SetColorTexture(unpack(color))
 	end
 end
 
@@ -84,9 +84,9 @@ function Style.SetFlatShown(frame, shown, borderShown)
 	if borderShown == nil then
 		borderShown = shown
 	end
-	frame.neuronFlat.bg:SetShown(shown)
+	frame.photonFlat.bg:SetShown(shown)
 	for _, side in ipairs(SIDES) do
-		frame.neuronFlat[side]:SetShown(borderShown)
+		frame.photonFlat[side]:SetShown(borderShown)
 	end
 end
 

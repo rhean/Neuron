@@ -1,5 +1,5 @@
-# Neuron
-Neuron is a full-featured action Bar addon for World of Warcraft Midnight and Forever
+# Photon
+Photon is a full-featured action Bar addon for World of Warcraft Midnight and Forever
 
 ## Download:
 The addon can be downloaded at these places:
@@ -7,4 +7,4 @@ The addon can be downloaded at these places:
 * **[WowInterface](https://www.wowinterface.com/)**
 
 ## Credit:
-This is a continuation of the fantastic work of Britt W. Yazel and Ion Action Bars by Connor H. Chenoweth.
+Photon started as a fork of Neuron. This is a continuation of the fantastic work of Britt W. Yazel on Neuron, and Ion Action Bars by Connor H. Chenoweth.

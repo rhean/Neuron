@@ -1,18 +1,18 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local addonName, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local NeuronGUI = Neuron.NeuronGUI
+local PhotonGUI = Photon.PhotonGUI
 
 local UI = addonTable.ui
 local Style = UI.Style
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 -----------------------------------------------------------------------------
 --------------------------Interface Menu-------------------------------------
@@ -21,17 +21,17 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
 -- this is not the file the manages bars and buttons
 --
 -- each fooOptions function sets up a separate configuration panel
--- these panels are then loaded via NeuronGUI:LoadInterfaceOptions
+-- these panels are then loaded via PhotonGUI:LoadInterfaceOptions
 
 local function profileOptions()
-	local options = LibStub("AceDBOptions-3.0"):GetOptionsTable(Neuron.db)
+	local options = LibStub("AceDBOptions-3.0"):GetOptionsTable(Photon.db)
 
 	--enhance the database object with per spec profile features
 	--LibDualSpec only loads on WOW_PROJECT_MAINLINE, so it's missing on Forever builds that report WOW_PROJECT_CAMELOT
 	local LibDualSpec = LibStub('LibDualSpec-1.0', true)
 	if LibDualSpec then
-		LibDualSpec:EnhanceDatabase(Neuron.db, addonName)
-		LibDualSpec:EnhanceOptions(options, Neuron.db) -- enhance the profiles config panel with per spec profile features
+		LibDualSpec:EnhanceDatabase(Photon.db, addonName)
+		LibDualSpec:EnhanceOptions(options, Photon.db) -- enhance the profiles config panel with per spec profile features
 	end
 	return options
 end
@@ -83,8 +83,8 @@ local function experimentalOptions()
 						multiline = 22,
 						confirm = function() return L["ImportWarning"] end,
 						validate = false,
-						set = function(self, input) Neuron:SetSerializedAndCompressedProfile(input) end,
-						get = function() return Neuron:GetSerializedAndCompressedProfile() end,
+						set = function(self, input) Photon:SetSerializedAndCompressedProfile(input) end,
+						get = function() return Photon:GetSerializedAndCompressedProfile() end,
 						width = "full",
 					},
 				},
@@ -94,7 +94,7 @@ local function experimentalOptions()
 end
 
 local function guiOptions()
-	local DB = Neuron.db.profile
+	local DB = Photon.db.profile
 	local changes = CopyTable(DB.blizzBars)
 	local args = {
 		RevertButton = {
@@ -120,17 +120,17 @@ local function guiOptions()
 				return tCompare(DB.blizzBars, changes)
 			end,
 			func = function()
-				Neuron:ToggleBlizzUI(changes)
+				Photon:ToggleBlizzUI(changes)
 				ReloadUI()
 			end
 		},
 	}
 	for bar, _ in pairs(changes) do
 		--skip bars that aren't registered on this client, like the vehicle exit bar on Forever
-		if Neuron.registeredBarData[bar] then
+		if Photon.registeredBarData[bar] then
 		args[bar] = {
 			order = 2,
-			name = Neuron.registeredBarData[bar].barLabel,
+			name = Photon.registeredBarData[bar].barLabel,
 			desc = L["Shows / Hides the Default Blizzard UI"],
 			type = "toggle",
 			set = function(_, value)
@@ -151,7 +151,7 @@ local function guiOptions()
 				return
 			end
 			SettingsPanel:Hide()
-			open(NeuronGUI)
+			open(PhotonGUI)
 		end
 	end
 	args.BarConfig = {
@@ -159,26 +159,26 @@ local function guiOptions()
 		name = L["Bar Config"],
 		type = "execute",
 		disabled = InCombatLockdown,
-		func = openEditor(NeuronGUI.OpenBarConfig),
+		func = openEditor(PhotonGUI.OpenBarConfig),
 	}
 	args.ButtonEditor = {
 		order = -1,
 		name = L["Button Editor"],
 		type = "execute",
 		disabled = InCombatLockdown,
-		func = openEditor(NeuronGUI.OpenButtonEditor),
+		func = openEditor(PhotonGUI.OpenButtonEditor),
 	}
 
-	args.NeuronMinimapButton = {
+	args.PhotonMinimapButton = {
 		order = 0,
 		name = L["Display Minimap Button"],
 		desc = L["Toggles the minimap button."],
 		type = "toggle",
-		set =  function() Neuron:Minimap_ToggleIcon() end,
-		get = function() return not DB.NeuronIcon.hide end,
+		set =  function() Photon:Minimap_ToggleIcon() end,
+		get = function() return not DB.PhotonIcon.hide end,
 		width = "full"
 	}
-	args.NeuronOverrides = {
+	args.PhotonOverrides = {
 		name = L["Display the Blizzard UI"],
 		desc = L["Shows / Hides the Default Blizzard UI"],
 		type = "header",
@@ -363,7 +363,7 @@ local function createPanel(options)
 		local lines = kind == "multiline" and (tonumber(option.multiline) or 4)
 		local key = lines and kind..lines or kind
 		pools[key] = pools[key] or UI.Pool(function()
-			return lines and createMultiline(scroll.child, lines) or NeuronGUI.CreateOptionControl(kind, scroll.child)
+			return lines and createMultiline(scroll.child, lines) or PhotonGUI.CreateOptionControl(kind, scroll.child)
 		end)
 		local control = pools[key]:Acquire()
 		control.changed = refresh
@@ -464,11 +464,11 @@ local function createPanel(options)
 end
 
 ---This is the main entry point
-function NeuronGUI:LoadInterfaceOptions()
+function PhotonGUI:LoadInterfaceOptions()
 	local category = Settings.RegisterCanvasLayoutCategory(createPanel(guiOptions()), addonName)
 	Settings.RegisterAddOnCategory(category)
-	--keep the category ID so Neuron:ToggleMainMenu() can open the panel with Settings.OpenToCategory
-	Neuron.optionsCategoryID = category.ID
+	--keep the category ID so Photon:ToggleMainMenu() can open the panel with Settings.OpenToCategory
+	Photon.optionsCategoryID = category.ID
 
 	for _, options in ipairs({profileOptions(), experimentalOptions()}) do
 		Settings.RegisterCanvasLayoutSubcategory(category, createPanel(options), options.name)

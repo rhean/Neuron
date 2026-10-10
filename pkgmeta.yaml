@@ -1,4 +1,4 @@
-package-as: Neuron
+package-as: Photon
 
 enable-nolib-creation: no
 enable-toc-creation: yes

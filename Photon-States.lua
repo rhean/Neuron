@@ -1,17 +1,17 @@
-﻿-- Neuron is a World of Warcraft® user interface addon.
+﻿-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
-function Neuron.UpdateStanceStrings()
+function Photon.UpdateStanceStrings()
 	-- these are the results of the visibility macro conditional in the MANAGED_SECONDARY_STATES table
-	Neuron.VISIBILITY_STATES = {
+	Photon.VISIBILITY_STATES = {
 		paged1 = L["Page 1"],
 		paged2 = L["Page 2"],
 		paged3 = L["Page 3"],
@@ -61,17 +61,17 @@ function Neuron.UpdateStanceStrings()
 		swimming0 = L["Not Swimming"],
 		swimming1 = L["Swimming"],
 	}
-	Neuron.STATES = {
+	Photon.STATES = {
 		homestate = L["Home State"],
 		laststate = L["Last State"],
 		custom0 = L["Custom States"],
 		-- the pet bar state uses pet2 for "pet exists", unlike the visibility pet1
 		pet2 = L["Pet Exists"],
 	}
-	MergeTable(Neuron.STATES, Neuron.VISIBILITY_STATES)
+	MergeTable(Photon.STATES, Photon.VISIBILITY_STATES)
 
 	-- a secondary state's page, named the same in the button editor and the bar config
-	MergeTable(Neuron.STATES, {
+	MergeTable(Photon.STATES, {
 		alt1 = L["Alt Pressed"],
 		ctrl1 = L["Control Pressed"],
 		shift1 = L["Shift Pressed"],
@@ -86,22 +86,22 @@ function Neuron.UpdateStanceStrings()
 	--- devo aura, priests have shadowform, etc
 	for i=1,GetNumShapeshiftForms() do
 		local _, _, _, spellID = GetShapeshiftFormInfo(i)
-		Neuron.STATES["stance"..i] = C_Spell.GetSpellName(spellID) --Get the string name of the shapeshift form (now that shapeshifts are considered spells)
+		Photon.STATES["stance"..i] = C_Spell.GetSpellName(spellID) --Get the string name of the shapeshift form (now that shapeshifts are considered spells)
 	end
 
 	-- out of form is a page too, see Bar.FormsArePages
-	if Neuron.class == "DRUID" then
-		Neuron.STATES["stance0"] = L["No Form"]
+	if Photon.class == "DRUID" then
+		Photon.STATES["stance0"] = L["No Form"]
 	else
-		Neuron.STATES["stance0"] = L["No Stance"]
+		Photon.STATES["stance0"] = L["No Stance"]
 	end
 
 	-- stealth shows up with the GetShapeshiftFormInfo, but not the others
 	-- Melee is special cased just because that's the way it's been historically
-	if Neuron.class == "ROGUE" then
-		Neuron.STATES["stance0"] = L["Melee"]
-		Neuron.STATES["stance2"] = L["Vanish"]
-		Neuron.STATES["stance3"] = L["Shadow Dance"] --for Subelty Rogues
+	if Photon.class == "ROGUE" then
+		Photon.STATES["stance0"] = L["Melee"]
+		Photon.STATES["stance2"] = L["Vanish"]
+		Photon.STATES["stance3"] = L["Shadow Dance"] --for Subelty Rogues
 	end
 
 
@@ -110,7 +110,7 @@ function Neuron.UpdateStanceStrings()
 	-- See "RegisterAttributeDriver" and "SetAttribute"
 	-- example: if a priest is in shadowform (stance1) then
 	-- "[stance0] noshadow; [stance1] shadow" will make message="shadow"
-	Neuron.MANAGED_HOME_STATES = {
+	Photon.MANAGED_HOME_STATES = {
 		paged = {
 			modifier = "paged",
 			homestate = "paged1",
@@ -130,9 +130,9 @@ function Neuron.UpdateStanceStrings()
 			rangeStart = 1,
 			rangeStop = 8,
 			localizedName =
-				(Neuron.class == "ROGUE" and L["Stealth"]) or
-				(Neuron.class == "DRUID" and L["Shapeshift"]) or
-				(Neuron.class == "SHAMAN" and L["Shapeshift"]) or
+				(Photon.class == "ROGUE" and L["Stealth"]) or
+				(Photon.class == "DRUID" and L["Shapeshift"]) or
+				(Photon.class == "SHAMAN" and L["Shapeshift"]) or
 				L["Stance"],
 		},
 
@@ -146,7 +146,7 @@ function Neuron.UpdateStanceStrings()
 			localizedName = L["Pet"],
 		},
 	}
-	Neuron.MANAGED_SECONDARY_STATES = {
+	Photon.MANAGED_SECONDARY_STATES = {
 		alt = {
 			modifier = "alt",
 			states = "[mod:alt] alt1; laststate",
@@ -320,7 +320,7 @@ function Neuron.UpdateStanceStrings()
 		},
 	}
 
-	Neuron.MANAGED_OTHER_STATES = {
+	Photon.MANAGED_OTHER_STATES = {
 		custom = {
 			modifier = "custom",
 			states = "",
@@ -360,26 +360,26 @@ function Neuron.UpdateStanceStrings()
 	}
 
 	--Forever has no vehicles or dragonriding or extra bars
-	if Neuron.isWoWForever then
-		Neuron.MANAGED_SECONDARY_STATES.dragonriding = nil
-		Neuron.VISIBILITY_STATES.dragonriding0 = nil
-		Neuron.VISIBILITY_STATES.dragonriding1 = nil
-		Neuron.STATES.dragonriding0 = nil
-		Neuron.STATES.dragonriding1 = nil
-		Neuron.MANAGED_SECONDARY_STATES.vehicle = nil
-		Neuron.VISIBILITY_STATES.vehicle0 = nil
-		Neuron.VISIBILITY_STATES.vehicle1 = nil
-		Neuron.STATES.vehicle0 = nil
-		Neuron.STATES.vehicle1 = nil
-		Neuron.MANAGED_OTHER_STATES.extrabar = nil
-		Neuron.VISIBILITY_STATES.extrabar0 = nil
-		Neuron.VISIBILITY_STATES.extrabar1 = nil
-		Neuron.STATES.extrabar0 = nil
-		Neuron.STATES.extrabar1 = nil
+	if Photon.isWoWForever then
+		Photon.MANAGED_SECONDARY_STATES.dragonriding = nil
+		Photon.VISIBILITY_STATES.dragonriding0 = nil
+		Photon.VISIBILITY_STATES.dragonriding1 = nil
+		Photon.STATES.dragonriding0 = nil
+		Photon.STATES.dragonriding1 = nil
+		Photon.MANAGED_SECONDARY_STATES.vehicle = nil
+		Photon.VISIBILITY_STATES.vehicle0 = nil
+		Photon.VISIBILITY_STATES.vehicle1 = nil
+		Photon.STATES.vehicle0 = nil
+		Photon.STATES.vehicle1 = nil
+		Photon.MANAGED_OTHER_STATES.extrabar = nil
+		Photon.VISIBILITY_STATES.extrabar0 = nil
+		Photon.VISIBILITY_STATES.extrabar1 = nil
+		Photon.STATES.extrabar0 = nil
+		Photon.STATES.extrabar1 = nil
 	end
 
-	Neuron.MANAGED_BAR_STATES = {}
-	MergeTable(Neuron.MANAGED_BAR_STATES, Neuron.MANAGED_HOME_STATES)
-	MergeTable(Neuron.MANAGED_BAR_STATES, Neuron.MANAGED_SECONDARY_STATES)
-	MergeTable(Neuron.MANAGED_BAR_STATES, Neuron.MANAGED_OTHER_STATES)
+	Photon.MANAGED_BAR_STATES = {}
+	MergeTable(Photon.MANAGED_BAR_STATES, Photon.MANAGED_HOME_STATES)
+	MergeTable(Photon.MANAGED_BAR_STATES, Photon.MANAGED_SECONDARY_STATES)
+	MergeTable(Photon.MANAGED_BAR_STATES, Photon.MANAGED_OTHER_STATES)
 end

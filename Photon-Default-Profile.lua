@@ -1,11 +1,11 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 local Array = addonTable.utilities.Array
 
@@ -231,7 +231,7 @@ addonTable.defaultProfile.MenuBar = {
 		padH = 0,
 		padV = 0,
 
-		buttons = Array.initialize(Neuron.NUM_MENU_BUTTONS, function() return {} end),
+		buttons = Array.initialize(Photon.NUM_MENU_BUTTONS, function() return {} end),
 	}
 }
 
@@ -249,6 +249,6 @@ addonTable.defaultProfile.BagBar = {
 		x = -125,
 		y = 24,
 
-		buttons = Array.initialize(Neuron.NUM_BAG_BUTTONS, function() return {} end),
+		buttons = Array.initialize(Photon.NUM_BAG_BUTTONS, function() return {} end),
 	}
 }

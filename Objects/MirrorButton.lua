@@ -1,17 +1,17 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class MirrorButton : StatusButton @define class RepButton inherits from class StatusButton
-local MirrorButton = setmetatable({}, { __index = Neuron.StatusButton })
-Neuron.MirrorButton = MirrorButton
+local MirrorButton = setmetatable({}, { __index = Photon.StatusButton })
+Photon.MirrorButton = MirrorButton
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local mirrorWatch, mirrorBars = {}, {}
 
@@ -39,14 +39,14 @@ MirrorTimerColors["FEIGNDEATH"] = {
 };
 
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return MirrorButton @ A newly created StatusButton object
 function MirrorButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.StatusButton.new(bar, buttonID, defaults, MirrorButton, "MirrorBar", "Mirror Button")
+	local newButton = Photon.StatusButton.new(bar, buttonID, defaults, MirrorButton, "MirrorBar", "Mirror Button")
 
 	return newButton
 end
@@ -153,7 +153,7 @@ function MirrorButton:OnUpdate()
 			mirrorWatch[self.mirror].timer = self.value
 		end
 
-	elseif not Neuron.barEditMode and not Neuron.buttonEditMode then
+	elseif not Photon.barEditMode and not Photon.buttonEditMode then
 		self.alpha = self.StatusBar:GetAlpha() - CASTING_BAR_ALPHA_STEP
 		if self.alpha > 0 then
 			self.StatusBar:SetAlpha(self.alpha)
@@ -162,7 +162,7 @@ function MirrorButton:OnUpdate()
 		end
 	end
 
-	if not Neuron.barEditMode and not Neuron.buttonEditMode then
+	if not Photon.barEditMode and not Photon.buttonEditMode then
 		self.StatusBar.CenterText:SetText(self:cFunc())
 		self.StatusBar.LeftText:SetText(self:lFunc())
 		self.StatusBar.RightText:SetText(self:rFunc())

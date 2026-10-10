@@ -1,45 +1,45 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
---Neuron MinimapIcon makes use of LibDBIcon and LibDataBroker to make sure we play
+--Photon MinimapIcon makes use of LibDBIcon and LibDataBroker to make sure we play
 --nicely with LDB addons and to simplify dramatically the minimap button
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local DB
-local neuronIconLDB
+local photonIconLDB
 local icon
 
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
-function Neuron:Minimap_IconInitialize()
-	DB = Neuron.db.profile
+function Photon:Minimap_IconInitialize()
+	DB = Photon.db.profile
 
 	--show new compartment icon even when minimap icon is disabled
-	DB.NeuronIcon.showInCompartment = true
+	DB.PhotonIcon.showInCompartment = true
 
-	neuronIconLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Neuron", {
+	photonIconLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Photon", {
 		type = "launcher",
-		text = "Neuron",
-		icon = "Interface\\AddOns\\Neuron\\Images\\static_icon",
-		OnClick = function(_, button) Neuron:Minimap_OnClickHandler(button) end,
-		OnTooltipShow = function(tooltip) Neuron:Minimap_TooltipHandler(tooltip) end,
+		text = "Photon",
+		icon = "Interface\\AddOns\\Photon\\Images\\static_icon",
+		OnClick = function(_, button) Photon:Minimap_OnClickHandler(button) end,
+		OnTooltipShow = function(tooltip) Photon:Minimap_TooltipHandler(tooltip) end,
 	})
 
 	icon = LibStub("LibDBIcon-1.0")
-	icon:Register("Neuron", neuronIconLDB, DB.NeuronIcon)
+	icon:Register("Photon", photonIconLDB, DB.PhotonIcon)
 end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
-function Neuron:Minimap_OnClickHandler(button)
+function Photon:Minimap_OnClickHandler(button)
 	if InCombatLockdown() then
 		return
 	end
@@ -48,18 +48,18 @@ function Neuron:Minimap_OnClickHandler(button)
 
 	if button == "LeftButton" then
 		if IsShiftKeyDown() then
-			if not Neuron.bindingMode then
-				Neuron:ToggleBindingMode(true)
+			if not Photon.bindingMode then
+				Photon:ToggleBindingMode(true)
 			else
-				Neuron:ToggleBindingMode(false)
+				Photon:ToggleBindingMode(false)
 			end
 		else
 			--the bar editor starts bar edit mode, and closing it ends it
-			if not Neuron.barEditMode then
-				Neuron.NeuronGUI:OpenBarConfig()
+			if not Photon.barEditMode then
+				Photon.PhotonGUI:OpenBarConfig()
 			else
-				Neuron:ToggleBarEditMode(false)
-				Neuron.NeuronGUI:CloseBarConfig()
+				Photon:ToggleBarEditMode(false)
+				Photon.PhotonGUI:CloseBarConfig()
 			end
 		end
 	elseif button == "RightButton" then
@@ -69,21 +69,21 @@ function Neuron:Minimap_OnClickHandler(button)
 			elseif InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() then --this is for pre-dragonflight compatibility
 				InterfaceOptionsFrame:Hide();
 			else
-				Neuron:ToggleMainMenu()
+				Photon:ToggleMainMenu()
 			end
 		else
-			if not Neuron.buttonEditMode then
-				Neuron.NeuronGUI:OpenButtonEditor()
+			if not Photon.buttonEditMode then
+				Photon.PhotonGUI:OpenButtonEditor()
 			else
-				Neuron:ToggleButtonEditMode(false)
-				Neuron.NeuronGUI:CloseButtonEditor()
+				Photon:ToggleButtonEditMode(false)
+				Photon.PhotonGUI:CloseButtonEditor()
 			end
 		end
 	end
 end
 
-function Neuron:Minimap_TooltipHandler(tooltip)
-	tooltip:SetText("Neuron", 1, 1, 1)
+function Photon:Minimap_TooltipHandler(tooltip)
+	tooltip:SetText("Photon", 1, 1, 1)
 	--the formatting for the following strings is such that the key combo is in yellow, and the description is in white. This helps it be more readable at a glance
 	--another route would be to use AddDoubleLine, to have a left justified string and a right justified string on the same line
 	tooltip:AddLine(L["Left-Click"] .. ": " .. "|cFFFFFFFF"..L["Configure Bars"])
@@ -94,12 +94,12 @@ function Neuron:Minimap_TooltipHandler(tooltip)
 	tooltip:Show()
 end
 
-function Neuron:Minimap_ToggleIcon()
-	if DB.NeuronIcon.hide == false then
-		icon:Hide("Neuron")
-		DB.NeuronIcon.hide = true
-	elseif DB.NeuronIcon.hide == true then
-		icon:Show("Neuron")
-		DB.NeuronIcon.hide = false
+function Photon:Minimap_ToggleIcon()
+	if DB.PhotonIcon.hide == false then
+		icon:Hide("Photon")
+		DB.PhotonIcon.hide = true
+	elseif DB.PhotonIcon.hide == true then
+		icon:Show("Photon")
+		DB.PhotonIcon.hide = false
 	end
 end

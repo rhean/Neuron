@@ -1,13 +1,13 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local Array = addonTable.utilities.Array
 
@@ -23,13 +23,13 @@ end
 -----------------------------------------------------------------------------
 
 local function bar()
-	return Neuron.currentBar
+	return Photon.currentBar
 end
 
 --hidden function for options that only some bar types have, see RegisteredGUIData.lua
 local function unlessOption(kind, flag)
 	return function()
-		local data = Neuron:RegisterGUI()[bar().class]
+		local data = Photon:RegisterGUI()[bar().class]
 		return not (data and data[kind] and data[kind][flag])
 	end
 end
@@ -83,9 +83,9 @@ end
 local function visibilityToggle(state)
 	return {
 		type = "toggle",
-		name = Neuron.VISIBILITY_STATES[state],
+		name = Photon.VISIBILITY_STATES[state],
 		--rogues get stealth as their home stance state instead
-		hidden = Neuron.class == "ROGUE" and state:match("^stealth") ~= nil,
+		hidden = Photon.class == "ROGUE" and state:match("^stealth") ~= nil,
 		get = function() return not not bar().data.hidestates:find(state) end,
 		set = function(_, value) bar():SetVisibility(state, not value) end,
 	}
@@ -98,7 +98,7 @@ local function barStateToggle(state, name)
 		name = name,
 		--states only apply to action bars. rogues get stealth as their home stance state instead
 		hidden = function()
-			return bar().class ~= "ActionBar" or (Neuron.class == "ROGUE" and state == "stealth")
+			return bar().class ~= "ActionBar" or (Photon.class == "ROGUE" and state == "stealth")
 		end,
 		get = function() return not not bar().data[state] end,
 		set = function(_, value) bar():SetState(state, true, value) end,
@@ -122,8 +122,8 @@ local function barDefinitions()
 		autoHide = barToggle(L["Auto-Hide"], "GetAutoHide", "SetAutoHide", unlessOption("generalOptions", "AUTOHIDE")),
 		showGrid = barToggle(L["Show Grid"], "GetShowGrid", "SetShowGrid", unlessOption("generalOptions", "SHOWGRID")),
 		snapTo = barToggle(L["SnapTo"], "GetSnapTo", "SetSnapTo", unlessOption("generalOptions", "SNAPTO")),
-		multiSpec = barToggle(Neuron.isWoWForever and L["Dual Spec"] or L["Multi Spec"], "GetMultiSpec", "SetMultiSpec", unlessOption("generalOptions", "MULTISPEC")),
-		pages = barStateToggle("paged", Neuron.MANAGED_HOME_STATES.paged.localizedName),
+		multiSpec = barToggle(Photon.isWoWForever and L["Dual Spec"] or L["Multi Spec"], "GetMultiSpec", "SetMultiSpec", unlessOption("generalOptions", "MULTISPEC")),
+		pages = barStateToggle("paged", Photon.MANAGED_HOME_STATES.paged.localizedName),
 		hidden = barToggle(L["Hidden"], "GetBarConceal", "SetBarConceal", unlessOption("generalOptions", "HIDDEN")),
 		lockActions = barSelect(L["Lock Actions"],
 			{none = L["None"], shift = L["Shift"], ctrl = L["Ctrl"], alt = L["Alt"]},
@@ -210,17 +210,17 @@ local function barDefinitions()
 		},
 	}
 
-	for state in pairs(Neuron.VISIBILITY_STATES) do
+	for state in pairs(Photon.VISIBILITY_STATES) do
 		definitions["visibility_"..state] = visibilityToggle(state)
 	end
 
-	for state, info in pairs(Neuron.MANAGED_HOME_STATES) do
+	for state, info in pairs(Photon.MANAGED_HOME_STATES) do
 		definitions["state_"..state] = barStateToggle(state, info.localizedName)
 	end
 	--named after its page, as in the button editor. the game's bars have no page
 	local gameBars = {vehicle = true, dragonriding = true, possess = true, override = true}
-	for state, info in pairs(Neuron.MANAGED_SECONDARY_STATES) do
-		local name = not gameBars[state] and Neuron.STATES[state.."1"] or info.localizedName
+	for state, info in pairs(Photon.MANAGED_SECONDARY_STATES) do
+		local name = not gameBars[state] and Photon.STATES[state.."1"] or info.localizedName
 		definitions["state_"..state] = barStateToggle(state, name)
 	end
 
@@ -236,7 +236,7 @@ local CAST_UNITS = {"player", "pet", "target", "targettarget", "focus", "mouseov
 --the status bar button being edited: the selected one when it is on the selected bar,
 --else the selected bar's own, so a bar picked without clicking it edits itself
 local function button()
-	local bar, current = Neuron.currentBar, Neuron.currentButton
+	local bar, current = Photon.currentBar, Photon.currentButton
 	if current and current.bar == bar then
 		return current
 	end
@@ -244,7 +244,7 @@ local function button()
 end
 
 local function notCastBar()
-	return Neuron.currentBar.barType ~= "CastBar"
+	return Photon.currentBar.barType ~= "CastBar"
 end
 
 local function statusSelect(name, values, configKey, updater)
@@ -275,9 +275,9 @@ local function statusDefinitions()
 	return {
 		width = statusRange(L["Width"], 10, 1000, "width", "UpdateWidth"),
 		height = statusRange(L["Height"], 4, 200, "height", "UpdateHeight"),
-		orientation = statusSelect(L["Orientation"], Neuron.BAR_ORIENTATIONS, "orientation", "UpdateOrientation"),
-		barFill = statusSelect(L["Bar Fill"], Array.map(function(fill) return fill[3] end, Neuron.BAR_TEXTURES), "texture", "UpdateBarFill"),
-		border = statusSelect(L["Border"], Array.map(function(border) return border[1] end, Neuron.BAR_BORDERS), "border", "UpdateBorder"),
+		orientation = statusSelect(L["Orientation"], Photon.BAR_ORIENTATIONS, "orientation", "UpdateOrientation"),
+		barFill = statusSelect(L["Bar Fill"], Array.map(function(fill) return fill[3] end, Photon.BAR_TEXTURES), "texture", "UpdateBarFill"),
+		border = statusSelect(L["Border"], Array.map(function(border) return border[1] end, Photon.BAR_BORDERS), "border", "UpdateBorder"),
 		centerText = statusSelect(L["Center Text"], textValues, "cIndex", "UpdateCenterText"),
 		leftText = statusSelect(L["Left Text"], textValues, "lIndex", "UpdateLeftText"),
 		rightText = statusSelect(L["Right Text"], textValues, "rIndex", "UpdateRightText"),

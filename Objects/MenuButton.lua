@@ -1,19 +1,19 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 
 ---@class MenuButton : Button @define class MenuButton inherits from class Button
-local MenuButton = setmetatable({}, {__index = Neuron.Button})
-Neuron.MenuButton = MenuButton
+local MenuButton = setmetatable({}, {__index = Photon.Button})
+Photon.MenuButton = MenuButton
 
 --the micro buttons differ between clients, these orders match the default UI
-local MENU_BUTTON_NAMES = Neuron.isWoWForever and {
+local MENU_BUTTON_NAMES = Photon.isWoWForever and {
 	"CharacterMicroButton", "ProfessionMicroButton", "SpellbookMicroButton", "TalentMicroButton", "LegacyMicroButton",
 	"QuestLogMicroButton", "GuildMicroButton", "LFDMicroButton", "CollectionsMicroButton", "StoreMicroButton", "MainMenuMicroButton",
 } or {
@@ -30,7 +30,7 @@ for _, name in ipairs(MENU_BUTTON_NAMES) do
 	end
 end
 
-Neuron.NUM_MENU_BUTTONS = #blizzMenuButtons
+Photon.NUM_MENU_BUTTONS = #blizzMenuButtons
 
 --every MenuButton holding a blizzard button, so they can be taken back after blizzard moves them
 local activeMenuButtons = {}
@@ -100,14 +100,14 @@ local tookOver = false
 
 ---------------------------------------------------------
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return MenuButton @ A newly created MenuButton object
 function MenuButton.new(bar, buttonID, defaults)
 	---call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, MenuButton, "MenuBar", "MenuButton", "NeuronAnchorButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, MenuButton, "MenuBar", "MenuButton", "PhotonAnchorButtonTemplate")
 
 	if defaults then
 		newButton:SetDefaults(defaults)
@@ -182,7 +182,7 @@ function MenuButton:AnchorHookedButton()
 end
 
 function MenuButton:InitializeButtonSettings()
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetScale(self.bar:GetBarScale())
 	self.isShown = true
 end

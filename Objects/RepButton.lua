@@ -1,17 +1,17 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class RepButton : StatusButton @define class RepButton inherits from class StatusButton
-local RepButton = setmetatable({}, { __index = Neuron.StatusButton })
-Neuron.RepButton = RepButton
+local RepButton = setmetatable({}, { __index = Photon.StatusButton })
+Photon.RepButton = RepButton
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local RepWatch = {}
 
@@ -25,14 +25,14 @@ RepButton.sbStrings = {
 }
 
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return RepButton @ A newly created StatusButton object
 function RepButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.StatusButton.new(bar, buttonID, defaults, RepButton, "RepBar", "Rep Button")
+	local newButton = Photon.StatusButton.new(bar, buttonID, defaults, RepButton, "RepBar", "Rep Button")
 
 	return newButton
 end
@@ -217,10 +217,10 @@ function RepButton:InitializeDropDown() --Initialize the dropdown menu for choos
 	end
 
 	local menuFrame
-	if not NeuronRepDropdownMenu then --try to avoid re-creating this over again if we don't have to
-		menuFrame = CreateFrame("Frame", "NeuronRepDropdownMenu", self, "UIDropDownMenuTemplate")
+	if not PhotonRepDropdownMenu then --try to avoid re-creating this over again if we don't have to
+		menuFrame = CreateFrame("Frame", "PhotonRepDropdownMenu", self, "UIDropDownMenuTemplate")
 	else
-		menuFrame = NeuronRepDropdownMenu
+		menuFrame = PhotonRepDropdownMenu
 	end
 	menuFrame:SetPoint("BOTTOMLEFT", self, "TOPRIGHT", 0, 0)
 
@@ -344,7 +344,7 @@ function RepButton:InitializeDropDown() --Initialize the dropdown menu for choos
 	})
 
 	--build the EasyMenu with the newly created menu table "menu"
-	Neuron.EasyMenu(menu)
+	Photon.EasyMenu(menu)
 end
 
 

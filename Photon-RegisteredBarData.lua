@@ -1,15 +1,15 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
-function Neuron:RegisterBars(DB)
+function Photon:RegisterBars(DB)
   local allBars = {
     ActionBar = {
       class = "ActionBar",
@@ -17,7 +17,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Action Bar"],
       objType = "ActionButton",
       barDB = DB.ActionBar,
-      objTemplate = Neuron.ActionButton,
+      objTemplate = Photon.ActionButton,
       objMax = 250
     },
     BagBar = {
@@ -26,8 +26,8 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Bag Bar"],
       objType = "BagButton",
       barDB = DB.BagBar,
-      objTemplate = Neuron.BagButton,
-      objMax = Neuron.NUM_BAG_BUTTONS
+      objTemplate = Photon.BagButton,
+      objMax = Photon.NUM_BAG_BUTTONS
     },
     MenuBar = {
       class = "MenuBar",
@@ -35,8 +35,8 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Menu Bar"],
       objType = "MenuButton",
       barDB = DB.MenuBar,
-      objTemplate = Neuron.MenuButton,
-      objMax = Neuron.NUM_MENU_BUTTONS
+      objTemplate = Photon.MenuButton,
+      objMax = Photon.NUM_MENU_BUTTONS
     },
     PetBar = {
       class = "PetBar",
@@ -44,7 +44,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Pet Bar"],
       objType = "PetButton",
       barDB = DB.PetBar,
-      objTemplate = Neuron.PetButton,
+      objTemplate = Photon.PetButton,
       objMax = 10
     },
     XPBar = {
@@ -53,7 +53,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["XP Bar"],
       objType = "ExpButton",
       barDB = DB.XPBar,
-      objTemplate = Neuron.ExpButton,
+      objTemplate = Photon.ExpButton,
       objMax = 10
     },
     RepBar = {
@@ -62,7 +62,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Rep Bar"],
       objType = "RepButton",
       barDB = DB.RepBar,
-      objTemplate = Neuron.RepButton,
+      objTemplate = Photon.RepButton,
       objMax = 10
     },
     CastBar = {
@@ -71,7 +71,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Cast Bar"],
       objType = "CastButton",
       barDB = DB.CastBar,
-      objTemplate = Neuron.CastButton,
+      objTemplate = Photon.CastButton,
       objMax = 10
     },
     MirrorBar = {
@@ -80,7 +80,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Mirror Bar"],
       objType = "MirrorButton",
       barDB = DB.MirrorBar,
-      objTemplate = Neuron.MirrorButton,
+      objTemplate = Photon.MirrorButton,
       objMax = 10
     },
     ZoneAbilityBar = {
@@ -89,7 +89,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Zone Action Bar"],
       objType = "ZoneActionButton",
       barDB = DB.ZoneAbilityBar,
-      objTemplate = Neuron.ZoneAbilityButton,
+      objTemplate = Photon.ZoneAbilityButton,
       objMax = 5, true
     },
     ExtraBar = {
@@ -98,7 +98,7 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Extra Action Bar"],
       objType = "ExtraActionButton",
       barDB = DB.ExtraBar,
-      objTemplate = Neuron.ExtraButton,
+      objTemplate = Photon.ExtraButton,
       objMax = 1
     },
     ExitBar = {
@@ -107,13 +107,13 @@ function Neuron:RegisterBars(DB)
       barLabel = L["Vehicle Exit Bar"],
       objType = "VehicleExitButton",
       barDB = DB.ExitBar,
-      objTemplate = Neuron.ExitButton,
+      objTemplate = Photon.ExitButton,
       objMax = 1
     },
   }
 
   --Forever has no vehicles, extra action buttons or zone abilities
-  if Neuron.isWoWForever then
+  if Photon.isWoWForever then
     allBars.ExitBar = nil
     allBars.ExtraBar = nil
     allBars.ZoneAbilityBar = nil

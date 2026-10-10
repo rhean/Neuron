@@ -1,4 +1,4 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
@@ -286,7 +286,7 @@ local genericBarData = {
 addonTable.databaseDefaults = {
 	profile = {
 		blizzBars = {
-			-- ActionBar is special: showing blizz action bars doesn't hide neuron action bars
+			-- ActionBar is special: showing blizz action bars doesn't hide photon action bars
 			ActionBar = false,
 
 			BagBar = false,
@@ -306,10 +306,10 @@ addonTable.databaseDefaults = {
 
 		firstRun = true,
 
-		NeuronItemCache = {},
-		NeuronSpellCache = {},
+		PhotonItemCache = {},
+		PhotonSpellCache = {},
 
-		NeuronIcon = {hide = false},
+		PhotonIcon = {hide = false},
 
 		ActionBar = {
 			['*'] = CopyTable(genericBarData)

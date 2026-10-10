@@ -1,26 +1,26 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class ExtraButton : Button @define class ExtraButton inherits from class Button
-local ExtraButton = setmetatable({}, { __index = Neuron.Button })
-Neuron.ExtraButton = ExtraButton
+local ExtraButton = setmetatable({}, { __index = Photon.Button })
+Photon.ExtraButton = ExtraButton
 
 ----------------------------------------------------------
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return ExtraButton @ A newly created ExtraButton object
 function ExtraButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, ExtraButton, "ExtraBar", "ExtraActionButton", "NeuronActionButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, ExtraButton, "ExtraBar", "ExtraActionButton", "PhotonActionButtonTemplate")
 
 	if defaults then
 		newButton:SetDefaults(defaults)
@@ -61,7 +61,7 @@ end
 
 function ExtraButton:InitializeButtonSettings()
 	self.bar:SetShowGrid(false)
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetSkinned()
 end
 
@@ -122,7 +122,7 @@ function ExtraButton:UpdateVisibility()
 	else
 		self.isShown = false
 	end
-	Neuron.Button.UpdateVisibility(self) --call parent function
+	Photon.Button.UpdateVisibility(self) --call parent function
 end
 
 --overwrite function in parent class Button

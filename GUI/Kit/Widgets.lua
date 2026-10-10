@@ -1,4 +1,4 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
 -- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
@@ -691,7 +691,7 @@ function UI.Tabs(parent, onSelect)
 		self.value = value
 		for _, tab in ipairs(pool.used) do
 			local isSelected = tab.value == value
-			tab.neuronFlat.bg:SetColorTexture(unpack(isSelected and Style.window or Style.strip))
+			tab.photonFlat.bg:SetColorTexture(unpack(isSelected and Style.window or Style.strip))
 			tab.opening:SetShown(isSelected)
 			tab.label:SetTextColor(unpack(isSelected and Style.accent or Style.dim))
 		end
@@ -733,7 +733,7 @@ end
 
 function UI.ScrollArea(parent)
 	local scroll = CreateFrame("ScrollFrame", nil, parent)
-	scroll.neuronScroll = true
+	scroll.photonScroll = true
 
 	local child = CreateFrame("Frame", nil, scroll)
 	child:SetSize(1, 1)
@@ -813,7 +813,7 @@ end
 function UI.ForwardWheel(frame, delta)
 	local parent = frame:GetParent()
 	while parent do
-		if parent.neuronScroll then
+		if parent.photonScroll then
 			parent:Scroll(delta)
 			return
 		end
@@ -839,7 +839,7 @@ function UI.Box(parent)
 	border:SetBackdropBorderColor(unpack(BOX_EDGE_COLOR))
 	Style.SetFlatShown(box, true, false)
 	--inside the rounded corners
-	local bg = box.neuronFlat.bg
+	local bg = box.photonFlat.bg
 	bg:ClearAllPoints()
 	bg:SetPoint("TOPLEFT", BOX_BG_INSET, -BOX_BG_INSET)
 	bg:SetPoint("BOTTOMRIGHT", -BOX_BG_INSET, BOX_BG_INSET)
