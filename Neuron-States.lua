@@ -70,6 +70,17 @@ function Neuron.UpdateStanceStrings()
 	}
 	MergeTable(Neuron.STATES, Neuron.VISIBILITY_STATES)
 
+	-- a secondary state's page, named the same in the button editor and the bar config
+	MergeTable(Neuron.STATES, {
+		alt1 = L["Alt Pressed"],
+		ctrl1 = L["Control Pressed"],
+		shift1 = L["Shift Pressed"],
+		help1 = L["Friendly Target"],
+		harm1 = L["Hostile Target"],
+		raid1 = L["Raid"],
+		party1 = L["Party"],
+	})
+
 
 	--- this is actually a lot of classes. rogues stealth, paladins have
 	--- devo aura, priests have shadowform, etc
@@ -172,15 +183,6 @@ function Neuron.UpdateStanceStrings()
 			localizedName = L["Stealth"],
 		},
 
-		reaction = {
-			modifier = "reaction",
-			states = "[@target,harm] reaction1; laststate",
-			visibility = "[@target,help] reaction0; [@target,harm] reaction1",
-			rangeStart = 1,
-			rangeStop = 1,
-			localizedName = L["Reaction"],
-		},
-
 		dragonriding = {
 			modifier = "dragonriding",
 			states = "[bonusbar:5,nopossessbar] dragonriding1; laststate",
@@ -199,13 +201,21 @@ function Neuron.UpdateStanceStrings()
 			localizedName = L["Vehicle"],
 		},
 
-		group = {
-			modifier = "group",
-			states = "[group:raid] group1; [group:party] group2; laststate",
-			visibility = "[nogroup] group0; [group:raid] group1; [group:party] group2",
+		raid = {
+			modifier = "raid",
+			states = "[group:raid] raid1; laststate",
 			rangeStart = 1,
-			rangeStop = 2,
-			localizedName = L["Group"],
+			rangeStop = 1,
+			localizedName = L["Raid"],
+		},
+
+		party = {
+			modifier = "party",
+			-- a raid is a party too, the raid state has that
+			states = "[group:raid] laststate; [group:party] party1; laststate",
+			rangeStart = 1,
+			rangeStop = 1,
+			localizedName = L["Party"],
 		},
 
 		fishing = {
@@ -326,6 +336,26 @@ function Neuron.UpdateStanceStrings()
 			rangeStart = 1,
 			rangeStop = 1,
 			localizedName = L["Extrabar"],
+		},
+
+		-- only for hiding the bar now, split into raid and party for pages
+		group = {
+			modifier = "group",
+			states = "[group:raid] group1; [group:party] group2; laststate",
+			visibility = "[nogroup] group0; [group:raid] group1; [group:party] group2",
+			rangeStart = 1,
+			rangeStop = 2,
+			localizedName = L["Group"],
+		},
+
+		-- only for hiding the bar now, harm is the same page
+		reaction = {
+			modifier = "reaction",
+			states = "[@target,harm] reaction1; laststate",
+			visibility = "[@target,help] reaction0; [@target,harm] reaction1",
+			rangeStart = 1,
+			rangeStop = 1,
+			localizedName = L["Reaction"],
 		},
 	}
 

@@ -13,8 +13,12 @@ local _, addonTable = ...
 local Style = {
 	window = {0.15, 0.15, 0.16, 0.96},
 	panel = {0.12, 0.12, 0.13, 1},
+	panelLight = {0.19, 0.19, 0.2, 1},
+	box = {0.13, 0.13, 0.14, 1},
+	strip = {0.1, 0.1, 0.11, 1},
 	field = {0.04, 0.04, 0.05, 1},
 	border = {0, 0, 0, 1},
+	clear = {0, 0, 0, 0},
 	hover = {1, 1, 1, 0.06},
 	selected = {1, 1, 1, 0.12},
 	accent = {1, 0.82, 0, 1},
@@ -28,8 +32,11 @@ local Style = {
 	fontLarge = "GameFontHighlightLarge",
 
 	padding = 8,
+	--inside a light box
+	lightInset = {left = 7, top = 7, right = 4, bottom = 4},
 	gap = 6,
 	rowHeight = 22,
+	stripHeight = 20,
 }
 
 local SIDES = {"TOP", "BOTTOM", "LEFT", "RIGHT"}
@@ -68,6 +75,18 @@ end
 function Style.SetBorder(frame, color)
 	for _, side in ipairs(SIDES) do
 		frame.neuronFlat[side]:SetColorTexture(unpack(color))
+	end
+end
+
+---shows or hides the background and border Style.Flat made
+---@param borderShown? boolean @the border on its own, like shown when left out
+function Style.SetFlatShown(frame, shown, borderShown)
+	if borderShown == nil then
+		borderShown = shown
+	end
+	frame.neuronFlat.bg:SetShown(shown)
+	for _, side in ipairs(SIDES) do
+		frame.neuronFlat[side]:SetShown(borderShown)
 	end
 end
 

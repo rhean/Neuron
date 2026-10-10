@@ -327,11 +327,12 @@ function Bar.ChangeSelectedBar(newBar)
 		return
 	end
 
-	if Neuron.currentBar then
+	--the overlays only exist in bar edit mode
+	if Neuron.currentBar and Neuron.currentBar.editFrame then
 		BarEditor.deactivate(Neuron.currentBar.editFrame)
 	end
 
-	if newBar then
+	if newBar and newBar.editFrame then
 		BarEditor.activate(newBar.editFrame)
 	end
 
@@ -534,28 +535,20 @@ function Bar.FormsArePages(barState)
 	return barState == "stance"
 end
 
-function Bar:BuildStateMap(remapState)
-	local statemap, state, map, remap, homestate = "", remapState:gsub("paged", "bar")
-	local formsArePages = Bar.FormsArePages(remapState)
-	for states in gmatch(self.data.remap, "[^;]+") do
-		map, remap = (":"):split(states)
-		if remapState == "stance" and Neuron.class == "ROGUE" and map == "1" then
-			--map = "2"
-		end
-		if not homestate and not formsArePages then
-			statemap = statemap.."["..state..":"..map.."] homestate; "; homestate = true
-		else
-			local newstate = remapState..remap
+---the action bar page is a layer around stance/pet, not a home state. pages 2-6 have their own
+---keys (paged2_stance1_alt1) that fall back on page 1's, see Button:GetResolvedData
+---@param barState string
+---@return boolean
+function Bar.PagesAreLayers(barState)
+	return barState == "paged"
+end
 
-			if not formsArePages and
-					Neuron.MANAGED_BAR_STATES[remapState] and
-					Neuron.MANAGED_BAR_STATES[remapState].homestate and
-					Neuron.MANAGED_BAR_STATES[remapState].homestate == newstate then
-				statemap = statemap.."["..state..":"..map.."] homestate; "
-			else
-				statemap = statemap.."["..state..":"..map.."] "..newstate.."; "
-			end
-		end
+function Bar:BuildStateMap(remapState)
+	--only stance remaps
+	local statemap = ""
+	for states in gmatch(self.data.remap, "[^;]+") do
+		local map, remap = (":"):split(states)
+		statemap = statemap.."["..remapState..":"..map.."] "..remapState..remap.."; "
 	end
 	statemap = gsub(statemap, "; $", "")
 	return statemap
@@ -567,7 +560,8 @@ function Bar:AddStates(handler, state, conditions)
 		if Neuron.MANAGED_BAR_STATES[state] then
 			RegisterAttributeDriver(handler, "state-"..state, conditions);
 		end
-		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.FormsArePages(state) then
+		--pages go around the other home states instead, see Bar.PagesAreLayers
+		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.FormsArePages(state) and not Bar.PagesAreLayers(state) then
 			handler:SetAttribute("handler-homestate", Neuron.MANAGED_BAR_STATES[state].homestate)
 		end
 		self[state].registered = true
@@ -576,7 +570,7 @@ end
 
 function Bar:ClearStates(handler, state)
 	if state ~= "homestate" then
-		if Neuron.MANAGED_BAR_STATES[state].homestate then
+		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.PagesAreLayers(state) then
 			handler:SetAttribute("handler-homestate", nil)
 		end
 		handler:SetAttribute("state-"..state, nil)
@@ -598,7 +592,7 @@ function Bar:UpdateStates(handler)
 					self[state] = {}
 				end
 
-				if self.data.remap and (state == "paged" or state == "stance") then
+				if self.data.remap and state == "stance" then
 					statemap = self:BuildStateMap(state)
 				end
 
@@ -654,6 +648,13 @@ end
 
 function Bar:CreateHandler()
 	local HANDLER_BASE_ACTION = [[
+	--the form, or the pet page with a pet out
+	local form = self:GetAttribute("state-stance")
+	if not form and self:GetAttribute("state-pet") ~= self:GetAttribute("handler-homestate") then
+		form = self:GetAttribute("state-pet")
+	end
+	local page = self:GetAttribute("state-paged") or ""
+
 	if self:GetAttribute("state-<MODIFIER>") == "laststate" then
 
 		if self:GetAttribute("statestack") then
@@ -677,8 +678,7 @@ function Bar:CreateHandler()
 		if self:GetAttribute("state-priority") then
 			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-priority"))
 		else
-			--with the form, for its own page of this state
-			control:ChildUpdate("<MODIFIER>", (self:GetAttribute("state-last") or "homestate")..":"..(self:GetAttribute("state-stance") or ""))
+			control:ChildUpdate("<MODIFIER>", (self:GetAttribute("state-last") or "homestate")..":"..(form or "")..":"..page)
 		end
 
 	elseif self:GetAttribute("state-<MODIFIER>") then
@@ -701,7 +701,7 @@ function Bar:CreateHandler()
 		if self:GetAttribute("state-priority") then
 			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-priority"))
 		else
-			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-<MODIFIER>")..":"..(self:GetAttribute("state-stance") or ""))
+			control:ChildUpdate("<MODIFIER>", self:GetAttribute("state-<MODIFIER>")..":"..(form or "")..":"..page)
 		end
 
 	end
@@ -717,43 +717,21 @@ function Bar:CreateHandler()
 		handler:SetAttribute("_onstate-"..stateInfo.modifier, action)
 	end
 
+	--not a state on the stack: what is on show is sent again, on the new page
 	handler:SetAttribute("_onstate-paged",
 			[[
-			if self:GetAttribute("statestack") then
-
-				if self:GetAttribute("statestack"):find("paged") then
-					self:SetAttribute("statestack", self:GetAttribute("statestack"):gsub("paged%d+", self:GetAttribute("state-paged") or "homestate"))
-				elseif self:GetAttribute("statestack"):find("homestate") then
-					self:SetAttribute("statestack", self:GetAttribute("statestack"):gsub("homestate", self:GetAttribute("state-paged") or "homestate"))
-				elseif self:GetAttribute("state-paged") then
-					self:SetAttribute("statestack", self:GetAttribute("statestack")..";"..self:GetAttribute("state-paged"))
-				end
-
+			if self:GetAttribute("state-priority") then
+				control:ChildUpdate("paged", self:GetAttribute("state-priority"))
 			else
-				self:SetAttribute("statestack", self:GetAttribute("state-paged"))
-			end
-
-			if self:GetAttribute("statestack"):find("^paged") or self:GetAttribute("statestack"):find("^homestate") then
-				self:SetAttribute("assertstate", "paged")
-				self:SetAttribute("state-last", self:GetAttribute("state-paged"))
-				self:SetAttribute("state-current", self:GetAttribute("state-paged"))
-
-				if self:GetAttribute("state-priority") then
-					control:ChildUpdate("paged", self:GetAttribute("state-priority"))
-				elseif self:GetAttribute("state-paged") and self:GetAttribute("state-paged") == self:GetAttribute("handler-homestate") then
-					control:ChildUpdate("paged", "homestate:"..self:GetAttribute("state-paged"))
-				else
-					control:ChildUpdate("paged", self:GetAttribute("state-paged"))
+				local front = (";"):split(self:GetAttribute("statestack") or "homestate")
+				if front == "" or front == self:GetAttribute("handler-homestate") then
+					front = "homestate"
 				end
-
-			else
-
-				if self:GetAttribute("state-priority") then
-					control:ChildUpdate("homestate", self:GetAttribute("state-priority"))
-				else
-					control:ChildUpdate("homestate", "homestate")
+				local form = self:GetAttribute("state-stance")
+				if not form and self:GetAttribute("state-pet") ~= self:GetAttribute("handler-homestate") then
+					form = self:GetAttribute("state-pet")
 				end
-
+				control:ChildUpdate("paged", front..":"..(form or "")..":"..(self:GetAttribute("state-paged") or ""))
 			end
 			]])
 
@@ -778,12 +756,13 @@ function Bar:CreateHandler()
 				self:SetAttribute("state-last", self:GetAttribute("state-stance"))
 				self:SetAttribute("state-current", self:GetAttribute("state-stance"))
 
+				local page = self:GetAttribute("state-paged") or ""
 				if self:GetAttribute("state-priority") then
 					control:ChildUpdate("stance", self:GetAttribute("state-priority"))
 				elseif self:GetAttribute("state-stance") and self:GetAttribute("state-stance") == self:GetAttribute("handler-homestate") then
-					control:ChildUpdate("stance", "homestate:"..self:GetAttribute("state-stance"))
+					control:ChildUpdate("stance", "homestate:"..self:GetAttribute("state-stance")..":"..page)
 				else
-					control:ChildUpdate("stance", self:GetAttribute("state-stance"))
+					control:ChildUpdate("stance", (self:GetAttribute("state-stance") or "homestate").."::"..page)
 				end
 
 			else
@@ -793,7 +772,7 @@ function Bar:CreateHandler()
 				else
 					--keep the secondary state on top, with its page for the new form
 					local front = (";"):split(self:GetAttribute("statestack"))
-					control:ChildUpdate("stance", front..":"..(self:GetAttribute("state-stance") or ""))
+					control:ChildUpdate("stance", front..":"..(self:GetAttribute("state-stance") or "")..":"..(self:GetAttribute("state-paged") or ""))
 				end
 
 			end
@@ -820,12 +799,13 @@ function Bar:CreateHandler()
 				self:SetAttribute("state-last", self:GetAttribute("state-pet"))
 				self:SetAttribute("state-current", self:GetAttribute("state-pet"))
 
+				local page = self:GetAttribute("state-paged") or ""
 				if self:GetAttribute("state-priority") then
 					control:ChildUpdate("stance", self:GetAttribute("state-priority"))
 				elseif self:GetAttribute("state-pet") and self:GetAttribute("state-pet") == self:GetAttribute("handler-homestate") then
-					control:ChildUpdate("pet", "homestate:"..self:GetAttribute("state-pet"))
+					control:ChildUpdate("pet", "homestate:"..self:GetAttribute("state-pet")..":"..page)
 				else
-					control:ChildUpdate("pet", self:GetAttribute("state-pet"))
+					control:ChildUpdate("pet", (self:GetAttribute("state-pet") or "homestate").."::"..page)
 				end
 
 			else
@@ -833,7 +813,13 @@ function Bar:CreateHandler()
 				if self:GetAttribute("state-priority") then
 					control:ChildUpdate("homestate", self:GetAttribute("state-priority"))
 				else
-					control:ChildUpdate("homestate", "homestate")
+					--keep the secondary state on top, with its page for the pet when one is out
+					local front = (";"):split(self:GetAttribute("statestack"))
+					local pet = self:GetAttribute("state-pet")
+					if pet == self:GetAttribute("handler-homestate") then
+						pet = ""
+					end
+					control:ChildUpdate("pet", front..":"..(pet or "")..":"..(self:GetAttribute("state-paged") or ""))
 				end
 
 			end
@@ -844,7 +830,9 @@ function Bar:CreateHandler()
 			self:SetAttribute("assertstate", "custom")
 			self:SetAttribute("state-last", self:GetAttribute("state-custom"))
 			self:SetAttribute("state-current", self:GetAttribute("state-custom"))
-			control:ChildUpdate("alt", self:GetAttribute("state-custom"))
+			if self:GetAttribute("state-custom") then
+				control:ChildUpdate("alt", self:GetAttribute("state-custom").."::"..(self:GetAttribute("state-paged") or ""))
+			end
 			]])
 
 	handler:SetAttribute("_onstate-current",
@@ -929,6 +917,8 @@ function Bar:UpdateBarStatus(show)
 	if self.vischanged then
 		self.handler:SetAttribute("hidestates", self.data.hidestates)
 		self:UpdateBarVisibility(self.driver)
+		--the hide list is only checked on a state change, so check it now
+		self.driver:Execute([[ control:ChildUpdate("visibility", self:GetAttribute("activestates")) ]])
 		self.vischanged = false
 	end
 
@@ -1193,17 +1183,6 @@ function Bar:SetDefaults(defaults)
 end
 
 
-function Bar:SetRemap_Paged()
-	self.data.remap = ""
-
-	for i=1,6 do
-		self.data.remap = self.data.remap..i..":"..i..";"
-	end
-
-	self.data.remap = gsub(self.data.remap, ";$", "")
-end
-
-
 function Bar:SetRemap_Stance()
 	local start = tonumber(Neuron.MANAGED_BAR_STATES.stance.homestate:match("%d+"))
 
@@ -1258,21 +1237,21 @@ end
 ----------------------------------------------------------------------
 
 function Bar:OnClick(click, down)
-	if not down then
-		Bar.ChangeSelectedBar(self)
+	if down then
+		return
 	end
 
-	if IsShiftKeyDown() and not down then
+	Bar.ChangeSelectedBar(self)
+
+	if IsShiftKeyDown() then
 		BarEditor.microadjust(self.editFrame)
-	elseif click == "RightButton" and not down then
-		if not addonTable.NeuronEditor then
-			Neuron.NeuronGUI:CreateEditor()
-		end
+	elseif click == "RightButton" then
+		--opening it draws it
+		Neuron.NeuronGUI:OpenBarConfig()
+		return
 	end
 
-	if addonTable.NeuronEditor then
-		Neuron.NeuronGUI:RefreshEditor()
-	end
+	Neuron.NeuronGUI:RefreshBarConfig()
 end
 
 function Bar:OnShow()
@@ -1424,19 +1403,7 @@ function Bar:SetState(msg, gui, checked)
 			self.data[state] = not self.data[state]
 		end
 
-		if state == "paged" then
-			self.data.stance = false
-			self.data.pet = false
-
-			if self.data.paged then
-				self:SetRemap_Paged()
-			else
-				self.data.remap = false
-			end
-		end
-
 		if state == "stance" then
-			self.data.paged = false
 			self.data.pet = false
 
 
@@ -1452,7 +1419,6 @@ function Bar:SetState(msg, gui, checked)
 		end
 
 		if state == "pet" and self.data.pet then
-			self.data.paged = false
 			self.data.stance = false
 			self.data.remap = false
 		end
@@ -1503,7 +1469,6 @@ function Bar:SetState(msg, gui, checked)
 		end
 
 		if state == "pet" then
-			self.data.paged = false
 			self.data.stance = false
 		end
 

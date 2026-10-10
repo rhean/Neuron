@@ -507,9 +507,8 @@ function Neuron:ToggleButtonEditMode(show)
 					isActionBar(bar) and "corners" or "sides",
 					function(btn)
 						Neuron.Button.ChangeSelectedButton(btn)
-						if addonTable.NeuronEditor then
-							Neuron.NeuronGUI:RefreshEditor()
-						end
+						--a status bar's appearance in the bar editor follows the picked button
+						Neuron.NeuronGUI:RefreshBarConfig()
 						if isActionBar(btn.bar) then
 							Neuron.NeuronGUI:OpenButtonEditor()
 						else

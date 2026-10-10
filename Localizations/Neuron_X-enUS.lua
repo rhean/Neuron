@@ -217,6 +217,13 @@ L["Control Up"] = true
 L["Control Down"] = true
 L["Shift Up"] = true
 L["Shift Down"] = true
+L["Alt Pressed"] = true
+L["Control Pressed"] = true
+L["Shift Pressed"] = true
+L["Friendly Target"] = true
+L["Hostile Target"] = true
+L["Raid"] = true
+L["Party"] = true
 
 L["Vanish"] = true
 L["Shapeshift"] = true
@@ -373,6 +380,7 @@ L["Dual Spec"] = true
 -- New for the updated GUI
 L["Color"] = true
 L["Delete Bar"] = true
+L["DeleteBar_Confirm"] = "Warning, will permanently delete the bar and all stored data"
 L["General Configuration"] = true
 L["Bar Visibility"] = true
 L["Secondary States"] = true

@@ -31,7 +31,22 @@ local buttons = {}
 local firstRow = 0
 local onPick
 
+--how many spells and items the list was built with, it is built again when that changes
+local builtFor
+
 local function generateIconList()
+	local known = 0
+	for _ in pairs(Neuron.spellCache) do
+		known = known + 1
+	end
+	for _ in pairs(Neuron.itemCache) do
+		known = known + 1
+	end
+	if known == builtFor then
+		return
+	end
+	builtFor = known
+
 	wipe(allIcons)
 	local byIcon = {}
 	local function add(icon, name)
@@ -49,8 +64,13 @@ local function generateIconList()
 		end
 	end
 
+	--a spell is in the cache under its name and name()
+	local seen = {}
 	for _, spell in pairs(Neuron.spellCache) do
-		add(spell.icon, spell.spellName)
+		if not seen[spell] then
+			seen[spell] = true
+			add(spell.icon, spell.spellName)
+		end
 	end
 	--item names to item ids
 	for name, itemID in pairs(Neuron.itemCache) do
@@ -79,18 +99,7 @@ local function applySearch()
 end
 
 local function createIcon()
-	local button = CreateFrame("Button", nil, grid)
-	Style.Flat(button, Style.field)
-	button:SetSize(ICON_SIZE, ICON_SIZE)
-
-	button.icon = button:CreateTexture(nil, "ARTWORK")
-	button.icon:SetPoint("TOPLEFT", 1, -1)
-	button.icon:SetPoint("BOTTOMRIGHT", -1, 1)
-
-	local hover = button:CreateTexture(nil, "HIGHLIGHT")
-	hover:SetAllPoints()
-	hover:SetColorTexture(unpack(Style.hover))
-
+	local button = UI.IconButton(grid, ICON_SIZE)
 	button:SetScript("OnClick", function(self)
 		local pick = onPick
 		window:Hide()
@@ -101,6 +110,7 @@ end
 
 --lays the grid's buttons out for its size and fills them from firstRow
 local updating
+local laidOut
 local function refresh()
 	if updating then
 		return
@@ -116,14 +126,21 @@ local function refresh()
 	bar:SetValue(firstRow)
 	bar:SetShown(maxFirst > 0)
 
+	--scrolling only changes the textures
+	local size = columns..":"..rows
+	local relayout = size ~= laidOut
+	laidOut = size
+
 	for i = 1, columns * rows do
 		local button = buttons[i]
 		if not button then
 			button = createIcon()
 			buttons[i] = button
 		end
-		button:ClearAllPoints()
-		button:SetPoint("TOPLEFT", ((i - 1) % columns) * STEP, -math.floor((i - 1) / columns) * STEP)
+		if relayout then
+			button:ClearAllPoints()
+			button:SetPoint("TOPLEFT", ((i - 1) % columns) * STEP, -math.floor((i - 1) / columns) * STEP)
+		end
 
 		local texture = iconList[firstRow * columns + i]
 		button.texture = texture
@@ -157,18 +174,11 @@ local function createWindow()
 	grid:SetPoint("BOTTOMRIGHT", -12, 0)
 	grid:SetScript("OnSizeChanged", refresh)
 
-	bar = CreateFrame("Slider", nil, window.content)
+	bar = UI.ScrollBar(window.content)
 	bar:SetPoint("TOPRIGHT", grid, "TOPRIGHT", 12, 0)
 	bar:SetPoint("BOTTOMRIGHT")
-	bar:SetWidth(6)
-	bar:SetOrientation("VERTICAL")
 	bar:SetValueStep(1)
 	bar:SetObeyStepOnDrag(true)
-	bar:EnableMouse(true)
-	local thumb = bar:CreateTexture(nil, "OVERLAY")
-	thumb:SetColorTexture(1, 1, 1, 0.25)
-	thumb:SetSize(6, 30)
-	bar:SetThumbTexture(thumb)
 	bar:SetScript("OnValueChanged", function(_, value)
 		value = math.floor(value + 0.5)
 		if value ~= firstRow then

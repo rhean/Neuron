@@ -18,8 +18,8 @@ local Style = UI.Style
 -----------------------------------------------------------------------------
 --------------------------Button Editor Window-------------------------------
 -----------------------------------------------------------------------------
---a button's macros as spec > default or form > modifier pages.
---the buttons on a row share their modifiers
+--a button's macros as spec > action bar page > default or form > modifier pages.
+--the buttons on a row share their modifiers, on every page
 
 local window
 local render
@@ -27,16 +27,14 @@ local render
 --kept while the window is open, so clicking another button keeps the place
 local selected = {}
 
---what is on show: pages in order, their editors by page, how to remove each modifier page
---and the modifiers that can be added
-local view = {pages = {}, editors = {}, removers = {}, available = {}}
+--what is on show: pages in order, their editors by page and the modifiers that can be added
+local view = {pages = {}, editors = {}, available = {}}
 
---modifier pages opened or folded by hand, by spec and page, while the same button is edited.
---the rest start folded when they have no text
-local expanded, expandedButton = {}, nil
+--modifier pages folded by hand, for the same button, spec, action bar page and tab. the rest fold when empty
+local expanded, expandedFor = {}, nil
 
 --made with the window, see createWindow
-local specRow, specLabel, specDropdown, tabs, body, emptyText
+local specRow, specLabel, specDropdown, pageTabs, tabs, body, emptyText
 local addButton, removeButton, rowPool
 local editors, editorPool
 
@@ -44,6 +42,8 @@ local editors, editorPool
 local ACTION_BAR_STATES = {vehicle = true, dragonriding = true, possess = true, override = true, extrabar = true}
 
 local HOME_STATE_ORDER = {paged = 1, stance = 2, pet = 3}
+
+local ALL_PAGES = {"paged1", "paged2", "paged3", "paged4", "paged5", "paged6"}
 
 local ICON_SIZE = 42
 
@@ -84,7 +84,7 @@ local function getStateList(bar)
 			and not (Neuron.class == "ROGUE" and barState == "stealth")
 		then
 			local driver = stateInfo.states
-			if barData.remap and (barState == "paged" or barState == "stance") then
+			if barData.remap and barState == "stance" then
 				driver = driver.."; "..bar:BuildStateMap(barState)
 			end
 
@@ -126,15 +126,21 @@ local function stateName(state)
 	return Neuron.STATES[state] or state
 end
 
+--stance1_alt1, pet2_alt1, paged2_stance1_alt1
 local function pageName(state)
-	local form, modifier = state:match("^(stance%d+)_(.+)$")
+	local form, rest = state:match("^(%a+%d+)_(.+)$")
 	if form then
-		return stateName(form).." - "..stateName(modifier)
+		return stateName(form).." - "..pageName(rest)
 	end
 	return stateName(state)
 end
 
----with multiSpec the default tree is only there until a spec is picked, see Button:MoveDefaultToSpec.
+--page 1 keeps its keys, paged2_alt1 on page 2
+local function onPage(actionPage, state)
+	return (actionPage and actionPage ~= "paged1") and actionPage.."_"..state or state
+end
+
+---with multiSpec the default tree only shows until a spec is picked, see Button:CopyDefaultToSpec.
 ---Forever always has it, as spec 1
 ---@param bar Bar
 local function getSpecs(bar)
@@ -211,7 +217,7 @@ local function selectPage(page, scroll)
 
 	for _, row in ipairs(rowPool.used) do
 		local isSelected = row.page == page
-		row.bg:SetShown(isSelected)
+		row.selectedBg:SetShown(isSelected)
 		row.marker:SetShown(isSelected)
 		row.label:SetTextColor(unpack(isSelected and Style.text or Style.dim))
 	end
@@ -222,7 +228,7 @@ local function selectPage(page, scroll)
 		editor.marker:SetShown(isSelected)
 	end
 
-	removeButton:SetEnabled(view.removers[page] ~= nil)
+	removeButton:SetEnabled(view.editors[page] ~= nil and view.editors[page].onRemove ~= nil)
 
 	if scroll and view.editors[page] then
 		editors:ScrollTo(view.editors[page].offset)
@@ -231,19 +237,24 @@ end
 
 -------------------------------- page editor --------------------------------
 
+--the selected look, a light background with an accent line on the left, inset from the edge
+local function addSelection(frame, inset)
+	frame.selectedBg = frame:CreateTexture(nil, "BACKGROUND", nil, -7)
+	frame.selectedBg:SetPoint("TOPLEFT", inset, -inset)
+	frame.selectedBg:SetPoint("BOTTOMRIGHT", -inset, inset)
+	frame.selectedBg:SetColorTexture(unpack(Style.selected))
+
+	frame.marker = frame:CreateTexture(nil, "ARTWORK")
+	frame.marker:SetColorTexture(unpack(Style.accent))
+	frame.marker:SetPoint("TOPLEFT", inset, -inset)
+	frame.marker:SetPoint("BOTTOMLEFT", inset, inset)
+	frame.marker:SetWidth(2)
+end
+
 local function createRow(parent)
 	local row = CreateFrame("Button", nil, parent)
 	row:SetHeight(Style.rowHeight)
-
-	row.bg = row:CreateTexture(nil, "BACKGROUND")
-	row.bg:SetAllPoints()
-	row.bg:SetColorTexture(unpack(Style.selected))
-
-	row.marker = row:CreateTexture(nil, "ARTWORK")
-	row.marker:SetColorTexture(unpack(Style.accent))
-	row.marker:SetPoint("TOPLEFT")
-	row.marker:SetPoint("BOTTOMLEFT")
-	row.marker:SetWidth(2)
+	addSelection(row, 0)
 
 	local hover = row:CreateTexture(nil, "HIGHLIGHT")
 	hover:SetAllPoints()
@@ -265,49 +276,28 @@ local function createRow(parent)
 end
 
 local function createPageEditor(parent)
-	local editor = CreateFrame("Frame", nil, parent)
-	Style.Flat(editor, Style.panel)
+	local editor = UI.Box(parent)
+	addSelection(editor, editor.edge)
 
-	--selected like a row in the page list
-	editor.selectedBg = editor:CreateTexture(nil, "BACKGROUND", nil, -7)
-	editor.selectedBg:SetAllPoints()
-	editor.selectedBg:SetColorTexture(unpack(Style.selected))
-
-	editor.marker = editor:CreateTexture(nil, "ARTWORK")
-	editor.marker:SetColorTexture(unpack(Style.accent))
-	editor.marker:SetPoint("TOPLEFT")
-	editor.marker:SetPoint("BOTTOMLEFT")
-	editor.marker:SetWidth(2)
-
-	--the title row, which folds a modifier page away
-	editor.header = CreateFrame("Button", nil, editor)
-	editor.header:SetHeight(Style.rowHeight)
+	--folds a modifier page
+	editor.header = CreateFrame("Button", nil, editor.strip)
+	editor.header:SetAllPoints()
 	editor.header:SetScript("OnClick", function()
 		editor.onToggle()
 	end)
 
 	editor.arrow = UI.Text(editor.header, Style.fontLarge, Style.dim)
-	editor.arrow:SetPoint("LEFT")
+	editor.arrow:SetPoint("LEFT", Style.padding, 0)
 	editor.arrow:SetWidth(12)
 	editor.arrow:SetJustifyH("CENTER")
-
-	editor.title = UI.Text(editor.header, nil, Style.accent)
-	editor.title:SetWordWrap(false)
 
 
 	editor.notice = UI.Text(editor, Style.fontSmall, Style.dim)
 	editor.notice:SetWordWrap(true)
 
 	--opens the icon selector
-	editor.iconFrame = CreateFrame("Button", nil, editor)
-	Style.Flat(editor.iconFrame, Style.field)
-	editor.iconFrame:SetSize(ICON_SIZE, ICON_SIZE)
-	editor.icon = editor.iconFrame:CreateTexture(nil, "ARTWORK")
-	editor.icon:SetPoint("TOPLEFT", 1, -1)
-	editor.icon:SetPoint("BOTTOMRIGHT", -1, 1)
-	local iconHover = editor.iconFrame:CreateTexture(nil, "HIGHLIGHT")
-	iconHover:SetAllPoints()
-	iconHover:SetColorTexture(unpack(Style.hover))
+	editor.iconFrame = UI.IconButton(editor, ICON_SIZE)
+	editor.icon = editor.iconFrame.icon
 	editor.iconFrame:SetScript("OnClick", function()
 		selectPage(editor.page)
 		NeuronGUI:OpenIconSelector(function(icon)
@@ -343,10 +333,6 @@ local function createPageEditor(parent)
 		self.arrow:SetShown(collapsible)
 		self.arrow:SetText(self.collapsed and "+" or "-")
 		self.header:EnableMouse(collapsible)
-		if self.collapsed then
-			self.labelBox:ClearFocus()
-			self.macroBox.editBox:ClearFocus()
-		end
 	end
 
 	--working in a page selects it, where it is
@@ -360,37 +346,24 @@ local function createPageEditor(parent)
 		selectPage(editor.page)
 	end)
 
-	function editor:OnRelease()
-		self.labelBox:ClearFocus()
-		self.macroBox.editBox:ClearFocus()
-	end
-
 	return editor
 end
 
 ---places the editor's parts for a width and returns its height
 local function layoutPageEditor(editor, width)
 	local pad, gap = Style.padding, Style.gap
-	local y = pad
-
-	editor.header:ClearAllPoints()
-	editor.header:SetPoint("TOPLEFT", pad, -y)
-	editor.header:SetPoint("TOPRIGHT", -pad, -y)
-	editor.title:ClearAllPoints()
-	editor.title:SetPoint("LEFT", editor.header, "LEFT", editor.arrow:IsShown() and 16 or 0, 0)
-	editor.title:SetPoint("RIGHT", editor.header, "RIGHT")
-	y = y + Style.rowHeight
+	local y = editor.edge + Style.stripHeight
 
 	for _, part in ipairs(editor.parts) do
 		part:SetShown(not editor.collapsed)
 	end
 	if editor.collapsed then
-		y = y + pad
+		y = y + editor.edge
 		editor:SetHeight(y)
 		return y
 	end
 	editor.notice:SetShown(editor.showNotice)
-	y = y + gap
+	y = y + pad
 
 	if editor.showNotice then
 		editor.notice:ClearAllPoints()
@@ -439,6 +412,19 @@ local function layoutEditors()
 	editors:SetContentHeight(math.max(0, y - Style.gap))
 end
 
+--a bar loads again once typing pauses, not on every key
+local loadPending = {}
+local function loadSoon(bar)
+	if loadPending[bar] then
+		return
+	end
+	loadPending[bar] = true
+	C_Timer.After(0.2, function()
+		loadPending[bar] = nil
+		bar:Load()
+	end)
+end
+
 ---@param collapsible boolean @modifier pages fold
 local function bindPageEditor(editor, button, specIndex, specName, page, collapsible)
 	local bar = button.bar
@@ -461,15 +447,11 @@ local function bindPageEditor(editor, button, specIndex, specName, page, collaps
 		end
 
 		-- for some reason we need to do a full bar load or the buttons don't update
-		bar:Load()
+		loadSoon(bar)
 	end
 
 	local function refreshIcon()
-		local data = rawget(specData, page)
-		if not hasMacro(data) then
-			data = button:GetResolvedData(page, specData)
-		end
-		editor.icon:SetTexture(button:GetAppearance(data) or "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK")
+		editor.icon:SetTexture(button:GetAppearance(button:GetResolvedData(page, specData)) or "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK")
 	end
 	refreshIcon()
 
@@ -506,14 +488,13 @@ local function bindPageEditor(editor, button, specIndex, specName, page, collaps
 		refreshIcon()
 	end
 	--modifier pages fold, and start folded without text
-	local key = specIndex..":"..page
-	local isExpanded = expanded[key]
+	local isExpanded = expanded[page]
 	if isExpanded == nil then
 		isExpanded = hasText(own)
 	end
 	editor:SetCollapsed(collapsible, not isExpanded)
 	editor.onToggle = function()
-		expanded[key] = editor.collapsed
+		expanded[page] = editor.collapsed
 		editor:SetCollapsed(true, not editor.collapsed)
 		layoutEditors()
 		selectPage(page)
@@ -522,12 +503,24 @@ end
 
 -------------------------------- tab --------------------------------
 
----the default's or a form's own page, then a page per modifier the row uses
-local function fillTab(button, specIndex, specName, forms, modifiers)
+---the tab's own page, then one per modifier the row uses. actionPages is empty on a bar without pages
+local function fillTab(button, specIndex, specName, forms, modifiers, actionPages)
 	local bar = button.bar
 	local multiSpec = bar:GetMultiSpec()
 	local tab = selected.tab
+	local actionPage = selected.actionPage
 	local tabStates = {"homestate", unpack(forms)}
+
+	--a modifier's keys on every action bar page and form. allPages includes pages the bar has off, they keep their data
+	local function modifierKeys(modifier, allPages)
+		local keys = {}
+		for _, page in ipairs(allPages and ALL_PAGES or #actionPages > 0 and actionPages or {"paged1"}) do
+			for _, tabState in ipairs(tabStates) do
+				table.insert(keys, onPage(page, pageState(tabState, modifier)))
+			end
+		end
+		return keys
+	end
 
 	--a circle's buttons are all one row
 	local _, row = buttonPosition(button)
@@ -557,9 +550,10 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 		if added[modifier] then
 			return true
 		end
+		local keys = modifierKeys(modifier)
 		for _, rowButton in ipairs(rowButtons) do
-			for _, tabState in ipairs(tabStates) do
-				if hasMacro(rawget(rowButton.DB[specIndex], pageState(tabState, modifier))) then
+			for _, key in ipairs(keys) do
+				if hasMacro(rawget(rowButton.DB[specIndex], key)) then
 					return true
 				end
 			end
@@ -567,11 +561,11 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 		return false
 	end
 
-	local pages, modifierOf = {tab}, {}
+	local pages, modifierOf = {onPage(actionPage, tab)}, {}
 	view.available = {}
 	for _, modifier in ipairs(modifiers) do
 		if inUse(modifier) then
-			local state = pageState(tab, modifier)
+			local state = onPage(actionPage, pageState(tab, modifier))
 			table.insert(pages, state)
 			modifierOf[state] = modifier
 		else
@@ -581,7 +575,7 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 	view.pages = pages
 
 	if not tContains(pages, selected.page) then
-		selected.page = tab
+		selected.page = pages[1]
 	end
 
 	view.addModifier = function(modifier)
@@ -592,8 +586,8 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 		end
 
 		setAdded(modifier, true)
-		selected.page = pageState(tab, modifier)
-		expanded[specIndex..":"..selected.page] = true
+		selected.page = onPage(actionPage, pageState(tab, modifier))
+		expanded[selected.page] = true
 		render()
 	end
 
@@ -602,13 +596,15 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 	for _, page in ipairs(pages) do
 		local item = rowPool:Acquire()
 		item.page = page
-		item.label:SetText(stateName(modifierOf[page] or tab))
+		--the tab already names the form
+		item.label:SetText(modifierOf[page] and stateName(modifierOf[page]) or L["Default"])
 		if previous then
 			item:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -2)
 			item:SetPoint("TOPRIGHT", previous, "BOTTOMRIGHT", 0, -2)
 		else
-			item:SetPoint("TOPLEFT")
-			item:SetPoint("TOPRIGHT")
+			local inset = item:GetParent().edge + 3
+			item:SetPoint("TOPLEFT", inset, -inset)
+			item:SetPoint("TOPRIGHT", -inset, -inset)
 		end
 		previous = item
 	end
@@ -617,17 +613,18 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 
 	-------------------------------- macros --------------------------------
 	for _, page in ipairs(pages) do
-		--clears the modifier on every button in the row, the default and every form
+		--clears the modifier from the whole row, on every page and form
 		local modifier = modifierOf[page]
 		local onRemove = modifier and function()
 			StaticPopup_Show("NEURON_REMOVE_MODIFIER", stateName(modifier), string.format(L["ButtonEditor_RowOfSpec"], row or 1, specName), function()
+				local keys = modifierKeys(modifier, true)
 				for _, rowButton in ipairs(rowButtons) do
-					for _, tabState in ipairs(tabStates) do
-						rowButton.DB[specIndex][pageState(tabState, modifier)] = nil
+					for _, key in ipairs(keys) do
+						rowButton.DB[specIndex][key] = nil
 					end
 				end
 				setAdded(modifier, nil)
-				selected.page = tab
+				selected.page = pages[1]
 
 				if specIndex == "default" or Spec.active(multiSpec) == specIndex then
 					bar:Load()
@@ -638,8 +635,8 @@ local function fillTab(button, specIndex, specName, forms, modifiers)
 
 		local editor = editorPool:Acquire()
 		bindPageEditor(editor, button, specIndex, specName, page, modifier ~= nil)
+		editor.onRemove = onRemove
 		view.editors[page] = editor
-		view.removers[page] = onRemove
 	end
 
 	layoutEditors()
@@ -648,17 +645,19 @@ end
 
 -------------------------------- window --------------------------------
 
----the tabs are only there when there are forms
+---the page tabs are only there with action bar pages, the form tabs with forms
 local function placeBody()
 	local top = 0
 	if specRow:IsShown() then
 		top = top + specRow:GetHeight() + Style.gap
 	end
-	if tabs:IsShown() then
-		tabs:ClearAllPoints()
-		tabs:SetPoint("TOPLEFT", 0, -top)
-		tabs:SetPoint("TOPRIGHT", 0, -top)
-		top = top + tabs:GetHeight() + Style.gap
+	for _, tabRow in ipairs({pageTabs, tabs}) do
+		if tabRow:IsShown() then
+			tabRow:ClearAllPoints()
+			tabRow:SetPoint("TOPLEFT", 0, -top)
+			tabRow:SetPoint("TOPRIGHT", 0, -top)
+			top = top + tabRow:GetHeight() + Style.gap
+		end
 	end
 	body:ClearAllPoints()
 	body:SetPoint("TOPLEFT", 0, -top)
@@ -706,14 +705,19 @@ local function createWindow()
 			end)
 		end
 	end)
-	--room for the arrow
-	addButton:SetWidth(addButton:GetFontString():GetStringWidth() + 40)
 
 	--removes the selected page's modifier
 	removeButton = UI.Button(specRow, L["Remove Modifier"], function()
-		view.removers[selected.page]()
+		view.editors[selected.page].onRemove()
 	end)
 	removeButton:SetPoint("LEFT", addButton, "RIGHT", Style.gap, 0)
+
+	-------------------------------- action bar pages --------------------------------
+	pageTabs = UI.Tabs(content, function(value)
+		selected.actionPage = value
+		selected.page = nil
+		render()
+	end)
 
 	-------------------------------- default and forms --------------------------------
 	tabs = UI.Tabs(content, function(value)
@@ -725,7 +729,8 @@ local function createWindow()
 	body = CreateFrame("Frame", nil, content)
 
 	-------------------------------- page list --------------------------------
-	local left = CreateFrame("Frame", nil, body)
+	local left = UI.Box(body)
+	left.strip:Hide()
 	left:SetPoint("TOPLEFT")
 	left:SetPoint("BOTTOMLEFT")
 
@@ -765,13 +770,13 @@ function render()
 	rowPool:ReleaseAll()
 	editorPool:ReleaseAll()
 	wipe(view.editors)
-	wipe(view.removers)
 	view.pages = {}
 
 	local button = Neuron.currentButton
 	if not button or button.bar.class ~= "ActionBar" then
 		window:SetStatus(L["ButtonEditor_SelectButton"])
 		specRow:Hide()
+		pageTabs:Hide()
 		tabs:Hide()
 		body:Hide()
 		emptyText:Show()
@@ -780,11 +785,6 @@ function render()
 
 	emptyText:Hide()
 	body:Show()
-
-	if button ~= expandedButton then
-		wipe(expanded)
-		expandedButton = button
-	end
 
 	local bar = button.bar
 	window:SetStatus(string.format(L["ButtonEditor_Status"], bar:GetBarName(), button.id))
@@ -825,13 +825,34 @@ function render()
 	end
 
 	-------------------------------- default and forms --------------------------------
-	local forms, modifiers = {}, {}
+	--a pet bar has its pet page as a tab, in place of forms. action bar pages go around both
+	local forms, modifiers, actionPages = {}, {}, {}
 	for _, state in ipairs(getStateList(bar)) do
-		if state:match("^stance%d+$") then
+		if state:match("^paged%d+$") then
+			table.insert(actionPages, state)
+		elseif state:match("^stance%d+$") or state:match("^pet%d+$") then
 			table.insert(forms, state)
 		else
 			table.insert(modifiers, state)
 		end
+	end
+
+	-------------------------------- action bar pages --------------------------------
+	--page 1 holds everything a bar has without pages, 2-6 fall back on it
+	if #actionPages > 0 then
+		table.insert(actionPages, 1, "paged1")
+		if not tContains(actionPages, selected.actionPage) then
+			selected.actionPage = "paged1"
+		end
+		local pageList = {}
+		for _, page in ipairs(actionPages) do
+			table.insert(pageList, {text = stateName(page), value = page})
+		end
+		pageTabs:SetTabs(pageList, selected.actionPage)
+		pageTabs:Show()
+	else
+		selected.actionPage = nil
+		pageTabs:Hide()
 	end
 
 	if not tContains(forms, selected.tab) then
@@ -839,7 +860,8 @@ function render()
 	end
 
 	if #forms > 0 then
-		local tabList = {{text = L["Default"], value = "homestate"}}
+		--with a pet bar the default is what shows without a pet
+		local tabList = {{text = bar.data.pet and L["No Pet"] or L["Default"], value = "homestate"}}
 		for _, form in ipairs(forms) do
 			table.insert(tabList, {text = stateName(form), value = form})
 		end
@@ -849,8 +871,14 @@ function render()
 		tabs:Hide()
 	end
 
+	local context = tostring(button)..":"..tostring(spec.index)..":"..tostring(selected.actionPage)..":"..selected.tab
+	if context ~= expandedFor then
+		wipe(expanded)
+		expandedFor = context
+	end
+
 	placeBody()
-	fillTab(button, spec.index, spec.name, forms, modifiers)
+	fillTab(button, spec.index, spec.name, forms, modifiers, actionPages)
 end
 
 function NeuronGUI:OpenButtonEditor()
