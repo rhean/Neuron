@@ -202,6 +202,11 @@ function ActionButton:InitializeButton()
 							end
 						end
 
+						--out of form is the home state, unless it has a macro of its own to override it with
+						if msg == "stance0" and not self:GetAttribute("stance0-own") then
+							msg = "homestate"
+						end
+
 						if not self:GetAttribute(msg.."-actionID") then
 							self:SetAttribute("type", "macro")
 

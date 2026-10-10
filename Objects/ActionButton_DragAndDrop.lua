@@ -75,7 +75,7 @@ function ActionButton:OnReceiveDrag()
 
 	local cursorType, action1, action2, spellID = GetCursorInfo()
 
-	if self:HasAction() and self:GetActiveData() == self.data then --if our button being dropped onto already has content, we need to cache that content. inherited content stays where it is
+	if self:GetMacroText() ~= "" and self:GetActiveData() == self.data then --if our button being dropped onto already has content, we need to cache that content. inherited content stays where it is
 		macroCache[1] = self:GetDragAction()
 		macroCache[2] = self:GetMacroText()
 		macroCache[3] = self:GetMacroIcon()
@@ -179,7 +179,7 @@ function ActionButton:PickUpMacro()
 		macroDrag = CopyTable(macroCache)
 		wipe(macroCache) --once macroCache is loaded into macroDrag, wipe it
 
-	elseif self:HasAction() then
+	elseif self:GetMacroText() ~= "" then --not HasAction, macros without a spell or item (like /cancelaura) have to move too
 
 		macroDrag[1] = self:GetDragAction()
 		macroDrag[2] = self:GetMacroText()
