@@ -202,6 +202,11 @@ function ActionButton:InitializeButton()
 							end
 						end
 
+						--out of form is the home state, unless it has a macro of its own to override it with
+						if msg == "stance0" and not self:GetAttribute("stance0-own") then
+							msg = "homestate"
+						end
+
 						if not self:GetAttribute(msg.."-actionID") then
 							self:SetAttribute("type", "macro")
 
@@ -524,6 +529,13 @@ function ActionButton:UpdateButtonSpec()
 	self:InitializeButtonSettings()
 	self:UpdateFlyout()
 	self:UpdateAll()
+end
+
+--the secure state code swaps in the state attributes set on load, so they have to follow a drag or drop
+function ActionButton:RefreshStateData()
+	if self.class == "ActionBar" then
+		self:LoadDataFromDatabase(Spec.active(self.bar:GetMultiSpec()), self.activeState)
+	end
 end
 
 --this function is used to "fake" a state change in the button editor so you can see what each state will look like

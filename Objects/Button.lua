@@ -306,7 +306,8 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 
 		--without multiSpec every spec shares the default tree
 		self.statedata = self.bar:GetMultiSpec() and self.DB[curSpec] or self.DB.default --all of the states for a given spec
-		self.activeState = curState or "homestate"
+		--the button's own state wins, it can differ from the bar's (out of form uses the home state)
+		self.activeState = self:GetAttribute("activestate") or curState or "homestate"
 		self.data = self.statedata[self.activeState] --loads a single state of a single spec into self.data
 
 		--clear attributes left over from a previously loaded spec
