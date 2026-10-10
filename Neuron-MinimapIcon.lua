@@ -54,18 +54,12 @@ function Neuron:Minimap_OnClickHandler(button)
 				Neuron:ToggleBindingMode(false)
 			end
 		else
+			--the bar editor starts bar edit mode, and closing it ends it
 			if not Neuron.barEditMode then
-				Neuron:ToggleBarEditMode(true)
-				if not addonTable.NeuronEditor then
-					Neuron.NeuronGUI:CreateEditor("bar")
-				else
-					Neuron.NeuronGUI:RefreshEditor("bar")
-				end
+				Neuron.NeuronGUI:OpenBarConfig()
 			else
 				Neuron:ToggleBarEditMode(false)
-				if addonTable.NeuronEditor then
-					Neuron.NeuronGUI:DestroyEditor()
-				end
+				Neuron.NeuronGUI:CloseBarConfig()
 			end
 		end
 	elseif button == "RightButton" then

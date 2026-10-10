@@ -14,7 +14,6 @@ Neuron.Button = Button
 local Skin = LibStub("Masque", true)
 local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
 
-LibStub("AceBucket-3.0"):Embed(Button)
 LibStub("AceEvent-3.0"):Embed(Button)
 LibStub("AceTimer-3.0"):Embed(Button)
 LibStub("AceHook-3.0"):Embed(Button)
@@ -303,7 +302,7 @@ function Button:LoadDataFromDatabase(curSpec, curState)
 		self.data = self.DB.data
 	else
 		self:MigrateDefaultData()
-		self:MoveDefaultToSpec(curSpec)
+		self:CopyDefaultToSpec(curSpec)
 
 		--without multiSpec every spec shares the default tree
 		self.statedata = self.bar:GetMultiSpec() and self.DB[curSpec] or self.DB.default --all of the states for a given spec
@@ -357,11 +356,16 @@ function Button:MigrateDefaultData()
 	self.DB.defaultMigrated = true
 end
 
----with multiSpec the default tree is only used until a spec is picked, then it moves into that spec
----where the spec has no macro. Forever keeps it as spec 1
+---with multiSpec a spec gets a copy of the default tree once. both are kept for when multiSpec is
+---toggled. Forever keeps the default tree as spec 1
 ---@param curSpec number|string
-function Button:MoveDefaultToSpec(curSpec)
+function Button:CopyDefaultToSpec(curSpec)
 	if Neuron.isWoWForever or not self.bar:GetMultiSpec() or type(curSpec) ~= "number" then
+		return
+	end
+
+	local copied = self.DB.copiedToSpec or {}
+	if copied[curSpec] then
 		return
 	end
 
@@ -373,7 +377,6 @@ function Button:MoveDefaultToSpec(curSpec)
 			for modifier in pairs(rowModifiers.default) do
 				rowModifiers[key][modifier] = true
 			end
-			rowModifiers.default = nil
 		end
 	end
 
@@ -385,11 +388,24 @@ function Button:MoveDefaultToSpec(curSpec)
 			end
 		end
 	end
-	wipe(self.DB.default)
+
+	copied[curSpec] = true
+	self.DB.copiedToSpec = copied
+end
+
+---a spec with its copy of the default tree doesn't fall back on it
+---@param statedata table @a spec's states
+function Button:HasOwnTree(statedata)
+	for spec, copied in pairs(self.DB.copiedToSpec or {}) do
+		if copied and rawget(self.DB, spec) == statedata then
+			return true
+		end
+	end
+	return false
 end
 
 ---the data a state shows: its own, the spec's homestate, the default tree's same state, then its homestate.
----a form's page (stance1_alt1) first tries the default's (alt1), then the form's
+---stance1_alt1 tries alt1, then stance1
 ---@param state string
 ---@param statedata? table @a spec's states, the loaded spec when left out
 ---@return GenericSpecData
@@ -401,7 +417,24 @@ function Button:GetResolvedData(state, statedata)
 		return own
 	end
 
-	local form, secondary = state:match("^(stance%d+)_(.+)$")
+	--page 2-6 falls back the same way within the page, then on its default, then page 1's
+	local page, onPage = state:match("^(paged%d+)_(.+)$")
+	if page then
+		local form, secondary = onPage:match("^(%a+%d+)_(.+)$")
+		if form then
+			local plain = rawget(statedata, page.."_"..secondary)
+			if hasMacro(plain) then
+				return plain
+			end
+			return self:GetResolvedData(page.."_"..form, statedata)
+		end
+		if onPage ~= "homestate" then
+			return self:GetResolvedData(page.."_homestate", statedata)
+		end
+		return self:GetResolvedData("homestate", statedata)
+	end
+
+	local form, secondary = state:match("^(%a+%d+)_(.+)$")
 	if form then
 		local plain = rawget(statedata, secondary)
 		if hasMacro(plain) then
@@ -415,14 +448,16 @@ function Button:GetResolvedData(state, statedata)
 		return specHome
 	end
 
-	local default = rawget(self.DB.default, state)
-	if hasMacro(default) then
-		return default
-	end
+	if not self:HasOwnTree(statedata) then
+		local default = rawget(self.DB.default, state)
+		if hasMacro(default) then
+			return default
+		end
 
-	local defaultHome = rawget(self.DB.default, "homestate")
-	if hasMacro(defaultHome) then
-		return defaultHome
+		local defaultHome = rawget(self.DB.default, "homestate")
+		if hasMacro(defaultHome) then
+			return defaultHome
+		end
 	end
 
 	return own or statedata[state]

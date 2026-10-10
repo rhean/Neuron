@@ -203,7 +203,6 @@ BarEditor = {
 
 		overlay.frame.Text:SetText(bar:GetBarName())
 
-		overlay.frame:EnableKeyboard(false)
 		overlay.frame:RegisterForClicks("AnyUp", "AnyDown")
 		overlay.frame:RegisterForDrag("LeftButton")
 		overlay.frame:SetScript("OnDragStart", function(_, button) onDragStart(overlay, button) end)
@@ -212,6 +211,8 @@ BarEditor = {
 		overlay.frame:SetScript("OnEnter", function() onEnter(overlay) end)
 		overlay.frame:SetScript("OnLeave", function() onLeave(overlay) end)
 		overlay.frame:SetScript("OnClick", function(_, button, down) onClick(overlay, button, down) end)
+		--setting OnKeyDown turns the keyboard on, it is only on while nudging, see microadjust
+		overlay.frame:EnableKeyboard(false)
 
 		overlay.frame.Text:Show()
 		overlay.frame:Show()
@@ -265,11 +266,7 @@ BarEditor = {
 			overlay.microadjust = 0
 		end
 
-		if microadjust == 0 then
-			overlay.frame:EnableKeyboard(false)
-		else
-			overlay.frame:EnableKeyboard(true)
-		end
+		overlay.frame:EnableKeyboard(overlay.microadjust ~= 0)
 
 		updateAppearance(overlay)
 	end,

@@ -7,29 +7,15 @@
 local _, addonTable = ...
 local Neuron = addonTable.Neuron
 
-local NeuronGUI = Neuron.NeuronGUI
-
 local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 
 local Array = addonTable.utilities.Array
 
--- The settings shown in the editor, as AceConfig options keyed by id.
--- Where they appear is decided by Layout.lua, not here.
-
-local BAR_APP = "NeuronBarOptions"
-local STATUS_APP = "NeuronStatusOptions"
+-- The bar editor's settings in AceConfig's option format, keyed by id. BarConfigLayout.lua places them.
 
 --layout names are plain English, use the translation when there is one
 local function localized(text)
 	return rawget(L, text) or text
-end
-
---rebuilding the editor from inside an AceConfig callback would release the
---widget that is still being used, so wait for the next frame
-local function refreshEditorLater()
-	C_Timer.After(0, function() NeuronGUI:RefreshEditor() end)
 end
 
 -----------------------------------------------------------------------------
@@ -93,27 +79,51 @@ local function barRange(name, min, max, step, isPercent, getter, setter)
 	}
 end
 
+--checked means the bar hides in that state, it is on the hide list
+local function visibilityToggle(state)
+	return {
+		type = "toggle",
+		name = Neuron.VISIBILITY_STATES[state],
+		--rogues get stealth as their home stance state instead
+		hidden = Neuron.class == "ROGUE" and state:match("^stealth") ~= nil,
+		get = function() return not not bar().data.hidestates:find(state) end,
+		set = function(_, value) bar():SetVisibility(state, not value) end,
+	}
+end
+
+--a state the bar switches its buttons on
+local function barStateToggle(state, name)
+	return {
+		type = "toggle",
+		name = name,
+		--states only apply to action bars. rogues get stealth as their home stance state instead
+		hidden = function()
+			return bar().class ~= "ActionBar" or (Neuron.class == "ROGUE" and state == "stealth")
+		end,
+		get = function() return not not bar().data[state] end,
+		set = function(_, value) bar():SetState(state, true, value) end,
+	}
+end
+
 --built each time the options are shown, so ranges follow the current bar
 local function barDefinitions()
 	local numObjects = bar():GetNumObjects()
 	--a menu bar is either empty or holds every micro button, a partial menu leaves blizzard's menu half taken
 	local allOrNothing = bar().class == "MenuBar"
 
-	return {
+	local definitions = {
 		barName = {
 			type = "input",
 			name = L["Name"],
 			get = function() return bar():GetBarName() end,
-			set = function(_, value)
-				bar():SetBarName(value)
-				refreshEditorLater() --the bar list and status line show the name
-			end,
+			set = function(_, value) bar():SetBarName(value) end,
 		},
 
 		autoHide = barToggle(L["Auto-Hide"], "GetAutoHide", "SetAutoHide", unlessOption("generalOptions", "AUTOHIDE")),
 		showGrid = barToggle(L["Show Grid"], "GetShowGrid", "SetShowGrid", unlessOption("generalOptions", "SHOWGRID")),
 		snapTo = barToggle(L["SnapTo"], "GetSnapTo", "SetSnapTo", unlessOption("generalOptions", "SNAPTO")),
 		multiSpec = barToggle(Neuron.isWoWForever and L["Dual Spec"] or L["Multi Spec"], "GetMultiSpec", "SetMultiSpec", unlessOption("generalOptions", "MULTISPEC")),
+		pages = barStateToggle("paged", Neuron.MANAGED_HOME_STATES.paged.localizedName),
 		hidden = barToggle(L["Hidden"], "GetBarConceal", "SetBarConceal", unlessOption("generalOptions", "HIDDEN")),
 		lockActions = barSelect(L["Lock Actions"],
 			{none = L["None"], shift = L["Shift"], ctrl = L["Ctrl"], alt = L["Alt"]},
@@ -188,11 +198,8 @@ local function barDefinitions()
 		deleteBar = {
 			type = "execute",
 			name = L["Delete Bar"],
-			confirm = function() return L["Delete Bar"]..": "..bar():GetBarName().."?" end,
-			func = function()
-				bar():DeleteBar()
-				refreshEditorLater()
-			end,
+			confirm = function() return L["DeleteBar_Confirm"] end,
+			func = function() bar():DeleteBar() end,
 		},
 
 		applyReload = {
@@ -202,59 +209,23 @@ local function barDefinitions()
 			func = ReloadUI,
 		},
 	}
+
+	for state in pairs(Neuron.VISIBILITY_STATES) do
+		definitions["visibility_"..state] = visibilityToggle(state)
+	end
+
+	for state, info in pairs(Neuron.MANAGED_HOME_STATES) do
+		definitions["state_"..state] = barStateToggle(state, info.localizedName)
+	end
+	--named after its page, as in the button editor. the game's bars have no page
+	local gameBars = {vehicle = true, dragonriding = true, possess = true, override = true}
+	for state, info in pairs(Neuron.MANAGED_SECONDARY_STATES) do
+		local name = not gameBars[state] and Neuron.STATES[state.."1"] or info.localizedName
+		definitions["state_"..state] = barStateToggle(state, name)
+	end
+
+	return definitions
 end
-
---settings that expand into one option per state, as {key, option} pairs
-local barDynamic = {
-	barStates = function()
-		local states = Array.map(function(state)
-			return {state = state, name = Neuron.MANAGED_HOME_STATES[state].localizedName}
-		end, {"paged", "stance", "pet"})
-
-		local secondary = {}
-		for state, info in pairs(Neuron.MANAGED_SECONDARY_STATES) do
-			--rogues get stealth as their home stance state instead
-			if not (Neuron.class == "ROGUE" and state == "stealth") then
-				table.insert(secondary, {state = state, name = info.localizedName})
-			end
-		end
-		table.sort(secondary, function(a, b) return a.name < b.name end)
-		for _, entry in ipairs(secondary) do
-			table.insert(states, entry)
-		end
-
-		return Array.map(function(entry)
-			return {"state_"..entry.state, {
-				type = "toggle",
-				name = entry.name,
-				--off for now: they share data.remap with stance, and the handler can't run two home states
-				disabled = entry.state == "paged" or entry.state == "pet",
-				get = function() return not not bar().data[entry.state] end,
-				set = function(_, value) bar():SetState(entry.state, true, value) end,
-			}}
-		end, states)
-	end,
-
-	--checked means the bar shows in that state, unchecked adds it to the hide list
-	visibilityStates = function()
-		local states = {}
-		for state in pairs(Neuron.VISIBILITY_STATES) do
-			if not (Neuron.class == "ROGUE" and state:match("^stealth")) then
-				table.insert(states, state)
-			end
-		end
-		table.sort(states)
-
-		return Array.map(function(state)
-			return {"visibility_"..state, {
-				type = "toggle",
-				name = Neuron.VISIBILITY_STATES[state],
-				get = function() return not bar().data.hidestates:find(state) end,
-				set = function(_, value) bar():SetVisibility(state, value) end,
-			}}
-		end, states)
-	end,
-}
 
 -----------------------------------------------------------------------------
 --------------------------Status Bar Appearance------------------------------
@@ -262,8 +233,14 @@ local barDynamic = {
 
 local CAST_UNITS = {"player", "pet", "target", "targettarget", "focus", "mouseover", "party1", "party2", "party3", "party4"}
 
+--the status bar button being edited: the selected one when it is on the selected bar,
+--else the selected bar's own, so a bar picked without clicking it edits itself
 local function button()
-	return Neuron.currentButton
+	local bar, current = Neuron.currentBar, Neuron.currentButton
+	if current and current.bar == bar then
+		return current
+	end
+	return bar and bar.buttons and bar.buttons[1] or current
 end
 
 local function notCastBar()
@@ -333,7 +310,7 @@ local function statusDefinitions()
 end
 
 -----------------------------------------------------------------------------
---------------------------Builder--------------------------------------------
+--------------------------For the Bar Editor---------------------------------
 -----------------------------------------------------------------------------
 
 local function isHidden(option)
@@ -372,142 +349,26 @@ end
 
 local PLACEHOLDER_TYPES = {toggle = true, select = true, range = true, input = true, color = true, execute = true}
 
-local function allHidden(options)
-	for _, option in ipairs(options) do
-		if not isHidden(option) then
-			return false
+--the settings for the bar editor, see BarConfigWindow.lua
+addonTable.optionDefinitions = {
+	localized = localized,
+	isHidden = isHidden,
+	placeholder = placeholder,
+	PLACEHOLDER_TYPES = PLACEHOLDER_TYPES,
+
+	---the selected bar's settings, built each time so ranges follow the bar. nil without a bar
+	bar = function()
+		if not bar() then
+			return
 		end
-	end
-	return true
-end
+		return barDefinitions()
+	end,
 
----turn one tab of Layout.lua into AceConfig args
----@param asPages boolean @true when the tab shows its boxes as sub-tabs or a tree instead of inline boxes
-local function buildGroups(groups, definitions, dynamic, asPages)
-	local args = {}
-
-	for groupIndex, group in ipairs(groups) do
-		local groupArgs = {}
-		local settings = {} --the real settings in this box, not the headers and row breaks
-		local order = 0
-
-		local function add(key, option)
-			order = order + 1
-			option.order = order
-			groupArgs[key] = option
+	---the selected status bar button's appearance settings, nil without one
+	status = function()
+		if not button() or not button().config then
+			return
 		end
-
-		--a box is a list of rows, an old style items list is a single row
-		local rows = group.rows or {group.items or {}}
-
-		for rowIndex, row in ipairs(rows) do
-			local rowSettings = {}
-
-			for itemIndex, item in ipairs(row) do
-				local key = rowIndex.."_"..itemIndex
-				if item.header then
-					add("header"..key, {type = "header", name = localized(item.header)})
-				elseif item.text then
-					add("text"..key, {type = "description", name = localized(item.text), fontSize = "medium", width = item.width or "full"})
-				elseif item.spacer then
-					add("spacer"..key, {type = "description", name = " ", width = item.width})
-				else
-					local entries
-					if dynamic and dynamic[item.id] then
-						entries = dynamic[item.id]()
-					elseif definitions[item.id] then
-						entries = {{item.id, definitions[item.id]}}
-					elseif PLACEHOLDER_TYPES[item.type] then
-						entries = {{item.id, placeholder(item)}}
-					else
-						entries = {} --unknown id, most likely a typo in Layout.lua
-					end
-
-					for _, entry in ipairs(entries) do
-						entry[2].width = item.width
-						add(entry[1], entry[2])
-						table.insert(rowSettings, entry[2])
-						table.insert(settings, entry[2])
-					end
-				end
-			end
-
-			--start the next row on a new line, unless nothing in this row is shown
-			if rowIndex < #rows then
-				add("break"..rowIndex, {
-					type = "description",
-					name = "",
-					width = "full",
-					hidden = function() return allHidden(rowSettings) end,
-				})
-			end
-		end
-
-		args[group.id] = {
-			type = "group",
-			inline = not asPages,
-			name = localized((group.name ~= "" and group.name) or (asPages and group.id) or ""),
-			order = groupIndex,
-			args = groupArgs,
-			--don't leave an empty box when this bar type has none of the group's settings
-			--a box with only text or headers is always shown
-			hidden = function() return #settings > 0 and allHidden(settings) end,
-		}
-	end
-
-	return args
-end
-
----turn a whole app of Layout.lua into an AceConfig options table
-local function buildApp(tabs, definitions, dynamic, hiddenTabs)
-	--a single tab doesn't need a tab bar
-	--a tab's childGroups ("tab" or "tree") shows its boxes as separate pages
-	if #tabs == 1 then
-		local tab = tabs[1]
-		return {type = "group", name = "", childGroups = tab.childGroups, args = buildGroups(tab.groups, definitions, dynamic, tab.childGroups ~= nil)}
-	end
-
-	local args = {}
-	for tabIndex, tab in ipairs(tabs) do
-		args[tab.id] = {
-			type = "group",
-			name = localized(tab.name),
-			order = tabIndex,
-			hidden = hiddenTabs and hiddenTabs[tab.id],
-			childGroups = tab.childGroups,
-			args = buildGroups(tab.groups, definitions, dynamic, tab.childGroups ~= nil),
-		}
-	end
-
-	return {type = "group", name = "", childGroups = "tab", args = args}
-end
-
---AceConfigDialog refreshes once more after a setting changes
-local EMPTY_OPTIONS = {type = "group", name = "", args = {}}
-
-AceConfigRegistry:RegisterOptionsTable(BAR_APP, function()
-	if not bar() then
-		return EMPTY_OPTIONS
-	end
-	return buildApp(addonTable.guiLayout.bar, barDefinitions(), barDynamic, {
-		--states only apply to action bars
-		states = function() return bar().class ~= "ActionBar" end,
-	})
-end)
-
-AceConfigRegistry:RegisterOptionsTable(STATUS_APP, function()
-	if not button() or not button().config then
-		return EMPTY_OPTIONS
-	end
-	return buildApp(addonTable.guiLayout.status, statusDefinitions())
-end)
-
----show the settings for the selected bar inside an AceGUI container
-function NeuronGUI:OpenBarOptions(container)
-	AceConfigDialog:Open(BAR_APP, container)
-end
-
----show the appearance settings for the selected status bar button inside an AceGUI container
-function NeuronGUI:OpenStatusOptions(container)
-	AceConfigDialog:Open(STATUS_APP, container)
-end
+		return statusDefinitions()
+	end,
+}

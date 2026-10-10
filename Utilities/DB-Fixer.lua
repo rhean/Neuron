@@ -7,7 +7,7 @@
 local _, addonTable = ...
 addonTable.utilities = addonTable.utilities or {}
 
-local LATEST_DB_VERSION = 1.4
+local LATEST_DB_VERSION = 1.6
 
 ------------------------------------------------------------
 --------------------Data Fixing Functions-------------------
@@ -185,12 +185,95 @@ local function migrate1_3To1_4(profile)
 	return newProfile
 end
 
+-- the group state was split into raid and party, and reaction was the same page as harm
+local RENAMED_PAGES = {group1 = "raid1", group2 = "party1", reaction1 = "harm1"}
+
+---renames states in place to what newName returns, skipping nil and names already taken
+local function renameStates(states, newName)
+	local renames = {}
+	for state in pairs(states) do
+		if type(state) == "string" then
+			local newState = newName(state)
+			if newState and states[newState] == nil then
+				renames[state] = newState
+			end
+		end
+	end
+	for state, newState in pairs(renames) do
+		states[newState] = states[state]
+		states[state] = nil
+	end
+end
+
+---a form's own page (stance1_group1) is renamed too
+local function renamedPage(state)
+	local prefix, page = state:match("^(.-)([^_]+)$")
+	return RENAMED_PAGES[page] and prefix..RENAMED_PAGES[page]
+end
+
+---each button's pages, by spec and in the default tree
+local function forEachButtonStates(bar, func)
+	for _, button in pairs(bar.buttons or {}) do
+		for key, states in pairs(button) do
+			if key ~= "config" and key ~= "keys" and key ~= "data" and type(states) == "table" then
+				func(states)
+			end
+		end
+	end
+end
+
+local function migrate1_4To1_5(profile)
+	local newProfile = CopyTable(profile)
+	for _, bar in pairs(newProfile.ActionBar or {}) do
+		if bar.group then
+			bar.raid, bar.party, bar.group = true, true, false
+		end
+		if bar.reaction then
+			bar.harm, bar.reaction = true, false
+		end
+
+		forEachButtonStates(bar, function(states)
+			renameStates(states, renamedPage)
+		end)
+
+		--modifiers added in the button editor, by row and spec
+		for _, row in pairs(bar.modifiers or {}) do
+			for _, modifiers in pairs(row) do
+				renameStates(modifiers, renamedPage)
+			end
+		end
+	end
+
+	newProfile.DBVersion = 1.5
+	return newProfile
+end
+
+-- action bar pages became a layer around the other states: a page's own buttons (paged2)
+-- are now its default (paged2_homestate) next to its own forms and modifiers
+local function migrate1_5To1_6(profile)
+	local newProfile = CopyTable(profile)
+	for _, bar in pairs(newProfile.ActionBar or {}) do
+		forEachButtonStates(bar, function(states)
+			renameStates(states, function(state)
+				return state:match("^paged%d+$") and state.."_homestate"
+			end)
+		end)
+	end
+
+	newProfile.DBVersion = 1.6
+	return newProfile
+end
+
 local function profileMigrate(profileDatabase)
 	if profileDatabase.DBVersion < 1.3 then
 		-- we need to copy the table for the og fixer, since it modifies in place
 		return profileMigrate(ogFixer(CopyTable(profileDatabase)))
 	elseif profileDatabase.DBVersion == 1.3 then
 		return profileMigrate(migrate1_3To1_4(profileDatabase))
+	elseif profileDatabase.DBVersion == 1.4 then
+		return profileMigrate(migrate1_4To1_5(profileDatabase))
+	elseif profileDatabase.DBVersion == 1.5 then
+		return profileMigrate(migrate1_5To1_6(profileDatabase))
 	else
 		return profileDatabase
 	end

@@ -217,6 +217,13 @@ L["Control Up"] = true
 L["Control Down"] = true
 L["Shift Up"] = true
 L["Shift Down"] = true
+L["Alt Pressed"] = true
+L["Control Pressed"] = true
+L["Shift Pressed"] = true
+L["Friendly Target"] = true
+L["Hostile Target"] = true
+L["Raid"] = true
+L["Party"] = true
 
 L["Vanish"] = true
 L["Shapeshift"] = true
@@ -266,6 +273,7 @@ L["Configure Buttons"] = true
 L["Configure Appearance"] = true
 
 ---button editor window
+L["Bar Config"] = true
 L["Button Editor"] = true
 L["Specialization"] = true
 L["Modifiers"] = true
@@ -273,7 +281,7 @@ L["ButtonEditor_Location"] = "Button %d - Row %d"
 L["ButtonEditor_Button"] = "Button %d"
 L["Add Modifier"] = true
 L["Remove Modifier"] = true
-L["ButtonEditor_RemoveModifier"] = "Remove %s from every button in %s? Their macros for it are cleared, on the default and every form."
+L["ButtonEditor_RemoveModifier"] = "Removing the modifier removes it from the whole bar and deletes its contents."
 L["ButtonEditor_RowOfSpec"] = "row %d of %s"
 L["ButtonEditor_Status"] = "|cffffd200%s|r|cFFFFFFFF button %d is selected. Click another button to edit it."
 L["ButtonEditor_SelectButton"] = "Click an action button to edit it."
@@ -373,6 +381,7 @@ L["Dual Spec"] = true
 -- New for the updated GUI
 L["Color"] = true
 L["Delete Bar"] = true
+L["DeleteBar_Confirm"] = "Warning, will permanently delete the bar and all stored data"
 L["General Configuration"] = true
 L["Bar Visibility"] = true
 L["Secondary States"] = true

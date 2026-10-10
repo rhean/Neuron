@@ -5,3 +5,5 @@
 dist
 Tools/LayoutEditor/index.html
 Tools/LayoutEditor/save-server.py
+Tools/BarConfigEditor/index.html
+Tools/BarConfigEditor/save-server.py

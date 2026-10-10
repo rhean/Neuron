@@ -124,8 +124,8 @@ function ActionButton:InitializeButton()
 	self:SetAttribute("_childupdate",
 			[[
 				if message then
-					--"state:form", the form being the bar's current stance
-					local msg, form = (":"):split(message)
+					--"state:form:page", form being the stance or pet page and page the action bar page
+					local msg, form, page = (":"):split(message)
 
 					if msg:find("vehicle") then
 						if not self:GetAttribute(msg.."-actionID") then
@@ -161,10 +161,39 @@ function ActionButton:InitializeButton()
 						self:Show()
 
 					else
-						--a secondary state in a form: the form's page for it (stance1_alt1), else the default's (alt1), else the form's own
-						if form and form:find("^stance%d") and msg ~= "homestate"
+						--a secondary state in a form: stance1_alt1, else alt1, else stance1
+						local inForm = form and (form:find("^stance%d") or form:find("^pet%d")) and msg ~= "homestate"
 							and not msg:find("^stance") and not msg:find("^paged") and not msg:find("^pet")
-						then
+
+						--page 2-6 falls back the same way within the page, then on its default, then page 1's
+						if page and page:find("^paged%d") and page ~= "paged1" then
+							local key
+							if inForm then
+								key = page.."_"..form.."_"..msg
+								if not (self:GetAttribute(key.."-macro_Text") or self:GetAttribute(key.."-actionID")) then
+									key = nil
+								end
+							end
+							if not key and msg ~= "homestate" then
+								key = page.."_"..msg
+								if not (self:GetAttribute(key.."-macro_Text") or self:GetAttribute(key.."-actionID")) then
+									key = nil
+								end
+							end
+							if not key and inForm then
+								key = page.."_"..form
+								if not (self:GetAttribute(key.."-macro_Text") or self:GetAttribute(key.."-actionID")) then
+									key = nil
+								end
+							end
+							if not key then
+								key = page.."_homestate"
+								if not (self:GetAttribute(key.."-macro_Text") or self:GetAttribute(key.."-actionID")) then
+									key = nil
+								end
+							end
+							msg = key or "homestate"
+						elseif inForm then
 							local combo = form.."_"..msg
 							if self:GetAttribute(combo.."-macro_Text") or self:GetAttribute(combo.."-actionID") then
 								msg = combo
@@ -307,8 +336,9 @@ function ActionButton:OnAttributeChanged(name, value)
 			--Part 2 of Druid Prowl overwrite fix (part 1 below)
 			-----------------------------------------------------
 			--breaks out of the loop due to flag set below
-			--caster form is stance0 on stance bars
-			if Neuron.class == "DRUID" and self.ignoreNextOverrideStance == true and (value == "homestate" or value == "stance0" or value:find("^stance0_")) then
+			--caster form is stance0, on any action bar page
+			local unpaged = value:gsub("^paged%d+_", "")
+			if Neuron.class == "DRUID" and self.ignoreNextOverrideStance == true and (unpaged == "homestate" or unpaged == "stance0" or unpaged:find("^stance0_")) then
 				self.ignoreNextOverrideStance = nil
 				self.bar:SetState("stealth") --have to add this in otherwise the button icons change but still retain the homestate ability actions
 				return
@@ -885,6 +915,9 @@ end
 ---@alias Border {[1]:number,[2]:number,[3]:number,[4]:number}|nil
 ---@alias TextureRef number|string
 
+--blizzard's question mark macro icon, which means take the icon from the macro
+local QUESTION_MARK = {[134400] = true, ["interface\\icons\\inv_misc_questionmark"] = true}
+
 --- @param data GenericSpecData
 --- @return TextureRef, Border an icon texture, and an rgb tuple, both nilable
 function ActionButton:GetAppearance(data)
@@ -898,11 +931,13 @@ function ActionButton:GetAppearance(data)
 		texture, border = self.GetSpellAppearance(spell)
 	elseif item then
 		texture, border = self.GetItemAppearance(item)
-	-- macro must go after spells and items, for blizz macro #showtooltip to work
-	elseif data.macro_Icon then
-		texture, border = data.macro_Icon, nil
-	else
-		texture, border = nil, nil
+	end
+
+	-- a picked icon wins over the macro's spell or item, as on blizzard's macros.
+	-- the question mark only shows when the macro has neither, for blizz macro #showtooltip to work
+	local icon = data.macro_Icon
+	if icon and (not texture or not QUESTION_MARK[type(icon) == "string" and icon:lower() or icon]) then
+		texture = icon
 	end
 
 	return texture, border
