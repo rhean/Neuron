@@ -41,6 +41,12 @@ function ActionButton:OnDragStart()
 	end
 
 	if drag and self:GetMacroText() ~= "" then
+		--an inherited macro belongs to another state, clearing this state would leave it showing
+		if self:GetActiveData() ~= self.data then
+			Photon:Print(L["DragDrop_Inherited_Message"])
+			return
+		end
+
 		Photon.dragging = true
 
 		if #macroCache==0 then --don't run if we have a cache, we will call it manually on the OnReceiveDrag on the new button
@@ -69,7 +75,7 @@ function ActionButton:OnReceiveDrag()
 
 	local cursorType, action1, action2, spellID = GetCursorInfo()
 
-	if self:HasAction() then --if our button being dropped onto already has content, we need to cache that content
+	if self:HasAction() and self:GetActiveData() == self.data then --if our button being dropped onto already has content, we need to cache that content. inherited content stays where it is
 		macroCache[1] = self:GetDragAction()
 		macroCache[2] = self:GetMacroText()
 		macroCache[3] = self:GetMacroIcon()

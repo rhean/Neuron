@@ -334,6 +334,7 @@ L["Timer_Limit_Set_Message"] = "Timer limit set to %d seconds"
 L["Timer_Limit_Invalid_Message"] = "Invalid timer limit"
 
 L["DragDrop_Error_Message"] = "Sorry, we were unable to place that ability or item."
+L["DragDrop_Inherited_Message"] = "This button inherits its ability from another page. You can override it in the button editor"
 
 
 L["Attack"] = true
