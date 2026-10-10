@@ -1,19 +1,19 @@
-﻿-- Neuron is a World of Warcraft® user interface addon.
+﻿-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 local Spec = addonTable.utilities.Spec
 
 local LCG = LibStub("LibCustomGlow-1.0")
 
 ---@class ActionButton : Button @define class ActionButton inherits from class Button
-local ActionButton = setmetatable({}, {__index = Neuron.Button}) --this is the metatable for our button object
-Neuron.ActionButton = ActionButton
+local ActionButton = setmetatable({}, {__index = Photon.Button}) --this is the metatable for our button object
+Photon.ActionButton = ActionButton
 
 ---------------------------------------------------------
 -------------------declare globals-----------------------
@@ -52,14 +52,14 @@ local COMMAND_LIST = {
 	["#showtooltip"] = true,
 }
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return ActionButton @ A newly created ActionButton object
 function ActionButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, ActionButton, "ActionBar", "ActionButton", "NeuronActionButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, ActionButton, "ActionBar", "ActionButton", "PhotonActionButtonTemplate")
 
 	if defaults then
 		newButton:SetDefaults(defaults)
@@ -89,11 +89,11 @@ function ActionButton:InitializeButton()
 
 	--this is to allow for the correct releasing of the button when dragging icons off of the bar
 	--we need to hook to the WorldFrame OnReceiveDrag and OnMouseDown so that we can "let go" of the spell when we drag it off the bar
-	if not Neuron:IsHooked(WorldFrame, "OnReceiveDrag") then
-		Neuron:HookScript(WorldFrame, "OnReceiveDrag", function() ActionButton:WorldFrame_OnReceiveDrag() end)
+	if not Photon:IsHooked(WorldFrame, "OnReceiveDrag") then
+		Photon:HookScript(WorldFrame, "OnReceiveDrag", function() ActionButton:WorldFrame_OnReceiveDrag() end)
 	end
-	if not Neuron:IsHooked(WorldFrame, "OnMouseDown") then
-		Neuron:HookScript(WorldFrame, "OnMouseDown", function() ActionButton:WorldFrame_OnReceiveDrag() end)
+	if not Photon:IsHooked(WorldFrame, "OnMouseDown") then
+		Photon:HookScript(WorldFrame, "OnMouseDown", function() ActionButton:WorldFrame_OnReceiveDrag() end)
 	end
 
 	self:SetScript("OnAttributeChanged", function(_, name, value) self:OnAttributeChanged(name, value) end)
@@ -243,7 +243,7 @@ function ActionButton:InitializeButton()
 end
 
 function ActionButton:InitializeButtonSettings()
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetScale(self.bar:GetBarScale())
 
 	if self.bar:GetShowBindText() then
@@ -338,7 +338,7 @@ function ActionButton:OnAttributeChanged(name, value)
 			--breaks out of the loop due to flag set below
 			--caster form is stance0, on any action bar page
 			local unpaged = value:gsub("^paged%d+_", "")
-			if Neuron.class == "DRUID" and self.ignoreNextOverrideStance == true and (unpaged == "homestate" or unpaged == "stance0" or unpaged:find("^stance0_")) then
+			if Photon.class == "DRUID" and self.ignoreNextOverrideStance == true and (unpaged == "homestate" or unpaged == "stance0" or unpaged:find("^stance0_")) then
 				self.ignoreNextOverrideStance = nil
 				self.bar:SetState("stealth") --have to add this in otherwise the button icons change but still retain the homestate ability actions
 				return
@@ -364,7 +364,7 @@ function ActionButton:OnAttributeChanged(name, value)
 				---------------------------------------------------
 				--druids have an issue where once stance will get immediately overwritten by another. I.E. stealth immediately getting overwritten by homestate if they go immediately into prowl from caster form
 				--this conditional sets a flag to ignore the next most stance flag, as that one is most likely in error and should be ignored
-				if Neuron.class == "DRUID" and value:find("stealth1$") then --also a form's, like stance2_stealth1
+				if Photon.class == "DRUID" and value:find("stealth1$") then --also a form's, like stance2_stealth1
 					self.ignoreNextOverrideStance = true
 				end
 				------------------------------------------------------
@@ -592,7 +592,7 @@ end
 --subname: subname of spell to use (optional)
 --return: macro text
 function ActionButton:AutoWriteMacro(spell)
-	local DB = Neuron.db.profile
+	local DB = Photon.db.profile
 
 	local spellName
 	local spellID
@@ -602,12 +602,12 @@ function ActionButton:AutoWriteMacro(spell)
 
 	--if there is an alt name associated with a given ability, and the alt name is known (i.e. the base spell) use the alt name instead
 	--This is important because a macro written with the base name "/cast Roll()" will work for talented abilities, but "/cast Chi Torpedo" won't work for base abilities
-	if Neuron.spellCache[spell:lower()] then
-		spellName = Neuron.spellCache[spell:lower()].spellName
-		spellID = Neuron.spellCache[spell:lower()].spellID
+	if Photon.spellCache[spell:lower()] then
+		spellName = Photon.spellCache[spell:lower()].spellName
+		spellID = Photon.spellCache[spell:lower()].spellID
 
-		altName = Neuron.spellCache[spell:lower()].altName
-		altSpellID = Neuron.spellCache[spell:lower()].altSpellID
+		altName = Photon.spellCache[spell:lower()].altName
+		altSpellID = Photon.spellCache[spell:lower()].altSpellID
 
 		if altSpellID and IsSpellKnown(altSpellID) then
 			spell = altName
@@ -620,7 +620,7 @@ function ActionButton:AutoWriteMacro(spell)
 	end
 
 	local modifier, modKey = " ", nil
-	local bar = Neuron.currentBar or self.bar
+	local bar = Photon.currentBar or self.bar
 
 	if bar.data.mouseOverCast and DB.mouseOverMod ~= "NONE"  then
 		modKey = DB.mouseOverMod
@@ -686,7 +686,7 @@ end
 --return: updated macro text
 --[[function ActionButton:AutoUpdateMacro(macro)
 
-	local DB = Neuron.db.profile
+	local DB = Photon.db.profile
 
 	if GetModifiedClick("SELFCAST") ~= "NONE"  then
 		macro = macro:gsub("%[@player,mod:%u+%]", "[@player,mod:"..GetModifiedClick("SELFCAST").."]")
@@ -721,14 +721,14 @@ function ActionButton:UpdateMacroCastTargets(global_update)
 
 	if global_update then
 
-		for _,bar in ipairs(Neuron.bars) do
+		for _,bar in ipairs(Photon.bars) do
 			for _, object in ipairs(bar.buttons) do
 				table.insert(button_list, object)
 			end
 		end
 
 	else
-		local bar = Neuron.currentBar
+		local bar = Photon.currentBar
 		for i, object in ipairs(bar.buttons) do
 			table.insert(button_list, object)
 		end
@@ -774,7 +774,7 @@ end]]
 --overwrite function in parent class Button
 function ActionButton:UpdateAll()
 	--pass to parent UpdateAll function
-	Neuron.Button.UpdateAll(self)
+	Photon.Button.UpdateAll(self)
 
 	self:UpdateGlow()
 end
@@ -824,15 +824,15 @@ function ActionButton.ExtractMacroData(macro)
 		if abilityOrItem and #abilityOrItem > 0 and command:find("/castsequence") then --this always will set the button info the next ability or item in the sequence
 			_, item, spell = QueryCastSequence(abilityOrItem) --it will only ever return as either item or spell, never both
 		elseif abilityOrItem and #abilityOrItem > 0 then
-			if Neuron.itemCache[abilityOrItem:lower()] then --if our abilityOrItem is actually an item in our cache, amend it as such
+			if Photon.itemCache[abilityOrItem:lower()] then --if our abilityOrItem is actually an item in our cache, amend it as such
 				item = abilityOrItem
 			elseif C_Item.GetItemInfo(abilityOrItem) then
 				item = abilityOrItem
 			elseif tonumber(abilityOrItem) and GetInventoryItemLink("player", abilityOrItem) then --in case abilityOrItem is a number and corresponds to a valid inventory item
 				item = GetInventoryItemLink("player", abilityOrItem)
-			elseif Neuron.spellCache[abilityOrItem:lower()] then
+			elseif Photon.spellCache[abilityOrItem:lower()] then
 				spell = abilityOrItem
-				spellID = Neuron.spellCache[abilityOrItem:lower()].spellID
+				spellID = Photon.spellCache[abilityOrItem:lower()].spellID
 			elseif C_Spell.GetSpellInfo(abilityOrItem) then
 				spell = abilityOrItem
 				spellID = C_Spell.GetSpellInfo(abilityOrItem).spellID
@@ -865,7 +865,7 @@ end
 
 --overwrite function in parent class Button
 function ActionButton:UpdateVisibility(show)
-	if self:HasAction() or Neuron.dragging or show or self.bar:GetShowGrid() or Neuron.buttonEditMode or Neuron.barEditMode or Neuron.bindingMode then
+	if self:HasAction() or Photon.dragging or show or self.bar:GetShowGrid() or Photon.buttonEditMode or Photon.barEditMode or Photon.bindingMode then
 		self.isShown = true
 	else
 		self.isShown = false
@@ -881,7 +881,7 @@ function ActionButton:UpdateVisibility(show)
 		end
 	end
 
-	Neuron.Button.UpdateVisibility(self)
+	Photon.Button.UpdateVisibility(self)
 end
 
 -----------------------------------------------------------------------------------------
@@ -890,7 +890,7 @@ end
 
 
 function ActionButton:UpdateIcon()
-	if Neuron.pendingReload then
+	if Photon.pendingReload then
 		return
 	end
 
@@ -971,8 +971,8 @@ function ActionButton.GetSpellAppearance(spell)
 	local texture = C_Spell.GetSpellTexture(spell)
 
 	if not texture then
-		if Neuron.spellCache[spell:lower()] then
-			texture = Neuron.spellCache[spell:lower()].icon
+		if Photon.spellCache[spell:lower()] then
+			texture = Photon.spellCache[spell:lower()].icon
 		end
 	end
 
@@ -990,8 +990,8 @@ function ActionButton.GetItemAppearance(item)
 	local texture = C_Item.GetItemIconByID(item)
 
 	if not texture then
-		if Neuron.itemCache[item:lower()] then
-			texture = C_Item.GetItemIconByID("item:"..Neuron.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
+		if Photon.itemCache[item:lower()] then
+			texture = C_Item.GetItemIconByID("item:"..Photon.itemCache[item:lower()]..":0:0:0:0:0:0:0"--[[@as number]])
 		end
 	end
 

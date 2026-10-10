@@ -1,14 +1,14 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local ActionButton = Neuron.ActionButton
-local Bar = Neuron.Bar
+local ActionButton = Photon.ActionButton
+local Bar = Photon.Bar
 
 local petIcons = {}
 
@@ -21,14 +21,14 @@ local barsToUpdate = {}
 
 local FOBarIndex, FOBtnIndex, AnchorIndex = {}, {}, {}
 
-Neuron.FOBarIndex = FOBarIndex
-Neuron.FOBtnIndex = FOBtnIndex
-Neuron.AnchorIndex = AnchorIndex
+Photon.FOBarIndex = FOBarIndex
+Photon.FOBtnIndex = FOBtnIndex
+Photon.AnchorIndex = AnchorIndex
 
 --[[ Timer Management ]]
 local timerFrame
 
---I think this is only used in Neuron-Flyouts
+--I think this is only used in Photon-Flyouts
 local POINTS = {
 	R = "RIGHT",
 	L = "LEFT",
@@ -383,8 +383,8 @@ function ActionButton:filter_item(tooltip)
 								end
 							end
 						until true
-						if (data[name] and (not Neuron.itemCache[name])) then
-							Neuron.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
+						if (data[name] and (not Photon.itemCache[name])) then
+							Photon.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
 						end
 					end
 				end
@@ -412,8 +412,8 @@ function ActionButton:filter_item(tooltip)
 								end
 							end
 						until true
-						if (data[name] and not Neuron.itemCache[name]) then
-							Neuron.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
+						if (data[name] and not Photon.itemCache[name]) then
+							Photon.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
 						end
 					end
 				end
@@ -491,10 +491,10 @@ function ActionButton:filter_spell(tooltip)
 					end
 				end
 			until true
-			if (data[name:lower()] and not (Neuron.spellCache[name:lower()] or Neuron.spellCache[name:lower().."()"])) then
+			if (data[name:lower()] and not (Photon.spellCache[name:lower()] or Photon.spellCache[name:lower().."()"])) then
 				-- if it isn't in the items cache the icon and tooltip won't show.
-				Neuron.spellCache[name:lower()] = { ["booktype"] = bookType,["index"] = j, ["spellType"] = spellType,["spellID"]= spellID, ["icon"]=icon,["spellName"]=name }
-				Neuron.spellCache[name:lower().."()"] = { ["booktype"] = bookType,["index"] = j, ["spellType"] = spellType,["spellID"]= spellID, ["icon"]=icon,["spellName"]=name }
+				Photon.spellCache[name:lower()] = { ["booktype"] = bookType,["index"] = j, ["spellType"] = spellType,["spellID"]= spellID, ["icon"]=icon,["spellName"]=name }
+				Photon.spellCache[name:lower().."()"] = { ["booktype"] = bookType,["index"] = j, ["spellType"] = spellType,["spellID"]= spellID, ["icon"]=icon,["spellName"]=name }
 			end
 		end
 	end
@@ -524,8 +524,8 @@ function ActionButton:filter_type()
 							end
 						end
 					until true
-					if (name and data[name] and (not Neuron.itemCache[name])) then
-						Neuron.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
+					if (name and data[name] and (not Photon.itemCache[name])) then
+						Photon.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
 					end
 				end
 			end
@@ -548,8 +548,8 @@ function ActionButton:filter_type()
 								data[name] = "item"
 							end
 						until true
-						if (data[name] and not Neuron.itemCache[name]) then
-							Neuron.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
+						if (data[name] and not Photon.itemCache[name]) then
+							Photon.itemCache[name] = itemId -- if it isn't in the items cache the icon and tooltip won't show.
 						end
 					end
 				end
@@ -1143,7 +1143,7 @@ function ActionButton:Flyout_GetButton()
 		id = id + 1
 	end
 
-	local newButton = CreateFrame("CheckButton", self:GetName().."_".."NeuronFlyoutButton"..id, UIParent, "NeuronActionButtonTemplate") --create the new button frame using the desired parameters
+	local newButton = CreateFrame("CheckButton", self:GetName().."_".."PhotonFlyoutButton"..id, UIParent, "PhotonActionButtonTemplate") --create the new button frame using the desired parameters
 	setmetatable(newButton, {__index = ActionButton})
 
 	newButton.elapsed = 0
@@ -1241,8 +1241,8 @@ function ActionButton:Flyout_GetBar()
 		id = id + 1
 	end
 
-	local bar = CreateFrame("CheckButton", self:GetName().."_".."NeuronFlyoutBar"..id, UIParent, "NeuronBarTemplate")
-	setmetatable(bar, {__index = Neuron.Bar})
+	local bar = CreateFrame("CheckButton", self:GetName().."_".."PhotonFlyoutBar"..id, UIParent, "PhotonBarTemplate")
+	setmetatable(bar, {__index = Photon.Bar})
 
 	bar.class = "FlyoutBar"
 	bar.elapsed = 0
@@ -1265,7 +1265,7 @@ function ActionButton:Flyout_GetBar()
 
 	bar:Hide()
 
-	bar.handler = CreateFrame("Frame", "NeuronFlyoutHandler"..id, UIParent, "SecureHandlerStateTemplate, SecureHandlerShowHideTemplate")
+	bar.handler = CreateFrame("Frame", "PhotonFlyoutHandler"..id, UIParent, "SecureHandlerStateTemplate, SecureHandlerShowHideTemplate")
 	bar.handler:SetAttribute("state-current", "homestate")
 	bar.handler:SetAttribute("state-last", "homestate")
 	bar.handler:SetAttribute("showstates", "homestate")

@@ -1,21 +1,21 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---The functions in this file are part of the ActionButton class.
 ---It was just easier to put them all in their own file for organization.
 
-local ActionButton = Neuron.ActionButton
+local ActionButton = Photon.ActionButton
 
 local macroDrag = {} --this is a table that holds onto the contents of the  current macro being dragged
 local macroCache = {} --this will hold onto any previous contents of our button
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 --------------------------------------
 --------------------------------------
@@ -41,7 +41,7 @@ function ActionButton:OnDragStart()
 	end
 
 	if drag and self:GetMacroText() ~= "" then
-		Neuron.dragging = true
+		Photon.dragging = true
 
 		if #macroCache==0 then --don't run if we have a cache, we will call it manually on the OnReceiveDrag on the new button
 			self:SetMouseCursor()
@@ -52,7 +52,7 @@ function ActionButton:OnDragStart()
 		self:InitializeButton()
 		self:UpdateAll()
 
-		for _,bar in pairs(Neuron.bars) do
+		for _,bar in pairs(Photon.bars) do
 			if bar.class == "ActionBar" then
 				bar:ACTIONBAR_SHOWHIDEGRID(true) --show the button grid if we have something picked up (i.e if macroDrag contains something)
 			end
@@ -86,7 +86,7 @@ function ActionButton:OnReceiveDrag()
 		self:SetMouseCursor()
 	end
 
-	if #macroDrag > 0 then --checks to see if the thing we are placing is a Neuron created macro vs something from the spellbook
+	if #macroDrag > 0 then --checks to see if the thing we are placing is a Photon created macro vs something from the spellbook
 		self:PlaceMacro()
 	elseif cursorType == "spell" then
 		self:PlaceSpell(action1, action2, spellID)
@@ -118,14 +118,14 @@ function ActionButton:OnReceiveDrag()
 
 	if #macroCache>0 then
 		self:OnDragStart() --If we picked up a new ability after dropping this one we have to manually call OnDragStart
-		for _,bar in pairs(Neuron.bars) do
+		for _,bar in pairs(Photon.bars) do
 			bar:ACTIONBAR_SHOWHIDEGRID(true) --show the button grid if we have something picked up (i.e if macroDrag contains something)
 		end
 	else
 		SetCursor(nil)
 		ClearCursor() --if we did not pick up a new spell, clear the cursor
-		Neuron.dragging = false
-		for _,bar in pairs(Neuron.bars) do
+		Photon.dragging = false
+		for _,bar in pairs(Photon.bars) do
 			bar:ACTIONBAR_SHOWHIDEGRID() --show the button grid if we have something picked up (i.e if macroDrag contains something)
 		end
 	end
@@ -145,19 +145,19 @@ end
 
 --we need to hook to the WorldFrame OnReceiveDrag and OnMouseDown so that we can "let go" of the spell when we drag it off the bar
 function ActionButton:WorldFrame_OnReceiveDrag()
-	--CAREFUL! see brittyazel/Neuron/issues/468
+	--CAREFUL! see brittyazel/Photon/issues/468
 	--only do something if there's currently data in macroDrag. Otherwise it is
 	--just for normal Blizzard behavior.
 	if #macroDrag > 0 then
 		SetCursor(nil)
 		ClearCursor()
-		Neuron.dragging = false
+		Photon.dragging = false
 
 		wipe(macroDrag)
 		wipe(macroCache)
 	end
 
-	for _,bar in pairs(Neuron.bars) do
+	for _,bar in pairs(Photon.bars) do
 		bar:ACTIONBAR_SHOWHIDEGRID()
 	end
 end
@@ -235,9 +235,9 @@ function ActionButton:PlaceSpell(action1, action2, spellID)
 	local icon = C_Spell.GetSpellTexture(spellID)
 
 	if not spellName then
-		if Neuron.spellCache[spell:lower()] then
-			spellName = Neuron.spellCache[spell:lower()].spellName
-			icon = Neuron.spellCache[spell:lower()].icon
+		if Photon.spellCache[spell:lower()] then
+			spellName = Photon.spellCache[spell:lower()].spellName
+			icon = Photon.spellCache[spell:lower()].icon
 		end
 	end
 
@@ -268,7 +268,7 @@ function ActionButton:PlacePetAbility(action1, action2)
 		self:SetMacroEquipmentSet()
 
 	else
-		Neuron:Print(L["DragDrop_Error_Message"])
+		Photon:Print(L["DragDrop_Error_Message"])
 	end
 end
 
@@ -276,9 +276,9 @@ end
 function ActionButton:PlaceItem(action1, action2)
 	local item, link = C_Item.GetItemInfo(action2)
 
-	if link and not Neuron.itemCache[item:lower()] then --add the item to the itemcache if it isn't otherwise in it
+	if link and not Photon.itemCache[item:lower()] then --add the item to the itemcache if it isn't otherwise in it
 		local _, itemID = link:match("(item:)(%d+)")
-		Neuron.itemCache[item:lower()] = itemID
+		Photon.itemCache[item:lower()] = itemID
 	end
 
 	if C_Item.IsEquippableItem(item) then
@@ -507,8 +507,8 @@ function ActionButton:SetMouseCursor()
 			end
 		end
 
-		if Neuron.itemCache[self.item:lower()] then --try to pull the spellID from our ItemCache as a last resort
-			C_Item.PickupItem(Neuron.itemCache[self.item:lower()])
+		if Photon.itemCache[self.item:lower()] then --try to pull the spellID from our ItemCache as a last resort
+			C_Item.PickupItem(Photon.itemCache[self.item:lower()])
 			if GetCursorInfo() then
 				return
 			end

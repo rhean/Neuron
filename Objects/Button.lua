@@ -1,18 +1,18 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
----@class NeuronButton : CheckButton @define Button as inheriting from CheckButton
+---@class PhotonButton : CheckButton @define Button as inheriting from CheckButton
 local Button = setmetatable({}, {__index = CreateFrame("CheckButton")}) --this is the metatable for our button object
-Neuron.Button = Button
+Photon.Button = Button
 
 local Skin = LibStub("Masque", true)
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 LibStub("AceEvent-3.0"):Embed(Button)
 LibStub("AceTimer-3.0"):Embed(Button)
@@ -31,14 +31,14 @@ local issecretvalue = issecretvalue or function() return false end
 local DEFAULT_VIRTUAL_KEY = "LeftButton"
 local NEURON_VIRTUAL_KEY = "Hotkey"
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param baseObj Button @Base object class for this specific button
 ---@param barClass string @Class type for the bar the button will be on
 ---@param objType string @Type of object this button will be
 ---@param template string @The template name that this frame will derive from
----@return NeuronButton @ A newly created Button object
+---@return PhotonButton @ A newly created Button object
 function Button.new(bar, buttonID, baseObj, barClass, objType, template)
 	local newButton
 	local newButtonName = bar:GetName().."_"..objType..buttonID
@@ -77,11 +77,11 @@ end
 ------------------------------------------------
 
 function Button.ChangeSelectedButton(newButton)
-	if newButton == Neuron.currentButton then
+	if newButton == Photon.currentButton then
 		return
-	elseif newButton and Neuron.currentButton then
-		if Neuron.currentButton.bar ~= newButton.bar then
-			local bar = Neuron.currentButton.bar
+	elseif newButton and Photon.currentButton then
+		if Photon.currentButton.bar ~= newButton.bar then
+			local bar = Photon.currentButton.bar
 
 			if bar.handler:GetAttribute("assertstate") then
 				bar.handler:SetAttribute("state-"..bar.handler:GetAttribute("assertstate"), bar.handler:GetAttribute("activestate") or "homestate")
@@ -90,17 +90,17 @@ function Button.ChangeSelectedButton(newButton)
 			newButton.bar.handler:SetAttribute("fauxstate", bar.handler:GetAttribute("activestate"))
 		end
 
-		ButtonEditor.deactivate(Neuron.currentButton.editFrame)
+		ButtonEditor.deactivate(Photon.currentButton.editFrame)
 		ButtonEditor.activate(newButton.editFrame)
-		Neuron.currentButton = newButton
-		Neuron.currentBar = newButton.bar
-	elseif newButton and not Neuron.currentButton then
+		Photon.currentButton = newButton
+		Photon.currentBar = newButton.bar
+	elseif newButton and not Photon.currentButton then
 		ButtonEditor.activate(newButton.editFrame)
-		Neuron.currentButton = newButton
-		Neuron.currentBar = newButton.bar
-	else -- not newButton and Neuron.currentButton
-		ButtonEditor.deactivate(Neuron.currentButton.editFrame)
-		Neuron.currentButton = nil
+		Photon.currentButton = newButton
+		Photon.currentBar = newButton.bar
+	else -- not newButton and Photon.currentButton
+		ButtonEditor.deactivate(Photon.currentButton.editFrame)
+		Photon.currentButton = nil
 	end
 end
 
@@ -164,7 +164,7 @@ function Button:SetCooldownTimer(start, duration, enable, modrate, showCountdown
 		end
 
 		--this is only for abilities that have CD's >4 sec. Any less than that and we don't want to track the CD with text or alpha, just with the standard animation
-		if duration >= Neuron.TIMERLIMIT then --if spells have a cooldown less than 4sec then don't show a full cooldown
+		if duration >= Photon.TIMERLIMIT then --if spells have a cooldown less than 4sec then don't show a full cooldown
 
 			if showCountdownTimer or showCountdownAlpha then --only set a timer if we explicitely want to (this saves CPU for a lot of people)
 
@@ -360,7 +360,7 @@ end
 ---toggled. Forever keeps the default tree as spec 1
 ---@param curSpec number|string
 function Button:CopyDefaultToSpec(curSpec)
-	if Neuron.isWoWForever or not self.bar:GetMultiSpec() or type(curSpec) ~= "number" then
+	if Photon.isWoWForever or not self.bar:GetMultiSpec() or type(curSpec) ~= "number" then
 		return
 	end
 
@@ -507,9 +507,9 @@ function Button:SetSkinned(flyout)
 			Highlight = self.Highlight,
 		}
 		if flyout then
-			Skin:Group("Neuron", self.anchor.bar.data.name):AddButton(self, btnData, "Action")
+			Skin:Group("Photon", self.anchor.bar.data.name):AddButton(self, btnData, "Action")
 		else
-			Skin:Group("Neuron", self.bar.data.name):AddButton(self, btnData, "Action")
+			Skin:Group("Photon", self.bar.data.name):AddButton(self, btnData, "Action")
 		end
 	end
 end
@@ -539,7 +539,7 @@ end
 function Button:ApplyBindings()
 	local virtualKey
 
-	---checks if the button is a Neuron action or a special Blizzard action (such as a zone ability)
+	---checks if the button is a Photon action or a special Blizzard action (such as a zone ability)
 	---this is necessary because Blizzard buttons usually won't work and can give very weird results
 	---if clicked with a virtual key other than the default "LeftButton"
 	if self.class == "ActionBar" then
@@ -609,7 +609,7 @@ function Button:UpdateNormalTexture()
 end
 
 function Button:UpdateVisibility()
-	if self.isShown or Neuron.barEditMode or (Neuron.buttonEditMode and self.editFrame) or (Neuron.bindingMode and self.keybindFrame) then
+	if self.isShown or Photon.barEditMode or (Photon.buttonEditMode and self.editFrame) or (Photon.bindingMode and self.keybindFrame) then
 		self.isShown = true
 	else
 		self.isShown = false
@@ -764,8 +764,8 @@ end
 function Button:UpdateItemCooldown()
 	if self.item and self.isShown then
 		local start, duration, enable, modrate
-		if Neuron.itemCache[self.item:lower()] then
-			start, duration, enable, modrate = C_Container.GetItemCooldown(Neuron.itemCache[self.item:lower()])
+		if Photon.itemCache[self.item:lower()] then
+			start, duration, enable, modrate = C_Container.GetItemCooldown(Photon.itemCache[self.item:lower()])
 		else
 			local itemID = C_Item.GetItemInfoInstant(self.item)
 			start, duration, enable, modrate = C_Container.GetItemCooldown(itemID)
@@ -796,7 +796,7 @@ end
 -----------------------------------------------------------------------------------------
 
 function Button:UpdateUsable()
-	if Neuron.buttonEditMode or Neuron.bindingMode then
+	if Photon.buttonEditMode or Photon.bindingMode then
 		self.Icon:SetVertexColor(0.2, 0.2, 0.2)
 	elseif self.actionID then
 		self:UpdateUsableAction()
@@ -818,7 +818,7 @@ function Button:UpdateUsableSpell()
 		--C_Spell.IsSpellInRange returns false when out of range and nil when range doesn't apply
 		if self.bar:GetShowRangeIndicator() and C_Spell.IsSpellInRange(self.spell, self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
-		elseif self.bar:GetShowRangeIndicator() and Neuron.spellCache[self.spell:lower()] and C_Spell.IsSpellInRange(Neuron.spellCache[self.spell:lower()].spellID, self.unit) == false then
+		elseif self.bar:GetShowRangeIndicator() and Photon.spellCache[self.spell:lower()] and C_Spell.IsSpellInRange(Photon.spellCache[self.spell:lower()].spellID, self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
 		else
 			self.Icon:SetVertexColor(1.0, 1.0, 1.0)
@@ -846,7 +846,7 @@ function Button:UpdateUsableItem()
 		local checkRange = self.bar:GetShowRangeIndicator() and not InCombatLockdown()
 		if checkRange and C_Item.IsItemInRange(self.item, self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
-		elseif checkRange and Neuron.itemCache[self.item:lower()] and C_Item.IsItemInRange(Neuron.itemCache[self.item:lower()], self.unit) == false then
+		elseif checkRange and Photon.itemCache[self.item:lower()] and C_Item.IsItemInRange(Photon.itemCache[self.item:lower()], self.unit) == false then
 			self.Icon:SetVertexColor(self.bar:GetRangeColor()[1], self.bar:GetRangeColor()[2], self.bar:GetRangeColor()[3])
 		else
 			self.Icon:SetVertexColor(1.0, 1.0, 1.0)
@@ -1006,11 +1006,11 @@ function Button:UpdateSpellTooltip()
 		elseif self.bar:GetTooltipOption() == "minimal" then
 			GameTooltip:SetText(self.spell, 1, 1, 1)
 		end
-	elseif Neuron.spellCache[self.spell:lower()] then --if the spell isn't in the spellbook, check our spell cache
+	elseif Photon.spellCache[self.spell:lower()] then --if the spell isn't in the spellbook, check our spell cache
 		if self.bar:GetTooltipOption() == "normal" then
-			GameTooltip:SetSpellByID(Neuron.spellCache[self.spell:lower()].spellID)
+			GameTooltip:SetSpellByID(Photon.spellCache[self.spell:lower()].spellID)
 		elseif self.bar:GetTooltipOption() == "minimal" then
-			GameTooltip:SetText(Neuron.spellCache[self.spell:lower()].spellName, 1, 1, 1)
+			GameTooltip:SetText(Photon.spellCache[self.spell:lower()].spellName, 1, 1, 1)
 		end
 	else
 		GameTooltip:SetText(UNKNOWN, 1, 1, 1)
@@ -1019,7 +1019,7 @@ end
 
 function Button:UpdateItemTooltip()
 	local name, link = C_Item.GetItemInfo(self.item)
-	name = name or Neuron.itemCache[self.item:lower()]
+	name = name or Photon.itemCache[self.item:lower()]
 	link = link or "item:"..name..":0:0:0:0:0:0:0"
 
 	if not name or not link then

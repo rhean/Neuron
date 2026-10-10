@@ -1,13 +1,13 @@
-﻿-- Neuron is a World of Warcraft® user interface addon.
+﻿-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local Bar = Neuron.Bar
+local Bar = Photon.Bar
 
 local function frameIsDependentOnFrame(frame, otherFrame)
 
@@ -124,7 +124,7 @@ function Bar:StickToEdge()
 
 	local point, x, y= self:GetPosition()
 	local changed
-	local w, h, rTol = self:GetWidth()/2, self:GetHeight()/2, Neuron.SNAPTO_TOLERANCE
+	local w, h, rTol = self:GetWidth()/2, self:GetHeight()/2, Photon.SNAPTO_TOLERANCE
 
 	local function calcX(opt)
 		if opt == 1 then if x <= w+rTol then x = w; changed = true end

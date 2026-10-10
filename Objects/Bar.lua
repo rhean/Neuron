@@ -1,11 +1,11 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 local Spec = addonTable.utilities.Spec
 local BarEditor = addonTable.overlay.BarEditor
@@ -13,9 +13,9 @@ local ButtonEditor = addonTable.overlay.ButtonEditor
 
 ---@class Bar : CheckButton @This is our bar object that serves as the container for all of our button objects
 local Bar = setmetatable({}, {__index = CreateFrame("CheckButton")}) --this is the metatable for our button object
-Neuron.Bar = Bar
+Photon.Bar = Bar
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 LibStub("AceTimer-3.0"):Embed(Bar)
 LibStub("AceEvent-3.0"):Embed(Bar)
@@ -29,21 +29,21 @@ Trashcan:Hide()
 
 ----------------------------------------------------
 
----Constructor: Create a new Neuron Bar object
+---Constructor: Create a new Photon Bar object
 ---@param class string @The class type of the new bar
 ---@param barID number @The ID of the new bar object
 ---@return Bar @ A newly created Button object
 function Bar.new(class, barID)
-	local data = Neuron.registeredBarData[class]
+	local data = Photon.registeredBarData[class]
 
 	local newBar
 
 	--this is the creation of our bar object frame
-	if _G["Neuron"..data.barType..barID] then --check to see if our bar already exists on the global namespace
-		newBar = CreateFrame("CheckButton", "Neuron"..data.barType..random(1000,10000000), UIParent, "NeuronBarTemplate") --in the case of trying to create a bar on a frame that already exists, create a random frame ID for this session only
+	if _G["Photon"..data.barType..barID] then --check to see if our bar already exists on the global namespace
+		newBar = CreateFrame("CheckButton", "Photon"..data.barType..random(1000,10000000), UIParent, "PhotonBarTemplate") --in the case of trying to create a bar on a frame that already exists, create a random frame ID for this session only
 		setmetatable(newBar, {__index = Bar})
 	else
-		newBar = CreateFrame("CheckButton", "Neuron"..data.barType..barID, UIParent, "NeuronBarTemplate")
+		newBar = CreateFrame("CheckButton", "Photon"..data.barType..barID, UIParent, "PhotonBarTemplate")
 		setmetatable(newBar, {__index = Bar})
 	end
 
@@ -80,7 +80,7 @@ function Bar.new(class, barID)
 	-- bars whose frame is not created to be deleted from the DB. This is
 	-- more of a structural issue I think, and hopefully resolve itself when
 	-- we start making separate objects for bar data and bar frames
-	table.insert(Neuron.bars, newBar) --insert our new bar at the end of the table
+	table.insert(Photon.bars, newBar) --insert our new bar at the end of the table
 
 	newBar:CreateDriver()
 	newBar:CreateHandler()
@@ -134,9 +134,9 @@ end
 function Bar:ACTIONBAR_SHOWHIDEGRID(show)
 
 	if show then
-		Neuron.dragging = true
+		Photon.dragging = true
 	else
-		Neuron.dragging = false
+		Photon.dragging = false
 	end
 
 	--don't show the grid if the bar is locked and the right key isn't pressed
@@ -160,12 +160,12 @@ end
 ---This function is used for creating brand new bars, and it is really just a wrapper for the Bar constructor with a couple of assumptions and checks
 function Bar:CreateNewBar(class)
 
-	if not class and Neuron.registeredBarData[class] then --if the class isn't registered, go ahead and bail out.
-		Neuron.PrintBarTypes()
+	if not class and Photon.registeredBarData[class] then --if the class isn't registered, go ahead and bail out.
+		Photon.PrintBarTypes()
 		return
 	end
 
-	local barID = #Neuron.registeredBarData[class].barDB + 1 --increment 1 higher than the current number of bars in this class of bar's database
+	local barID = #Photon.registeredBarData[class].barDB + 1 --increment 1 higher than the current number of bars in this class of bar's database
 
 	local newBar = Bar.new(class, barID) --create new bar
 
@@ -177,7 +177,7 @@ function Bar:CreateNewBar(class)
 	newBar:Load() --load the bar
 
 	--overlays are only allocated when edit mode is turned on, so a bar created while editing needs its own
-	if Neuron.barEditMode then
+	if Photon.barEditMode then
 		newBar.editFrame = BarEditor.allocate(newBar, function(overlay, button, down)
 			overlay.bar:OnClick(button, down)
 		end)
@@ -187,7 +187,7 @@ function Bar:CreateNewBar(class)
 
 	Bar.ChangeSelectedBar(newBar)
 end
-Neuron.CreateNewBar = Bar.CreateNewBar --this is so the slash function works correctly
+Photon.CreateNewBar = Bar.CreateNewBar --this is so the slash function works correctly
 
 
 function Bar:DeleteBar()
@@ -196,7 +196,7 @@ function Bar:DeleteBar()
 	self.handler:SetAttribute("showstates", "homestate")
 	self:ClearStates(self.handler, "homestate")
 
-	for state, values in pairs(Neuron.MANAGED_BAR_STATES) do
+	for state, values in pairs(Photon.MANAGED_BAR_STATES) do
 		if self.data[state] and self[state] and self[state].registered then
 			if state == "custom" and self.data.customRange then
 				local start = tonumber(string.match(self.data.customRange, "^%d+"))
@@ -245,28 +245,28 @@ function Bar:DeleteBar()
 	end
 
 	local index --find the location of our bar in the bar table
-	for i,v in ipairs(Neuron.bars) do
+	for i,v in ipairs(Photon.bars) do
 		if v == self then
 			index = i
 		end
 	end
 
 	if index then --if our index was found (it should always be found) remove it from the array
-		table.remove(Neuron.bars, index)
+		table.remove(Photon.bars, index)
 	end
 
-	Neuron.currentBar = nil
+	Photon.currentBar = nil
 
-	for i,v in pairs(Neuron.bars) do --update bars to reflect new names, if they have new names
+	for i,v in pairs(Photon.bars) do --update bars to reflect new names, if they have new names
 		v:UpdateBarStatus()
 	end
 end
 
-function Bar:AddObjectToBar() --called from NeuronGUI
+function Bar:AddObjectToBar() --called from PhotonGUI
 	local id = #self.buttons + 1
 
 	if #self.buttons < self.objMax then
-		local buttonBaseObject = Neuron.registeredBarData[self.class].objTemplate
+		local buttonBaseObject = Photon.registeredBarData[self.class].objTemplate
 		buttonBaseObject.new(self, id)
 	end
 
@@ -278,7 +278,7 @@ function Bar:AddObjectToBar() --called from NeuronGUI
 	self:UpdateObjectVisibility()
 end
 
-function Bar:RemoveObjectFromBar() --called from NeuronGUI
+function Bar:RemoveObjectFromBar() --called from PhotonGUI
 
 	local id = #self.buttons --always the last button
 
@@ -323,20 +323,20 @@ end
 
 ---@param newBar Bar|nil
 function Bar.ChangeSelectedBar(newBar)
-	if newBar == Neuron.currentBar then
+	if newBar == Photon.currentBar then
 		return
 	end
 
 	--the overlays only exist in bar edit mode
-	if Neuron.currentBar and Neuron.currentBar.editFrame then
-		BarEditor.deactivate(Neuron.currentBar.editFrame)
+	if Photon.currentBar and Photon.currentBar.editFrame then
+		BarEditor.deactivate(Photon.currentBar.editFrame)
 	end
 
 	if newBar and newBar.editFrame then
 		BarEditor.activate(newBar.editFrame)
 	end
 
-	Neuron.currentBar = newBar
+	Photon.currentBar = newBar
 end
 
 -----------------------------------
@@ -374,7 +374,7 @@ end
 ---this function is set via a repeating scheduled timer in SetAutoHide()
 function Bar:AutoHideUpdate()
 	if self:GetAutoHide() and self.handler~=nil then
-		if not Neuron.buttonEditMode and not Neuron.barEditMode and not Neuron.bindingMode then
+		if not Photon.buttonEditMode and not Photon.barEditMode and not Photon.bindingMode then
 			if self:IsShown() then
 				self.handler:SetAlpha(1)
 			else
@@ -481,7 +481,7 @@ end
 
 
 function Bar:AddVisibilityDriver(handler, state, conditions)
-	if Neuron.MANAGED_BAR_STATES[state] then
+	if Photon.MANAGED_BAR_STATES[state] then
 		RegisterAttributeDriver(handler, "state-"..state, conditions);
 
 		if handler:GetAttribute("activestates"):find(state) then
@@ -509,7 +509,7 @@ end
 
 
 function Bar:UpdateBarVisibility(driver)
-	for state, values in pairs(Neuron.MANAGED_BAR_STATES) do
+	for state, values in pairs(Photon.MANAGED_BAR_STATES) do
 		if self.data.hidestates:find(":"..state) then
 			if not self.vis[state] or not self.vis[state].registered then
 				if not self.vis[state] then
@@ -557,12 +557,12 @@ end
 
 function Bar:AddStates(handler, state, conditions)
 	if state then
-		if Neuron.MANAGED_BAR_STATES[state] then
+		if Photon.MANAGED_BAR_STATES[state] then
 			RegisterAttributeDriver(handler, "state-"..state, conditions);
 		end
 		--pages go around the other home states instead, see Bar.PagesAreLayers
-		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.FormsArePages(state) and not Bar.PagesAreLayers(state) then
-			handler:SetAttribute("handler-homestate", Neuron.MANAGED_BAR_STATES[state].homestate)
+		if Photon.MANAGED_BAR_STATES[state].homestate and not Bar.FormsArePages(state) and not Bar.PagesAreLayers(state) then
+			handler:SetAttribute("handler-homestate", Photon.MANAGED_BAR_STATES[state].homestate)
 		end
 		self[state].registered = true
 	end
@@ -570,7 +570,7 @@ end
 
 function Bar:ClearStates(handler, state)
 	if state ~= "homestate" then
-		if Neuron.MANAGED_BAR_STATES[state].homestate and not Bar.PagesAreLayers(state) then
+		if Photon.MANAGED_BAR_STATES[state].homestate and not Bar.PagesAreLayers(state) then
 			handler:SetAttribute("handler-homestate", nil)
 		end
 		handler:SetAttribute("state-"..state, nil)
@@ -583,7 +583,7 @@ end
 
 
 function Bar:UpdateStates(handler)
-	for state, values in pairs(Neuron.MANAGED_BAR_STATES) do
+	for state, values in pairs(Photon.MANAGED_BAR_STATES) do
 		if self.data[state] then
 			if not self[state] or not self[state].registered then
 				local statemap
@@ -629,11 +629,11 @@ function Bar:CreateDriver()
 	end
 	]]
 
-	local driver = CreateFrame("Frame", "NeuronBarDriver"..self.id, UIParent, "SecureHandlerStateTemplate")
+	local driver = CreateFrame("Frame", "PhotonBarDriver"..self.id, UIParent, "SecureHandlerStateTemplate")
 
 	driver:SetID(self.id)
-	--Dynamicly builds driver attributes based on stated in Neuron.MANAGED_BAR_STATES using localized attribute text from a above
-	for _, stateInfo in pairs(Neuron.MANAGED_BAR_STATES) do
+	--Dynamicly builds driver attributes based on stated in Photon.MANAGED_BAR_STATES using localized attribute text from a above
+	for _, stateInfo in pairs(Photon.MANAGED_BAR_STATES) do
 		local action = DRIVER_BASE_ACTION:gsub("<MODIFIER>", stateInfo.modifier)
 		driver:SetAttribute("_onstate-"..stateInfo.modifier, action)
 	end
@@ -707,12 +707,12 @@ function Bar:CreateHandler()
 	end
 	]]
 
-	local handler = CreateFrame("Frame", "NeuronBarHandler"..self.id, self.driver, "SecureHandlerStateTemplate")
+	local handler = CreateFrame("Frame", "PhotonBarHandler"..self.id, self.driver, "SecureHandlerStateTemplate")
 
 	handler:SetID(self.id)
 
-	--Dynamicly builds handler actions based on states in Neuron.MANAGED_BAR_STATES using Global text
-	for _, stateInfo in pairs(Neuron.MANAGED_BAR_STATES) do
+	--Dynamicly builds handler actions based on states in Photon.MANAGED_BAR_STATES using Global text
+	for _, stateInfo in pairs(Photon.MANAGED_BAR_STATES) do
 		local action = HANDLER_BASE_ACTION:gsub("<MODIFIER>", stateInfo.modifier)
 		handler:SetAttribute("_onstate-"..stateInfo.modifier, action)
 	end
@@ -880,7 +880,7 @@ end
 
 
 function Bar:CreateWatcher()
-	local watcher = CreateFrame("Frame", "NeuronBarWatcher"..self.id, self.handler, "SecureHandlerStateTemplate")
+	local watcher = CreateFrame("Frame", "PhotonBarWatcher"..self.id, self.handler, "SecureHandlerStateTemplate")
 
 	watcher:SetID(self.id)
 
@@ -987,7 +987,7 @@ function Bar:SetPosition()
 		self:ClearAllPoints()
 		self:SetPoint("CENTER", "UIParent", point, x, y)
 		self:SetUserPlaced(true)
-		self:SetFrameStrata(Neuron.STRATAS[self:GetStrata()])
+		self:SetFrameStrata(Photon.STRATAS[self:GetStrata()])
 
 		if self.Message then
 			self.Message:SetText(point:lower().."     x: "..format("%0.2f", x).."     y: "..format("%0.2f", y))
@@ -997,7 +997,7 @@ function Bar:SetPosition()
 	end
 end
 
---Fakes a state change for a given bar, calls up the counterpart function in NeuronButton
+--Fakes a state change for a given bar, calls up the counterpart function in PhotonButton
 function Bar:FakeStateChange(state)
 	self.handler:SetAttribute("fauxstate", state)
 
@@ -1041,7 +1041,7 @@ function Bar:SetObjectLoc()
 		buttons = self.buttons
 	else
 		for k,v in pairs (self.data.objectList) do
-			table.insert(buttons, Neuron.FOBTNIndex[v])
+			table.insert(buttons, Photon.FOBTNIndex[v])
 		end
 	end
 
@@ -1137,7 +1137,7 @@ function Bar:SetPerimeter()
 		buttons = self.buttons
 	else
 		for k,v in pairs (self.data.objectList) do
-			table.insert(buttons, Neuron.FOBTNIndex[v])
+			table.insert(buttons, Photon.FOBTNIndex[v])
 		end
 	end
 	-----------------------------------------------
@@ -1184,7 +1184,7 @@ end
 
 
 function Bar:SetRemap_Stance()
-	local start = tonumber(Neuron.MANAGED_BAR_STATES.stance.homestate:match("%d+"))
+	local start = tonumber(Photon.MANAGED_BAR_STATES.stance.homestate:match("%d+"))
 
 	if start then
 		self.data.remap = ""
@@ -1196,7 +1196,7 @@ function Bar:SetRemap_Stance()
 		self.data.remap = gsub(self.data.remap, ";$", "")
 
 
-		if Neuron.class == "ROGUE" then
+		if Photon.class == "ROGUE" then
 			self.data.remap = self.data.remap..";2:2"
 		end
 	end
@@ -1247,11 +1247,11 @@ function Bar:OnClick(click, down)
 		BarEditor.microadjust(self.editFrame)
 	elseif click == "RightButton" then
 		--opening it draws it
-		Neuron.NeuronGUI:OpenBarConfig()
+		Photon.PhotonGUI:OpenBarConfig()
 		return
 	end
 
-	Neuron.NeuronGUI:RefreshBarConfig()
+	Photon.PhotonGUI:RefreshBarConfig()
 end
 
 function Bar:OnShow()
@@ -1388,11 +1388,11 @@ function Bar:SetState(msg, gui, checked)
 		local command = msg:gsub(state, "");
 		command = command:gsub("^%s+", "")
 
-		if not Neuron.MANAGED_BAR_STATES[state] then
+		if not Photon.MANAGED_BAR_STATES[state] then
 			if not gui then
-				Neuron:PrintStateList()
+				Photon:PrintStateList()
 			else
-				Neuron:Print("GUI option error")
+				Photon:Print("GUI option error")
 			end
 			return
 		end
@@ -1407,7 +1407,7 @@ function Bar:SetState(msg, gui, checked)
 			self.data.pet = false
 
 
-			if Neuron.class == "ROGUE" and self.data.stealth then
+			if Photon.class == "ROGUE" and self.data.stealth then
 				self.data.stealth = false
 			end
 
@@ -1443,7 +1443,7 @@ function Bar:SetState(msg, gui, checked)
 
 						count = count + 1
 					else
-						Neuron:Print(states.." not formated properly and skipped")
+						Photon:Print(states.." not formated properly and skipped")
 					end
 				end
 
@@ -1464,7 +1464,7 @@ function Bar:SetState(msg, gui, checked)
 			for states in gmatch(self.data.hidestates, "custom%d+") do
 				self.data.hidestates = self.data.hidestates:gsub(states..":", "")
 			end
-			if not self.data.hidestates then Neuron:Print("OOPS")
+			if not self.data.hidestates then Photon:Print("OOPS")
 			end
 		end
 
@@ -1478,7 +1478,7 @@ function Bar:SetState(msg, gui, checked)
 	elseif not gui then
 		wipe(statetable)
 
-		for k,v in pairs(Neuron.MANAGED_BAR_STATES) do
+		for k,v in pairs(Photon.MANAGED_BAR_STATES) do
 
 			if self.data[k] then
 				table.insert(statetable, v.localizedName..": on")
@@ -1490,7 +1490,7 @@ function Bar:SetState(msg, gui, checked)
 		table.sort(statetable)
 
 		for k,v in ipairs(statetable) do
-			Neuron:Print(v)
+			Photon:Print(v)
 		end
 	end
 
@@ -1503,20 +1503,20 @@ function Bar:SetVisibility(toggle, visible)
 	toggle = toggle:lower()
 
 	if not toggle
-		or not Neuron.STATES[toggle]
+		or not Photon.STATES[toggle]
 	then
 		return
 	end
 
 	-- update the preferences - model
-	if Neuron.STATES[toggle] or (toggle == "custom" and self.data.customNames) then
+	if Photon.STATES[toggle] or (toggle == "custom" and self.data.customNames) then
 		if visible and self.data.hidestates:find(toggle) then
 			self.data.hidestates = self.data.hidestates:gsub(toggle..":", "")
 		elseif not visible and not self.data.hidestates:find(toggle) then
 			self.data.hidestates = self.data.hidestates..toggle..":"
 		end
 	else
-		Neuron:Print(L["Invalid index"]); return
+		Photon:Print(L["Invalid index"]); return
 	end
 
 	self.vischanged = true

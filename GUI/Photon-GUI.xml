@@ -1,18 +1,18 @@
-<!--Neuron is a World of Warcraft® user interface addon.
+<!--Photon is a World of Warcraft® user interface addon.
+	Copyright (c) 2026- Linus Olsson
 	Copyright (c) 2017-2023 Britt W. Yazel
 	Copyright (c) 2006-2014 Connor H. Chenoweth
-	Copyright (c) 2026 Linus Olsson
 	This code is licensed under the MIT license (see LICENSE for details)-->
 
 <Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.blizzard.com/wow/ui/" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI_shared.xsd">
-	<!-- Neuron's own flat widgets -->
+	<!-- Photon's own flat widgets -->
 	<Script file="Kit\Style.lua"/>
 	<Script file="Kit\Widgets.lua"/>
 	<!-- Registered GUI Data is a table for building the Bar config form in a generic way -->
 	<Script file="RegisteredGUIData.lua"/>
 	<Script file="BarConfigLayout.lua"/>
-	<!-- the bar editor, it makes NeuronGUI for the files below -->
+	<!-- the bar editor, it makes PhotonGUI for the files below -->
 	<Script file="BarConfigWindow.lua"/>
 	<Script file="InterfacePanel.lua"/>
 	<Script file="Options.lua"/>

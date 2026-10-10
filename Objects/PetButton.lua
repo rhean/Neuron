@@ -1,32 +1,32 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 local LCG = LibStub("LibCustomGlow-1.0")
 
 ---@class PetButton : Button @define class PetButton inherits from class Button
-local PetButton = setmetatable({}, { __index = Neuron.Button })
-Neuron.PetButton = PetButton
+local PetButton = setmetatable({}, { __index = Photon.Button })
+Photon.PetButton = PetButton
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 LibStub("AceEvent-3.0"):Embed(PetButton)
 LibStub("AceTimer-3.0"):Embed(PetButton)
 
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return PetButton @ A newly created PetButton object
 function PetButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, PetButton, "PetBar", "PetButton", "NeuronActionButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, PetButton, "PetBar", "PetButton", "PhotonActionButtonTemplate")
 
 	if defaults then
 		newButton:SetDefaults(defaults)
@@ -72,7 +72,7 @@ function PetButton:InitializeButton()
 end
 
 function PetButton:InitializeButtonSettings()
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetScale(self.bar:GetBarScale())
 
 	if self.bar:GetShowBindText() then
@@ -140,7 +140,7 @@ function PetButton:OnDragStart()
 		self:UpdateData()
 	end
 
-	for i,bar in pairs(Neuron.bars) do
+	for i,bar in pairs(Photon.bars) do
 		bar:ACTIONBAR_SHOWHIDEGRID(true)
 	end
 end
@@ -157,10 +157,10 @@ function PetButton:OnReceiveDrag()
 		self:UpdateData()
 	else
 		ClearCursor()
-		Neuron:Print(L["DragDrop_Error_Message"])
+		Photon:Print(L["DragDrop_Error_Message"])
 	end
 
-	for i,bar in pairs(Neuron.bars) do
+	for i,bar in pairs(Photon.bars) do
 		bar:ACTIONBAR_SHOWHIDEGRID()
 	end
 end
@@ -268,7 +268,7 @@ end
 
 --overwrite function in parent class Button
 function PetButton:UpdateUsable()
-	if Neuron.buttonEditMode or Neuron.bindingMode then
+	if Photon.buttonEditMode or Photon.bindingMode then
 		self.Icon:SetVertexColor(0.2, 0.2, 0.2)
 	elseif self.actionID and GetPetActionSlotUsable(self.actionID) then
 		self.Icon:SetVertexColor(1.0, 1.0, 1.0)
@@ -302,5 +302,5 @@ function PetButton:UpdateVisibility(show)
 	else
 		self.isShown = false
 	end
-	Neuron.Button.UpdateVisibility(self) --call parent function
+	Photon.Button.UpdateVisibility(self) --call parent function
 end

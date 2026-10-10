@@ -1,26 +1,26 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class ZoneAbilityButton : Button @define class ZoneAbilityButton inherits from class Button
-local ZoneAbilityButton = setmetatable({}, {__index = Neuron.Button}) --this is the metatable for our button object
-Neuron.ZoneAbilityButton = ZoneAbilityButton
+local ZoneAbilityButton = setmetatable({}, {__index = Photon.Button}) --this is the metatable for our button object
+Photon.ZoneAbilityButton = ZoneAbilityButton
 
 ----------------------------------------------------------
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return ZoneAbilityButton @ A newly created ZoneAbilityButton object
 function ZoneAbilityButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, ZoneAbilityButton, "ZoneAbilityBar", "ZoneActionButton", "NeuronActionButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, ZoneAbilityButton, "ZoneAbilityBar", "ZoneActionButton", "PhotonActionButtonTemplate")
 
 	newButton.abilityIndex = buttonID
 
@@ -65,7 +65,7 @@ end
 
 function ZoneAbilityButton:InitializeButtonSettings()
 	self.bar:SetShowGrid(false)
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetSkinned()
 end
 
@@ -126,7 +126,7 @@ function ZoneAbilityButton:UpdateVisibility()
 		self.isShown = false
 	end
 
-	Neuron.Button.UpdateVisibility(self) --call parent function
+	Photon.Button.UpdateVisibility(self) --call parent function
 end
 
 --overwrite function in parent class Button

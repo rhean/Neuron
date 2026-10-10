@@ -1,17 +1,17 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
 
 addonTable.overlay = addonTable.overlay or {}
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 ---type definition the contents of the xml file
----@class NeuronBarFrame:CheckButton,ScriptObject
+---@class PhotonBarFrame:CheckButton,ScriptObject
 ---@field Text FontString
 ---@field Message FontString
 ---@field MessageBG Texture
@@ -19,11 +19,11 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
 ---@class BarOverlay
 ---@field active boolean
 ---@field bar Bar
----@field frame NeuronBarFrame
+---@field frame PhotonBarFrame
 ---@field microadjust number
 ---@field onClick fun(overlay: BarOverlay, button:string, down: boolean):nil
 
----@type NeuronBarFrame[]
+---@type PhotonBarFrame[]
 local framePool = {}
 
 ---@param overlay BarOverlay
@@ -46,12 +46,12 @@ local function updateAppearance(overlay)
 	if overlay.microadjust == 0 then
 		overlay.frame.Message:Hide()
 		overlay.frame.MessageBG:Hide()
-		overlay.frame:SetFrameStrata(Neuron.STRATAS[overlay.bar:GetStrata()])
+		overlay.frame:SetFrameStrata(Photon.STRATAS[overlay.bar:GetStrata()])
 	else
 		-- overlay never gets keyboard events unless a high strata
 		-- this hack doesn't work if there is a tooltip level bar
 		-- until you choose that bar and then it starts working for others
-		overlay.frame:SetFrameStrata(Neuron.STRATAS[#Neuron.STRATAS])
+		overlay.frame:SetFrameStrata(Photon.STRATAS[#Photon.STRATAS])
 		overlay.frame:SetBackdropColor(1,1,0,0.6)
 		overlay.frame.Message:Show()
 		overlay.frame.Message:SetText(overlay.bar.data.point:lower().."     x: "..format("%0.2f", overlay.bar:GetXAxis()).."     y: "..format("%0.2f", overlay.bar:GetYAxis()))
@@ -99,9 +99,9 @@ local function onDragStop(overlay)
 	overlay.frame:StopMovingOrSizing()
 	overlay.frame.isDragging = false
 
-	for _,v in pairs(Neuron.bars) do
+	for _,v in pairs(Photon.bars) do
 		if not point and overlay.bar:GetSnapTo() and v:GetSnapTo() and overlay.bar ~= v then
-			point = overlay.bar:Stick(v, Neuron.SNAPTO_TOLERANCE, overlay.bar:GetHorizontalPad(), overlay.bar:GetVerticalPad())
+			point = overlay.bar:Stick(v, Photon.SNAPTO_TOLERANCE, overlay.bar:GetHorizontalPad(), overlay.bar:GetVerticalPad())
 
 			if point then
 				overlay.bar.data.snapToPoint = point
@@ -190,7 +190,7 @@ BarEditor = {
 			bar = bar,
 			frame = -- try to pop a frame off the stack, otherwise make a new one
 				table.remove(framePool) or
-				CreateFrame("CheckButton", nil, UIParent, "NeuronBarTemplate") --[[@as NeuronBarFrame]],
+				CreateFrame("CheckButton", nil, UIParent, "PhotonBarTemplate") --[[@as PhotonBarFrame]],
 			microadjust = 0,
 			onClick = onClickCallback,
 		}

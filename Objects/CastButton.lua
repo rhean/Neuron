@@ -1,17 +1,17 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class CastButton : StatusButton @define class CastButton inherits from class StatusButton
-local CastButton = setmetatable({}, { __index = Neuron.StatusButton })
-Neuron.CastButton = CastButton
+local CastButton = setmetatable({}, { __index = Photon.StatusButton })
+Photon.CastButton = CastButton
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local castWatch = {}
 
@@ -26,14 +26,14 @@ local CASTING_BAR_ALPHA_STEP = 0.05
 local CASTING_BAR_FLASH_STEP = 0.2
 local CASTING_BAR_HOLD_TIME = 1
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return CastButton @ A newly created StatusButton object
 function CastButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.StatusButton.new(bar, buttonID, defaults, CastButton, "CastBar", "Cast Button")
+	local newButton = Photon.StatusButton.new(bar, buttonID, defaults, CastButton, "CastBar", "Cast Button")
 
 	return newButton
 end
@@ -84,7 +84,7 @@ function CastButton:OnEvent(event,...)
 
 		self.StatusBar:SetStatusBarColor(self.config.castColor[1], self.config.castColor[2], self.config.castColor[3])
 
-		self.StatusBar.Spark:SetTexture("Interface\\AddOns\\Neuron\\Images\\CastingBar_Spark_"..self.orientation)
+		self.StatusBar.Spark:SetTexture("Interface\\AddOns\\Photon\\Images\\CastingBar_Spark_"..self.orientation)
 		self.StatusBar.Spark:Show()
 
 
@@ -233,7 +233,7 @@ function CastButton:OnEvent(event,...)
 		self.StatusBar.Shield:Show()
 	end
 
-	if not Neuron.barEditMode and not Neuron.buttonEditMode then
+	if not Photon.barEditMode and not Photon.buttonEditMode then
 		self.StatusBar.CenterText:SetText(self:cFunc())
 		self.StatusBar.LeftText:SetText(self:lFunc())
 		self.StatusBar.RightText:SetText(self:rFunc())
@@ -243,7 +243,7 @@ function CastButton:OnEvent(event,...)
 end
 
 function CastButton:OnUpdate(elapsed)
-	if Neuron.pendingReload then
+	if Photon.pendingReload then
 		return
 	end
 
@@ -309,7 +309,7 @@ function CastButton:OnUpdate(elapsed)
 			self.flash = nil
 		end
 
-	elseif self.fadeout and (not Neuron.barEditMode and not Neuron.buttonEditMode) then
+	elseif self.fadeout and (not Photon.barEditMode and not Photon.buttonEditMode) then
 		local alpha = self.StatusBar:GetAlpha() - CASTING_BAR_ALPHA_STEP
 		if alpha > 0 then
 			self.StatusBar:SetAlpha(alpha)
@@ -320,7 +320,7 @@ function CastButton:OnUpdate(elapsed)
 		self:Reset()
 	end
 
-	if not Neuron.barEditMode and not Neuron.buttonEditMode then
+	if not Photon.barEditMode and not Photon.buttonEditMode then
 		self.StatusBar.CenterText:SetText(self:cFunc())
 		self.StatusBar.LeftText:SetText(self:lFunc())
 		self.StatusBar.RightText:SetText(self:rFunc())
@@ -344,7 +344,7 @@ function CastButton:Reset()
 	self.channeling = nil
 	self.StatusBar:SetStatusBarColor(self.config.castColor[1], self.config.castColor[2], self.config.castColor[3])
 
-	if not Neuron.barEditMode and not Neuron.buttonEditMode then
+	if not Photon.barEditMode and not Photon.buttonEditMode then
 		self.StatusBar:Hide()
 	end
 end

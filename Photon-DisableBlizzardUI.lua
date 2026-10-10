@@ -1,11 +1,11 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 -- Hidden parent frame
 local UIHider = CreateFrame("Frame")
@@ -35,7 +35,7 @@ local function disableFrameSlidingAnimation(frame)
 	end
 end
 
-function Neuron:HideBlizzardUI(profileDatabase)
+function Photon:HideBlizzardUI(profileDatabase)
 	local blizzBars = profileDatabase.blizzBars
 	----------------------------
 	----- Disable Buttons ------
@@ -82,18 +82,18 @@ function Neuron:HideBlizzardUI(profileDatabase)
 		disableFrameSlidingAnimation(OverrideActionBar)
 
 		-- i think this is the shaman bar, it seems like it was deprecated in cata
-		-- just leave it on always https://github.com/brittyazel/Neuron/issues/444
+		-- just leave it on always https://github.com/brittyazel/Photon/issues/444
 		-- disableBarFrame(MultiCastActionBarFrame)
 
 		--disable the ActionBarController to avoid potential for taint
 		ActionBarController:UnregisterAllEvents()
 
 		--these two get called when opening the spellbook so it's best to just silence them ahead of time
-		if not Neuron:IsHooked("MultiActionBar_ShowAllGrids") then
-			Neuron:RawHook("MultiActionBar_ShowAllGrids", function() end, true)
+		if not Photon:IsHooked("MultiActionBar_ShowAllGrids") then
+			Photon:RawHook("MultiActionBar_ShowAllGrids", function() end, true)
 		end
-		if not Neuron:IsHooked("MultiActionBar_HideAllGrids") then
-			Neuron:RawHook("MultiActionBar_HideAllGrids", function() end, true)
+		if not Photon:IsHooked("MultiActionBar_HideAllGrids") then
+			Photon:RawHook("MultiActionBar_HideAllGrids", function() end, true)
 		end
 	end
 
@@ -109,7 +109,7 @@ function Neuron:HideBlizzardUI(profileDatabase)
 	end
 	if not blizzBars.CastBar then
 		PlayerCastingBarFrame:UnregisterAllEvents()
-		PlayerCastingBarFrame:SetParent(Neuron.hiddenFrame)
+		PlayerCastingBarFrame:SetParent(Photon.hiddenFrame)
 	end
 	if not blizzBars.ExitBar then
 		disableBarFrame(MainMenuBarVehicleLeaveButton)
@@ -140,7 +140,7 @@ function Neuron:HideBlizzardUI(profileDatabase)
 		--MirrorTimer1-3 were replaced by a single MirrorTimerContainer in 10.0
 		UIParent:UnregisterEvent("MIRROR_TIMER_START")
 		MirrorTimerContainer:UnregisterAllEvents()
-		MirrorTimerContainer:SetParent(Neuron.hiddenFrame)
+		MirrorTimerContainer:SetParent(Photon.hiddenFrame)
 	end
 	if not blizzBars.PetBar then
 		disableBarFrame(PetActionBar)
@@ -179,13 +179,13 @@ function Neuron:HideBlizzardUI(profileDatabase)
 	end
 end
 
-function Neuron:ToggleBlizzUI(blizzBars)
+function Photon:ToggleBlizzUI(blizzBars)
 	if InCombatLockdown() then
 		return
 	end
 
 	if blizzBars then
-		local DB = Neuron.db.profile
+		local DB = Photon.db.profile
 		DB.blizzBars = CopyTable(DB.blizzBars)
 		MergeTable(DB.blizzBars, blizzBars)
 	end

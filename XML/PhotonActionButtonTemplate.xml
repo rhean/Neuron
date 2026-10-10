@@ -1,13 +1,13 @@
-<!--Neuron is a World of Warcraft® user interface addon.
+<!--Photon is a World of Warcraft® user interface addon.
+	Copyright (c) 2026- Linus Olsson
 	Copyright (c) 2017-2023 Britt W. Yazel
 	Copyright (c) 2006-2014 Connor H. Chenoweth
-	Copyright (c) 2026 Linus Olsson
 	This code is licensed under the MIT license (see LICENSE for details)-->
 
 <Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.blizzard.com/wow/ui/" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI_shared.xsd">
 
-	<CheckButton name="NeuronActionButtonTemplate" inherits="SecureActionButtonTemplate, SecureHandlerEnterLeaveTemplate" virtual="true">
+	<CheckButton name="PhotonActionButtonTemplate" inherits="SecureActionButtonTemplate, SecureHandlerEnterLeaveTemplate" virtual="true">
 		<Size>
 			<AbsDimension x="43" y="43"/>
 		</Size>
@@ -77,28 +77,28 @@ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI
 				</Texture>
 
 				<!--Flyout Textures-->
-				<Texture name="$parentFlyoutTop" parentKey="FlyoutTop" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+				<Texture name="$parentFlyoutTop" parentKey="FlyoutTop" file="Interface\AddOns\Photon\Images\flyout.tga" hidden="true">
 					<Size x="56" y="16"/>
 					<Anchors>
 						<Anchor point="TOP" x="0" y="5"/>
 					</Anchors>
 					<TexCoords left="0" right="1" top="0" bottom="0.28125"/>
 				</Texture>
-				<Texture name="$parentFlyoutBottom" parentKey="FlyoutBottom" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+				<Texture name="$parentFlyoutBottom" parentKey="FlyoutBottom" file="Interface\AddOns\Photon\Images\flyout.tga" hidden="true">
 					<Size x="56" y="16"/>
 					<Anchors>
 						<Anchor point="BOTTOM" x="0" y="-5"/>
 					</Anchors>
 					<TexCoords left="0" right="1" top="0.71875" bottom="1"/>
 				</Texture>
-				<Texture name="$parentFlyoutLeft" parentKey="FlyoutLeft" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+				<Texture name="$parentFlyoutLeft" parentKey="FlyoutLeft" file="Interface\AddOns\Photon\Images\flyout.tga" hidden="true">
 					<Size x="16" y="56"/>
 					<Anchors>
 						<Anchor point="LEFT" x="-5" y="0"/>
 					</Anchors>
 					<TexCoords left="0" right="0.28125" top="0" bottom="1"/>
 				</Texture>
-				<Texture name="$parentFlyoutRight" parentKey="FlyoutRight" file="Interface\AddOns\Neuron\Images\flyout.tga" hidden="true">
+				<Texture name="$parentFlyoutRight" parentKey="FlyoutRight" file="Interface\AddOns\Photon\Images\flyout.tga" hidden="true">
 					<Size x="16" y="56"/>
 					<Anchors>
 						<Anchor point="RIGHT" x="5" y="0"/>

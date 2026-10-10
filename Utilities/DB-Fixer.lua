@@ -1,13 +1,13 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
 addonTable.utilities = addonTable.utilities or {}
 
-local LATEST_DB_VERSION = 1.6
+local LATEST_DB_VERSION = 1.7
 
 ------------------------------------------------------------
 --------------------Data Fixing Functions-------------------
@@ -35,7 +35,7 @@ end
 local function ogFixer(profile)
 	local oldDBVersion = profile.DBVersion
 	-- this file loads before we setup the addon with ace, so don't init at file level
-	local Neuron = addonTable.Neuron
+	local Photon = addonTable.Photon
 	---Added on 8/25/2018. Remove at some point in the future
 	---The purpose of this migration was to rename many of the DB tables to values that make more sense
 	if oldDBVersion < 1.1 then --this is the first of many DB fixes. This should be run first before the rest to migrate us into the DBVersion 1.1 state
@@ -62,7 +62,7 @@ local function ogFixer(profile)
 		profile["NeuronCDB"]["xbarFirstRun"] = nil
 
 		oldDBVersion = 1.1 --increment oldDBVersion up to the latest that this set of code fixes
-		Neuron:Print("Neuron database migrated to version " .. 1.1)
+		Photon:Print("Photon database migrated to version " .. 1.1)
 	end
 
 
@@ -111,7 +111,7 @@ local function ogFixer(profile)
 		end
 
 		oldDBVersion = 1.2 --increment oldDBVersion up to the latest that this set of code fixes
-		Neuron:Print("Neuron database migrated to version " .. 1.2)
+		Photon:Print("Photon database migrated to version " .. 1.2)
 	end
 
 
@@ -154,14 +154,14 @@ local function ogFixer(profile)
 		end
 
 		oldDBVersion = 1.3 --increment oldDBVersion up to the latest that this set of code fixes
-		Neuron:Print("Neuron database migrated to version " .. 1.3)
+		Photon:Print("Photon database migrated to version " .. 1.3)
 	end
 
 	profile.DBVersion = 1.3
 	return profile
 end
 
--- this is when we made enabling/disabling neuron/blizzard ui
+-- this is when we made enabling/disabling photon/blizzard ui
 -- components more granular--eg, enable cast bar but not rep bar
 local function migrate1_3To1_4(profile)
 	local newProfile = CopyTable(profile)
@@ -264,6 +264,31 @@ local function migrate1_5To1_6(profile)
 	return newProfile
 end
 
+-- Neuron was renamed Photon: its keys in the profile, and the bar frame names a bar snaps to
+-- (NeuronActionBar3 is now PhotonActionBar3). NeuronCDB and NeuronGDB above are older and stay as they were
+local function migrate1_6To1_7(profile)
+	local newProfile = CopyTable(profile)
+	for _, key in ipairs({"Icon", "ItemCache", "SpellCache"}) do
+		if newProfile["Neuron"..key] ~= nil and newProfile["Photon"..key] == nil then
+			newProfile["Photon"..key] = newProfile["Neuron"..key]
+		end
+		newProfile["Neuron"..key] = nil
+	end
+
+	for _, bars in pairs(newProfile) do
+		if type(bars) == "table" then
+			for _, bar in pairs(bars) do
+				if type(bar) == "table" and type(bar.snapToFrame) == "string" then
+					bar.snapToFrame = bar.snapToFrame:gsub("^Neuron", "Photon")
+				end
+			end
+		end
+	end
+
+	newProfile.DBVersion = 1.7
+	return newProfile
+end
+
 local function profileMigrate(profileDatabase)
 	if profileDatabase.DBVersion < 1.3 then
 		-- we need to copy the table for the og fixer, since it modifies in place
@@ -274,6 +299,8 @@ local function profileMigrate(profileDatabase)
 		return profileMigrate(migrate1_4To1_5(profileDatabase))
 	elseif profileDatabase.DBVersion == 1.5 then
 		return profileMigrate(migrate1_5To1_6(profileDatabase))
+	elseif profileDatabase.DBVersion == 1.6 then
+		return profileMigrate(migrate1_6To1_7(profileDatabase))
 	else
 		return profileDatabase
 	end
@@ -281,13 +308,13 @@ end
 
 local function loadingDatabaseFailed(DB)
 	StaticPopupDialogs["Profile_Migration_Failed"] = {
-		text = "We are sorry, but your Neuron profile migration has failed. By clicking accept you agree to reset your current profile to the its default values.",
+		text = "We are sorry, but your Photon profile migration has failed. By clicking accept you agree to reset your current profile to the its default values.",
 		button1 = ACCEPT,
 		button2 = CANCEL,
 		timeout = 0,
 		whileDead = true,
 		OnAccept = function() DB:ResetProfile() end,
-		OnCancel = function() C_AddOns.DisableAddOn("Neuron"); ReloadUI() end,
+		OnCancel = function() C_AddOns.DisableAddOn("Photon"); ReloadUI() end,
 	}
 	StaticPopup_Show("Profile_Migration_Failed")
 end
@@ -311,7 +338,7 @@ local function databaseMigration(DB)
 	end
 
 	--run again to re-register all of our wildcard ['*'] tables back in the newly shifted DB
-	return LibStub("AceDB-3.0"):New("NeuronProfilesDB", addonTable.databaseDefaults)
+	return LibStub("AceDB-3.0"):New("PhotonProfilesDB", addonTable.databaseDefaults)
 end
 
 addonTable.utilities.DBFixer = {databaseMigration=databaseMigration}

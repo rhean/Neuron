@@ -1,17 +1,17 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class ExpButton: StatusButton @define class ExpButton inherits from class StatusButton
-local ExpButton = setmetatable({}, { __index = Neuron.StatusButton })
-Neuron.ExpButton = ExpButton
+local ExpButton = setmetatable({}, { __index = Photon.StatusButton })
+Photon.ExpButton = ExpButton
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 ExpButton.sbStrings = {
 	[1] = { L["None"], function(self) return "" end },
@@ -23,14 +23,14 @@ ExpButton.sbStrings = {
 }
 
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return ExpButton @ A newly created StatusButton object
 function ExpButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.StatusButton.new(bar, buttonID, defaults, ExpButton, "XPBar", "XP Button")
+	local newButton = Photon.StatusButton.new(bar, buttonID, defaults, ExpButton, "XPBar", "XP Button")
 
 	return newButton
 end
@@ -164,10 +164,10 @@ end
 function ExpButton:InitializeDropDown() -- initialize the dropdown menu for chosing to watch either XP, azerite XP, or Honor Points
 	--this is the frame that will hold our dropdown menu
 	local menuFrame
-	if not NeuronXPDropdownMenu then --try to avoid re-creating this over again if we don't have to
-		menuFrame = CreateFrame("Frame", "NeuronXPDropdownMenu", self, "UIDropDownMenuTemplate")
+	if not PhotonXPDropdownMenu then --try to avoid re-creating this over again if we don't have to
+		menuFrame = CreateFrame("Frame", "PhotonXPDropdownMenu", self, "UIDropDownMenuTemplate")
 	else
-		menuFrame = NeuronXPDropdownMenu
+		menuFrame = PhotonXPDropdownMenu
 	end
 	menuFrame:SetPoint("BOTTOMLEFT", self, "TOPRIGHT", 0, 0)
 
@@ -243,7 +243,7 @@ function ExpButton:InitializeDropDown() -- initialize the dropdown menu for chos
 	})
 
 	--build the EasyMenu with the newly created menu table "menu"
-	Neuron.EasyMenu(menu)
+	Photon.EasyMenu(menu)
 end
 
 function ExpButton:OnClick(mousebutton)

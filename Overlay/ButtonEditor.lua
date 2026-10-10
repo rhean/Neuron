@@ -1,14 +1,14 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
 
 addonTable.overlay = addonTable.overlay or {}
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 ---type definition the contents of the xml file
 ---@class OverlayFrameSelect:Frame
@@ -61,7 +61,7 @@ local ButtonEditor= {
 			button = button,
 			frame = -- try to pop a frame off the stack, otherwise make a new one
 				table.remove(framePool) or
-				CreateFrame("Button", nil, UIParent, "NeuronOverlayFrameTemplate") --[[@as ButtonOverlayFrame]],
+				CreateFrame("Button", nil, UIParent, "PhotonOverlayFrameTemplate") --[[@as ButtonOverlayFrame]],
 			onClick = onClickCallback,
 		}
 
@@ -81,14 +81,14 @@ local ButtonEditor= {
 		else
 			overlay.frame.select.Left:ClearAllPoints()
 			overlay.frame.select.Left:SetPoint("RIGHT", overlay.frame.select, "LEFT", 4, 0)
-			overlay.frame.select.Left:SetTexture("Interface\\AddOns\\Neuron\\Images\\flyout.tga")
+			overlay.frame.select.Left:SetTexture("Interface\\AddOns\\Photon\\Images\\flyout.tga")
 			overlay.frame.select.Left:SetTexCoord(0.71875, 1, 0, 1)
 			overlay.frame.select.Left:SetWidth(16)
 			overlay.frame.select.Left:SetHeight(55)
 
 			overlay.frame.select.Right:ClearAllPoints()
 			overlay.frame.select.Right:SetPoint("LEFT", overlay.frame.select, "RIGHT", -4, 0)
-			overlay.frame.select.Right:SetTexture("Interface\\AddOns\\Neuron\\Images\\flyout.tga")
+			overlay.frame.select.Right:SetTexture("Interface\\AddOns\\Photon\\Images\\flyout.tga")
 			overlay.frame.select.Right:SetTexCoord(0, 0.28125, 0, 1)
 			overlay.frame.select.Right:SetWidth(16)
 			overlay.frame.select.Right:SetHeight(55)

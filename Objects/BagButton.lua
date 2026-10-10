@@ -1,15 +1,15 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
 ---@class BagButton : Button @class BagButton inherits from class Button
-local BagButton = setmetatable({}, {__index = Neuron.Button})
-Neuron.BagButton = BagButton
+local BagButton = setmetatable({}, {__index = Photon.Button})
+Photon.BagButton = BagButton
 
 --the blizzard bag buttons this client has, Forever has a keyring but no reagent bag
 local blizzBagButtons = {}
@@ -19,11 +19,11 @@ for _, name in ipairs({"KeyRingButton", "CharacterReagentBag0Slot","CharacterBag
 	end
 end
 
-Neuron.NUM_BAG_BUTTONS = #blizzBagButtons
+Photon.NUM_BAG_BUTTONS = #blizzBagButtons
 
 local Skin = LibStub("Masque", true)
 
---the same size as an action button, see NeuronActionButtonTemplate
+--the same size as an action button, see PhotonActionButtonTemplate
 local BAG_BUTTON_SIZE = 43
 
 local function inset(texture, button, offset)
@@ -34,7 +34,7 @@ local function inset(texture, button, offset)
 end
 
 --blizzard redraws its round bag art on every bag update, so this runs again after each one.
---these are the same textures and insets NeuronActionButtonTemplate uses
+--these are the same textures and insets PhotonActionButtonTemplate uses
 local function ApplyActionButtonFrame(button)
 	--the backpack has no item icon, blizzard draws the backpack as part of its round frame art
 	if button == MainMenuBarBackpackButton and button.icon then
@@ -142,14 +142,14 @@ local tookOver = false
 
 ---------------------------------------------------------
 
----Constructor: Create a new Neuron Button object (this is the base object for all Neuron button types)
+---Constructor: Create a new Photon Button object (this is the base object for all Photon button types)
 ---@param bar Bar @Bar Object this button will be a child of
 ---@param buttonID number @Button ID that this button will be assigned
 ---@param defaults table @Default options table to be loaded onto the given button
 ---@return BagButton @ A newly created BagButton object
 function BagButton.new(bar, buttonID, defaults)
 	--call the parent object constructor with the provided information specific to this button type
-	local newButton = Neuron.Button.new(bar, buttonID, BagButton, "BagBar", "BagButton", "NeuronAnchorButtonTemplate")
+	local newButton = Photon.Button.new(bar, buttonID, BagButton, "BagBar", "BagButton", "PhotonAnchorButtonTemplate")
 
 	if defaults then
 		newButton:SetDefaults(defaults)
@@ -195,7 +195,7 @@ function BagButton:AnchorHookedButton()
 end
 
 function BagButton:InitializeButtonSettings()
-	self:SetFrameStrata(Neuron.STRATAS[self.bar:GetStrata()-1])
+	self:SetFrameStrata(Photon.STRATAS[self.bar:GetStrata()-1])
 	self:SetScale(self.bar:GetBarScale())
 	self:SetSkinned()
 	self.isShown = true
@@ -215,7 +215,7 @@ function BagButton:SetSkinned()
 			Highlight = self.hookedButton:GetHighlightTexture(),
 			Border = self.hookedButton.IconBorder,
 		}
-		Skin:Group("Neuron", self.bar.data.name):AddButton(self.hookedButton, btnData, "Item")
+		Skin:Group("Photon", self.bar.data.name):AddButton(self.hookedButton, btnData, "Item")
 	end
 end
 

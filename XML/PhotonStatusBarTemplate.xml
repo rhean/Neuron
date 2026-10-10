@@ -1,13 +1,13 @@
-<!--Neuron is a World of Warcraft® user interface addon.
+<!--Photon is a World of Warcraft® user interface addon.
+	Copyright (c) 2026- Linus Olsson
 	Copyright (c) 2017-2023 Britt W. Yazel
 	Copyright (c) 2006-2014 Connor H. Chenoweth
-	Copyright (c) 2026 Linus Olsson
 	This code is licensed under the MIT license (see LICENSE for details)-->
 
 <Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.blizzard.com/wow/ui/" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI_shared.xsd">
 
-	<Frame name="NeuronStatusBarTemplate" frameStrata="LOW" virtual="true" inherits="BackdropTemplate">
+	<Frame name="PhotonStatusBarTemplate" frameStrata="LOW" virtual="true" inherits="BackdropTemplate">
 		<Size x="195" y="16"/>
 		<Frames>
 			<StatusBar name="$parentStatusBar" parentKey="StatusBar">
@@ -70,7 +70,7 @@ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/FrameXML/UI
 								</Anchor>
 							</Anchors>
 						</FontString>
-						<Texture name="$parentSpark" parentKey="Spark" file="Interface\AddOns\Neuron\Images\CastingBar_Spark_1" alphaMode="ADD" hidden="true">
+						<Texture name="$parentSpark" parentKey="Spark" file="Interface\AddOns\Photon\Images\CastingBar_Spark_1" alphaMode="ADD" hidden="true">
 							<Size x="32" y="32"/>
 							<Anchors>
 								<Anchor point="CENTER">

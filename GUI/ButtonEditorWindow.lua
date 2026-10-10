@@ -1,15 +1,15 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
-local NeuronGUI = Neuron.NeuronGUI
+local PhotonGUI = Photon.PhotonGUI
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local Spec = addonTable.utilities.Spec
 local UI = addonTable.ui
@@ -76,12 +76,12 @@ local function getStateList(bar)
 	local barData = bar.data
 
 	local stateList = {}
-	for barState, stateInfo in pairs(Neuron.MANAGED_BAR_STATES) do
-		if (barData[barState] or Neuron.MANAGED_SECONDARY_STATES[barState])
+	for barState, stateInfo in pairs(Photon.MANAGED_BAR_STATES) do
+		if (barData[barState] or Photon.MANAGED_SECONDARY_STATES[barState])
 			and barState ~= "custom"
 			and not ACTION_BAR_STATES[barState]
 			--a rogue's stealth is a stance
-			and not (Neuron.class == "ROGUE" and barState == "stealth")
+			and not (Photon.class == "ROGUE" and barState == "stealth")
 		then
 			local driver = stateInfo.states
 			if barData.remap and barState == "stance" then
@@ -92,8 +92,8 @@ local function getStateList(bar)
 			for state in driver:gmatch("%a+%d+") do
 				if not seen[state]
 					and state:match("^"..barState.."%d+$")
-					and (state ~= stateInfo.homestate or Neuron.Bar.FormsArePages(barState))
-					and Neuron.STATES[state]
+					and (state ~= stateInfo.homestate or Photon.Bar.FormsArePages(barState))
+					and Photon.STATES[state]
 				then
 					seen[state] = true
 					table.insert(stateList, {state = state, barState = barState, num = tonumber(state:match("%d+$"))})
@@ -123,7 +123,7 @@ local function stateName(state)
 	if state == "homestate" then
 		return L["Default"]
 	end
-	return Neuron.STATES[state] or state
+	return Photon.STATES[state] or state
 end
 
 --stance1_alt1, pet2_alt1, paged2_stance1_alt1
@@ -148,8 +148,8 @@ local function getSpecs(bar)
 	local activeSpec = Spec.active(multiSpec)
 
 	local specs = {}
-	if not multiSpec or Neuron.isWoWForever or activeSpec == "default" then
-		table.insert(specs, {index = "default", name = Neuron.isWoWForever and L["Spec 1"] or L["Default"]})
+	if not multiSpec or Photon.isWoWForever or activeSpec == "default" then
+		table.insert(specs, {index = "default", name = Photon.isWoWForever and L["Spec 1"] or L["Default"]})
 	end
 
 	if multiSpec then
@@ -300,7 +300,7 @@ local function createPageEditor(parent)
 	editor.icon = editor.iconFrame.icon
 	editor.iconFrame:SetScript("OnClick", function()
 		selectPage(editor.page)
-		NeuronGUI:OpenIconSelector(function(icon)
+		PhotonGUI:OpenIconSelector(function(icon)
 			editor.onIcon(icon)
 		end)
 	end)
@@ -665,13 +665,13 @@ local function placeBody()
 end
 
 local function createWindow()
-	window = UI.Window("NeuronButtonEditorFrame", L["Button Editor"])
+	window = UI.Window("PhotonButtonEditorFrame", L["Button Editor"])
 	window:SetSize(660, 700)
 	window:SetMinSize(560, 420)
 	window:SetScript("OnHide", function()
-		NeuronGUI:CloseIconSelector()
-		if Neuron.buttonEditMode then
-			Neuron:ToggleButtonEditMode(false)
+		PhotonGUI:CloseIconSelector()
+		if Photon.buttonEditMode then
+			Photon:ToggleButtonEditMode(false)
 		end
 	end)
 
@@ -765,14 +765,14 @@ function render()
 	end
 
 	--a pick would go to a page that is no longer on show
-	NeuronGUI:CloseIconSelector()
+	PhotonGUI:CloseIconSelector()
 
 	rowPool:ReleaseAll()
 	editorPool:ReleaseAll()
 	wipe(view.editors)
 	view.pages = {}
 
-	local button = Neuron.currentButton
+	local button = Photon.currentButton
 	if not button or button.bar.class ~= "ActionBar" then
 		window:SetStatus(L["ButtonEditor_SelectButton"])
 		specRow:Hide()
@@ -881,9 +881,9 @@ function render()
 	fillTab(button, spec.index, spec.name, forms, modifiers, actionPages)
 end
 
-function NeuronGUI:OpenButtonEditor()
-	if not Neuron.buttonEditMode then
-		Neuron:ToggleButtonEditMode(true)
+function PhotonGUI:OpenButtonEditor()
+	if not Photon.buttonEditMode then
+		Photon:ToggleButtonEditMode(true)
 	end
 
 	if not window then
@@ -894,11 +894,11 @@ function NeuronGUI:OpenButtonEditor()
 	render()
 end
 
-function NeuronGUI:RefreshButtonEditor()
+function PhotonGUI:RefreshButtonEditor()
 	render()
 end
 
-function NeuronGUI:CloseButtonEditor()
+function PhotonGUI:CloseButtonEditor()
 	if window then
 		window:Hide() --leaves button edit mode, see createWindow
 	end

@@ -1,7 +1,7 @@
--- Neuron is a World of Warcraft® user interface addon.
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 
@@ -14,35 +14,35 @@ local ButtonBinder = addonTable.overlay.ButtonBinder
 local ButtonEditor = addonTable.overlay.ButtonEditor
 local BarEditor = addonTable.overlay.BarEditor
 
----@class Neuron : AceAddon-3.0 @define The main addon object for the Neuron Action Bar addon
-addonTable.Neuron = LibStub("AceAddon-3.0"):NewAddon(CreateFrame("Frame", nil, UIParent), "Neuron", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0", "AceTimer-3.0", "AceSerializer-3.0")
-local Neuron = addonTable.Neuron
+---@class Photon : AceAddon-3.0 @define The main addon object for the Photon Action Bar addon
+addonTable.Photon = LibStub("AceAddon-3.0"):NewAddon(CreateFrame("Frame", nil, UIParent), "Photon", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0", "AceTimer-3.0", "AceSerializer-3.0")
+local Photon = addonTable.Photon
 
 local DB
 
 local LibDeflate = LibStub:GetLibrary("LibDeflate")
-local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
+local L = LibStub("AceLocale-3.0"):GetLocale("Photon")
 
 local LATEST_VERSION_NUM = "1.4.1" --this variable is set to popup a welcome message upon updating/installing. Only change it if you want to pop up a message after the users next update
 
---prepare the Neuron table with some sub-tables that will be used down the road
-Neuron.bars = {} --this table will be our main handle for all of our bars.
+--prepare the Photon table with some sub-tables that will be used down the road
+Photon.bars = {} --this table will be our main handle for all of our bars.
 
-Neuron.registeredBarData = {}
+Photon.registeredBarData = {}
 
 --these are the database tables that are going to hold our data. They are global because every .lua file needs access to them
-Neuron.itemCache = {} --Stores a cache of all items that have been seen by a Neuron button
-Neuron.spellCache = {} --Stores a cache of all spells that have been seen by a Neuron button
+Photon.itemCache = {} --Stores a cache of all items that have been seen by a Photon button
+Photon.spellCache = {} --Stores a cache of all spells that have been seen by a Photon button
 
-Neuron.barEditMode = false
-Neuron.buttonEditMode = false
-Neuron.bindingMode = false
+Photon.barEditMode = false
+Photon.buttonEditMode = false
+Photon.bindingMode = false
 
 local tocVersion = select(4, GetBuildInfo())
-Neuron.isWoWForever = (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT) or (tocVersion >= 16000 and tocVersion < 20000)
-Neuron.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not Neuron.isWoWForever
+Photon.isWoWForever = (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT) or (tocVersion >= 16000 and tocVersion < 20000)
+Photon.isWoWRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not Photon.isWoWForever
 
-Neuron.STRATAS = {
+Photon.STRATAS = {
 	[1] = "BACKGROUND",
 	[2] = "LOW",
 	[3] = "MEDIUM",
@@ -51,10 +51,10 @@ Neuron.STRATAS = {
 	[6] = "TOOLTIP"
 }
 
-Neuron.TIMERLIMIT = 4
-Neuron.SNAPTO_TOLERANCE = 28
+Photon.TIMERLIMIT = 4
+Photon.SNAPTO_TOLERANCE = 28
 
-Neuron.DEBUG = true
+Photon.DEBUG = true
 
 -------------------------------------------------------------------------
 --------------------Start of Functions-----------------------------------
@@ -63,7 +63,7 @@ Neuron.DEBUG = true
 --- EasyMenu was removed in 11.0. This shows a menu table in the old EasyMenu
 --- format with MenuUtil instead. Spacers (disabled entries) become dividers
 ---@param menuList table
-function Neuron.EasyMenu(menuList)
+function Photon.EasyMenu(menuList)
 	local function build(parent, list)
 		for _, entry in ipairs(list) do
 			local text = entry.colorCode and entry.colorCode..entry.text.."|r" or entry.text
@@ -91,24 +91,24 @@ end
 --- **OnInitialize**, which is called directly after the addon is fully loaded.
 --- do init tasks here, like loading the Saved Variables
 --- or setting up slash commands.
-function Neuron:OnInitialize()
-	Neuron.db = LibStub("AceDB-3.0"):New("NeuronProfilesDB", addonTable.databaseDefaults)
+function Photon:OnInitialize()
+	Photon.db = LibStub("AceDB-3.0"):New("PhotonProfilesDB", addonTable.databaseDefaults)
 
 	--Check if the current database needs to be migrated, and attempt the migration
-	Neuron.db = DBFixer.databaseMigration(Neuron.db)
-	DB = Neuron.db.profile
+	Photon.db = DBFixer.databaseMigration(Photon.db)
+	DB = Photon.db.profile
 
-	Neuron.db.RegisterCallback(Neuron, "OnProfileChanged", "RefreshConfig")
-	Neuron.db.RegisterCallback(Neuron, "OnProfileCopied", "RefreshConfig")
-	Neuron.db.RegisterCallback(Neuron, "OnProfileReset", "RefreshConfig")
-	Neuron.db.RegisterCallback(Neuron, "OnDatabaseReset", "RefreshConfig")
+	Photon.db.RegisterCallback(Photon, "OnProfileChanged", "RefreshConfig")
+	Photon.db.RegisterCallback(Photon, "OnProfileCopied", "RefreshConfig")
+	Photon.db.RegisterCallback(Photon, "OnProfileReset", "RefreshConfig")
+	Photon.db.RegisterCallback(Photon, "OnDatabaseReset", "RefreshConfig")
 
 	--load saved variables into working variable containers
-	Neuron.itemCache = DB.NeuronItemCache
-	Neuron.spellCache = DB.NeuronSpellCache
+	Photon.itemCache = DB.PhotonItemCache
+	Photon.spellCache = DB.PhotonSpellCache
 
-	Neuron.class = select(2, UnitClass("player"))
-	Neuron:UpdateStanceStrings()
+	Photon.class = select(2, UnitClass("player"))
+	Photon:UpdateStanceStrings()
 
 	StaticPopupDialogs["ReloadUI"] = {
 		text = L["ReloadUI"],
@@ -120,64 +120,64 @@ function Neuron:OnInitialize()
 	}
 
 	--Initialize the Minimap Icon
-	Neuron:Minimap_IconInitialize()
+	Photon:Minimap_IconInitialize()
 
-	--Initialize the chat commands (i.e. /neuron)
-	--Neuron:RegisterChatCommand("neuron", "slashHandler")
+	--Initialize the chat commands (i.e. /photon)
+	--Photon:RegisterChatCommand("photon", "slashHandler")
 
 	--build all bar and button frames and run initial setup
-	Neuron.registeredBarData = Neuron:RegisterBars(DB)
+	Photon.registeredBarData = Photon:RegisterBars(DB)
 	if DB.firstRun then
-		Neuron:InitializeEmptyDatabase(DB)
+		Photon:InitializeEmptyDatabase(DB)
 	end
-	Neuron:CreateBarsAndButtons(DB)
+	Photon:CreateBarsAndButtons(DB)
 end
 
 --- **OnEnable** which gets called during the PLAYER_LOGIN event, when most of the data provided by the game is already present.
 --- Do more initialization here, that really enables the use of your addon.
 --- Register Events, Hook functions, Create Frames, Get information from
 --- the game that wasn't available in OnInitialize
-function Neuron:OnEnable()
-	if Neuron.DEBUG then
-		_G.Neuron = Neuron
+function Photon:OnEnable()
+	if Photon.DEBUG then
+		_G.Photon = Photon
 	end
 
-	Neuron:RegisterEvent("PLAYER_REGEN_DISABLED")
-	Neuron:RegisterEvent("PLAYER_ENTERING_WORLD")
-	Neuron:RegisterEvent("SPELLS_CHANGED")
-	Neuron:RegisterEvent("CHARACTER_POINTS_CHANGED")
-	Neuron:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
-	Neuron:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
+	Photon:RegisterEvent("PLAYER_REGEN_DISABLED")
+	Photon:RegisterEvent("PLAYER_ENTERING_WORLD")
+	Photon:RegisterEvent("SPELLS_CHANGED")
+	Photon:RegisterEvent("CHARACTER_POINTS_CHANGED")
+	Photon:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
+	Photon:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 
-	Neuron:UpdateStanceStrings()
+	Photon:UpdateStanceStrings()
 
 	--this allows for the "Esc" key to disable the Edit Mode instead of bringing up the game menu, but only if an edit mode is activated.
 
-	if not Neuron:IsHooked(GameMenuFrame, "OnUpdate") then
-		Neuron:HookScript(GameMenuFrame, "OnUpdate", function(self)
+	if not Photon:IsHooked(GameMenuFrame, "OnUpdate") then
+		Photon:HookScript(GameMenuFrame, "OnUpdate", function(self)
 
-			if Neuron.barEditMode then
+			if Photon.barEditMode then
 				HideUIPanel(self)
-				Neuron:ToggleBarEditMode(false)
+				Photon:ToggleBarEditMode(false)
 			end
 
-			if Neuron.buttonEditMode then
+			if Photon.buttonEditMode then
 				HideUIPanel(self)
-				Neuron:ToggleButtonEditMode(false)
+				Photon:ToggleButtonEditMode(false)
 			end
 
-			if Neuron.bindingMode then
+			if Photon.bindingMode then
 				HideUIPanel(self)
-				Neuron:ToggleBindingMode(false)
+				Photon:ToggleBindingMode(false)
 			end
 
 		end)
 	end
 
-	Neuron:LoginMessage()
+	Photon:LoginMessage()
 
 	--Load all bars and buttons
-	for _,v in pairs(Neuron.bars) do
+	for _,v in pairs(Photon.bars) do
 		v:Load()
 	end
 
@@ -185,7 +185,7 @@ function Neuron:OnEnable()
 	--SecureActionButtons see SecureTemplates.lua SecureActionButton_OnClick() for more information
 	SetCVar("ActionButtonUseKeyDown", 0)
 
-	Neuron.NeuronGUI:LoadInterfaceOptions()
+	Photon.PhotonGUI:LoadInterfaceOptions()
 
 end
 
@@ -193,73 +193,73 @@ end
 --- Unhook, Unregister Events, Hide frames that you created.
 --- You would probably only use an OnDisable if you want to
 --- build a "standby" mode, or be able to toggle modules on/off.
-function Neuron:OnDisable()
+function Photon:OnDisable()
 	SetCVar("ActionButtonUseKeyDown", 1)
 end
 
 -------------------------------------------------
 
-function Neuron:PLAYER_REGEN_DISABLED()
-	if Neuron.buttonEditMode then
-		Neuron:ToggleButtonEditMode(false)
+function Photon:PLAYER_REGEN_DISABLED()
+	if Photon.buttonEditMode then
+		Photon:ToggleButtonEditMode(false)
 	end
 
-	if Neuron.bindingMode then
-		Neuron:ToggleBindingMode(false)
+	if Photon.bindingMode then
+		Photon:ToggleBindingMode(false)
 	end
 
-	if Neuron.barEditMode then
-		Neuron:ToggleBarEditMode(false)
+	if Photon.barEditMode then
+		Photon:ToggleBarEditMode(false)
 	end
 end
 
 
-function Neuron:PLAYER_ENTERING_WORLD()
+function Photon:PLAYER_ENTERING_WORLD()
 	DB.firstRun = false
 
-	Neuron:UpdateSpellCache()
-	Neuron:UPDATE_SHAPESHIFT_FORMS() --catches up bars saved before a form was learned
+	Photon:UpdateSpellCache()
+	Photon:UPDATE_SHAPESHIFT_FORMS() --catches up bars saved before a form was learned
 
 	--Fix for Titan causing the Main Bar to not be hidden
 	if C_AddOns.IsAddOnLoaded("Titan") then
 		TitanUtils_AddonAdjust("MainMenuBar", true)
 	end
 
-	Neuron:HideBlizzardUI(DB)
+	Photon:HideBlizzardUI(DB)
 end
 
-function Neuron:ACTIVE_TALENT_GROUP_CHANGED()
-	Neuron:UpdateSpellCache()
-	Neuron:UpdateStanceStrings()
+function Photon:ACTIVE_TALENT_GROUP_CHANGED()
+	Photon:UpdateSpellCache()
+	Photon:UpdateStanceStrings()
 end
 
-function Neuron:LEARNED_SPELL_IN_SKILL_LINE()
-	Neuron:UpdateSpellCache()
-	Neuron:UpdateStanceStrings()
+function Photon:LEARNED_SPELL_IN_SKILL_LINE()
+	Photon:UpdateSpellCache()
+	Photon:UpdateStanceStrings()
 end
 
-function Neuron:CHARACTER_POINTS_CHANGED()
-	Neuron:UpdateSpellCache()
-	Neuron:UpdateStanceStrings()
+function Photon:CHARACTER_POINTS_CHANGED()
+	Photon:UpdateSpellCache()
+	Photon:UpdateStanceStrings()
 end
 
-function Neuron:SPELLS_CHANGED()
-	Neuron:UpdateSpellCache()
-	Neuron:UpdateStanceStrings()
+function Photon:SPELLS_CHANGED()
+	Photon:UpdateSpellCache()
+	Photon:UpdateStanceStrings()
 end
 
 --a newly learned form needs a page on every stance bar
-function Neuron:UPDATE_SHAPESHIFT_FORMS()
-	Neuron:UpdateStanceStrings()
+function Photon:UPDATE_SHAPESHIFT_FORMS()
+	Photon:UpdateStanceStrings()
 
 	--level ups happen in combat, where the drivers can't be changed
 	if InCombatLockdown() then
-		Neuron:RegisterEvent("PLAYER_REGEN_ENABLED", "UPDATE_SHAPESHIFT_FORMS")
+		Photon:RegisterEvent("PLAYER_REGEN_ENABLED", "UPDATE_SHAPESHIFT_FORMS")
 		return
 	end
-	Neuron:UnregisterEvent("PLAYER_REGEN_ENABLED")
+	Photon:UnregisterEvent("PLAYER_REGEN_ENABLED")
 
-	for _, bar in pairs(Neuron.bars) do
+	for _, bar in pairs(Photon.bars) do
 		bar:UpdateStanceRemap()
 	end
 end
@@ -269,22 +269,22 @@ end
 -------------------------------------------------------------------------
 
 
-function Neuron:RefreshConfig(db, profile)
+function Photon:RefreshConfig(db, profile)
 	StaticPopup_Show("ReloadUI")
-	Neuron.pendingReload = true
+	Photon.pendingReload = true
 end
 
 -----------------------------------------------------------------
 
 
-function Neuron:LoginMessage()
+function Photon:LoginMessage()
 	--displays a info window on login for either fresh installs or updates
 	if not DB.updateWarning or DB.updateWarning ~= LATEST_VERSION_NUM  then
 		if not C_AddOns.IsAddOnLoaded("Masque") then
 			print(" ")
 			print("    You do not currently have Masque installed or enabled.")
-			print("    Please consider using Masque for enhancing the visual appearance of Neuron's action buttons.")
-			print("    We recommend using Masque: Neuron, the theme made by Soyier for use with Neuron.")
+			print("    Please consider using Masque for enhancing the visual appearance of Photon's action buttons.")
+			print("    We recommend using Masque: Photon, the theme made by Soyier for use with Photon.")
 			print(" ")
 		end
 	end
@@ -293,9 +293,9 @@ function Neuron:LoginMessage()
 
 
 	--Shadowlands warning that will show as long as a player has one button on their ZoneAbilityBar for Shadowlands content
-	if not Neuron.isWoWForever and UnitLevel("player") >= 50 and Neuron.db.profile.ZoneAbilityBar[1] and #Neuron.db.profile.ZoneAbilityBar[1].buttons == 1 then
+	if not Photon.isWoWForever and UnitLevel("player") >= 50 and Photon.db.profile.ZoneAbilityBar[1] and #Photon.db.profile.ZoneAbilityBar[1].buttons == 1 then
 		print(" ")
-		Neuron:Print(WrapTextInColorCode("IMPORTANT: Shadowlands content now requires multiple Zone Ability Buttons. Please add at least 3 buttons to your Zone Ability Bar to support this new functionality.", "FF00FFEC"))
+		Photon:Print(WrapTextInColorCode("IMPORTANT: Shadowlands content now requires multiple Zone Ability Buttons. Please add at least 3 buttons to your Zone Ability Bar to support this new functionality.", "FF00FFEC"))
 		print(" ")
 	end
 end
@@ -305,7 +305,7 @@ end
 --- Creates a table containing provided data
 -- @param index, bookType, spellName, altName, spellID, altSpellID, spellType, icon
 -- @return curSpell:  Table containing provided data
-function Neuron:SetSpellInfo(index, bookType, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
+function Photon:SetSpellInfo(index, bookType, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
 	local curSpell = {}
 
 	curSpell.index = index
@@ -329,7 +329,7 @@ end
 
 --- Scans Character Spell Book and creates a table of all known spells.  This table is used to refrence macro spell info to generate tooltips and cooldowns.
 ---	If a spell is not displaying its tooltip or cooldown, then the spell in the macro probably is not in the database
-function Neuron:UpdateSpellCache()
+function Photon:UpdateSpellCache()
 	local sIndexMax = 0
 	local numSkillLines = C_SpellBook.GetNumSpellBookSkillLines()
 
@@ -367,18 +367,18 @@ function Neuron:UpdateSpellCache()
 				altIcon = nil
 			end
 
-			local spellData = Neuron:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
+			local spellData = Photon:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon, altName, altSpellID, altIcon)
 
-			Neuron.spellCache[(spellName):lower()] = spellData
-			Neuron.spellCache[(spellName):lower().."()"] = spellData
+			Photon.spellCache[(spellName):lower()] = spellData
+			Photon.spellCache[(spellName):lower().."()"] = spellData
 
 
 			--reverse main and alt so we can put both in the table accurately
-			local altSpellData = Neuron:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, altName, altSpellID, altIcon, spellName, spellID, icon)
+			local altSpellData = Photon:SetSpellInfo(i, Enum.SpellBookSpellBank.Player, spellType, altName, altSpellID, altIcon, spellName, spellID, icon)
 
 			if altName and altName ~= spellName then
-				Neuron.spellCache[(altName):lower()] = altSpellData
-				Neuron.spellCache[(altName):lower().."()"] = altSpellData
+				Photon.spellCache[(altName):lower()] = altSpellData
+				Photon.spellCache[(altName):lower().."()"] = altSpellData
 			end
 
 		end
@@ -401,10 +401,10 @@ function Neuron:UpdateSpellCache()
 
 				if spellName and spellID and spellType ~= Enum.SpellBookItemType.FutureSpell then
 					icon = C_Spell.GetSpellTexture(spellID)
-					local spellData = Neuron:SetSpellInfo(offsetIndex, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon,nil,  nil, nil)
+					local spellData = Photon:SetSpellInfo(offsetIndex, Enum.SpellBookSpellBank.Player, spellType, spellName, spellID, icon,nil,  nil, nil)
 
-					Neuron.spellCache[(spellName):lower()] = spellData
-					Neuron.spellCache[(spellName):lower().."()"] = spellData
+					Photon.spellCache[(spellName):lower()] = spellData
+					Photon.spellCache[(spellName):lower().."()"] = spellData
 
 				end
 			end
@@ -412,17 +412,17 @@ function Neuron:UpdateSpellCache()
 	end
 end
 
-function Neuron:ToggleMainMenu()
-	Settings.OpenToCategory(Neuron.optionsCategoryID)
+function Photon:ToggleMainMenu()
+	Settings.OpenToCategory(Photon.optionsCategoryID)
 end
 
-function Neuron:ToggleBarEditMode(show)
+function Photon:ToggleBarEditMode(show)
 	if show then
-		Neuron.barEditMode = true
-		Neuron:ToggleButtonEditMode(false)
-		Neuron:ToggleBindingMode(false)
+		Photon.barEditMode = true
+		Photon:ToggleButtonEditMode(false)
+		Photon:ToggleBindingMode(false)
 
-		for _, bar in pairs(Neuron.bars) do
+		for _, bar in pairs(Photon.bars) do
 			bar.editFrame =
 				bar.editFrame or
 				BarEditor.allocate(bar, function(overlay, button, down)
@@ -436,14 +436,14 @@ function Neuron:ToggleBarEditMode(show)
 
 		--if there is no bar selected, default to the first in the BarList
 		--TODO: This logic may be unintuitive. Should probably be fixed
-		if not Neuron.currentBar and #Neuron.bars then
-			Neuron.Bar.ChangeSelectedBar(Neuron.bars[1])
-		elseif Neuron.currentBar then
-			BarEditor.activate(Neuron.currentBar.editFrame)
+		if not Photon.currentBar and #Photon.bars then
+			Photon.Bar.ChangeSelectedBar(Photon.bars[1])
+		elseif Photon.currentBar then
+			BarEditor.activate(Photon.currentBar.editFrame)
 		end
 	else
-		Neuron.barEditMode = false
-		for _, bar in pairs(Neuron.bars) do
+		Photon.barEditMode = false
+		for _, bar in pairs(Photon.bars) do
 			local overlay = bar.editFrame
 			bar.editFrame = nil
 			if overlay then
@@ -457,7 +457,7 @@ function Neuron:ToggleBarEditMode(show)
 	end
 end
 
-function Neuron:ToggleButtonEditMode(show)
+function Photon:ToggleButtonEditMode(show)
 	local isActionBar = function(bar)
 		return bar and bar.class == "ActionBar"
 	end
@@ -473,21 +473,21 @@ function Neuron:ToggleButtonEditMode(show)
 	end
 
 	local bars = Array.concatenate(
-		Array.filter(isActionBar, Neuron.bars),
-		Array.filter(isStatusBar, Neuron.bars)
+		Array.filter(isActionBar, Photon.bars),
+		Array.filter(isStatusBar, Photon.bars)
 	)
 
 	if show then
-		Neuron.buttonEditMode = true
+		Photon.buttonEditMode = true
 
-		Neuron:ToggleBarEditMode(false)
-		Neuron:ToggleBindingMode(false)
+		Photon:ToggleBarEditMode(false)
+		Photon:ToggleBindingMode(false)
 
 		local currentButton =
-			Neuron.currentButton or
+			Photon.currentButton or
 			(
-				(isActionBar(Neuron.currentBar) or isStatusBar(Neuron.currentBar))
-				and unpack(Neuron.currentBar.buttons)
+				(isActionBar(Photon.currentBar) or isStatusBar(Photon.currentBar))
+				and unpack(Photon.currentBar.buttons)
 			) or
 			Array.foldl(
 				function(button, bar) return button or unpack(bar.buttons) end,
@@ -496,7 +496,7 @@ function Neuron:ToggleButtonEditMode(show)
 			)
 
 		if not currentButton then
-			Neuron.buttonEditMode = false
+			Photon.buttonEditMode = false
 			return
 		end
 
@@ -506,13 +506,13 @@ function Neuron:ToggleButtonEditMode(show)
 					button,
 					isActionBar(bar) and "corners" or "sides",
 					function(btn)
-						Neuron.Button.ChangeSelectedButton(btn)
+						Photon.Button.ChangeSelectedButton(btn)
 						--a status bar's appearance in the bar editor follows the picked button
-						Neuron.NeuronGUI:RefreshBarConfig()
+						Photon.PhotonGUI:RefreshBarConfig()
 						if isActionBar(btn.bar) then
-							Neuron.NeuronGUI:OpenButtonEditor()
+							Photon.PhotonGUI:OpenButtonEditor()
 						else
-							Neuron.NeuronGUI:RefreshButtonEditor()
+							Photon.PhotonGUI:RefreshButtonEditor()
 						end
 					end
 				)
@@ -527,10 +527,10 @@ function Neuron:ToggleButtonEditMode(show)
 		-- change the button, but also manually activate it
 		-- just in case it was already the current button and
 		-- so if the change is a noop, we still show the recticle
-		Neuron.Button.ChangeSelectedButton(currentButton)
+		Photon.Button.ChangeSelectedButton(currentButton)
 		ButtonEditor.activate(currentButton.editFrame)
 	else
-		Neuron.buttonEditMode = false
+		Photon.buttonEditMode = false
 
 		for _, bar in pairs(bars) do
 			for _, button in pairs(bar.buttons) do
@@ -567,7 +567,7 @@ local function processKeyBinding(targetButton, key)
 		--if the key is anything else, keybind the button to this key
 	elseif key then --checks to see if another keybind already has that key, and if so clears it from the other button
 		--check to see if any other button has this key bound to it, ignoring locked buttons, and if so remove the key from the other button
-		for _, bar in pairs(Neuron.bars) do
+		for _, bar in pairs(Photon.bars) do
 			for _, button in pairs(bar.buttons) do
 				if button.keys then
 					if targetButton ~= button and not button.keys.hotKeyLock then
@@ -599,7 +599,7 @@ local function processKeyBinding(targetButton, key)
 	end
 end
 
-function Neuron:ToggleBindingMode(show)
+function Photon:ToggleBindingMode(show)
 	local isBindable = function(bar)
 		return bar and (
 			bar.class == "ActionBar" or
@@ -609,12 +609,12 @@ function Neuron:ToggleBindingMode(show)
 		)
 	end
 
-	local bars = Array.filter(isBindable, Neuron.bars)
+	local bars = Array.filter(isBindable, Photon.bars)
 
 	if show then
-		Neuron.bindingMode = true
-		Neuron:ToggleButtonEditMode(false)
-		Neuron:ToggleBarEditMode(false)
+		Photon.bindingMode = true
+		Photon:ToggleButtonEditMode(false)
+		Photon:ToggleBarEditMode(false)
 
 		for _, bar in pairs(bars) do
 			for _, button in pairs(bar.buttons) do
@@ -628,7 +628,7 @@ function Neuron:ToggleBindingMode(show)
 		end
 
 	else
-		Neuron.bindingMode = false
+		Photon.bindingMode = false
 		for _, bar in pairs(bars) do
 			for _, button in pairs(bar.buttons) do
 				if button.keybindFrame then
@@ -644,47 +644,47 @@ function Neuron:ToggleBindingMode(show)
 	end
 end
 
-function Neuron:GetSerializedAndCompressedProfile()
-	local uncompressed = Neuron:Serialize(Neuron.db.profile) --serialize the database into a string value
+function Photon:GetSerializedAndCompressedProfile()
+	local uncompressed = Photon:Serialize(Photon.db.profile) --serialize the database into a string value
 	local compressed = LibDeflate:CompressZlib(uncompressed) --compress the data
 	local encoded = LibDeflate:EncodeForPrint(compressed) --encode the data for print for copy+paste
 	return encoded
 end
 
-function Neuron:SetSerializedAndCompressedProfile(input)
+function Photon:SetSerializedAndCompressedProfile(input)
 	--check if the input is empty
 	if input == "" then
-		Neuron:Print(L["No data to import."].." "..L["Aborting."])
+		Photon:Print(L["No data to import."].." "..L["Aborting."])
 		return
 	end
 
 	--decode and check if decoding worked properly
 	local decoded = LibDeflate:DecodeForPrint(input)
 	if decoded == nil then
-		Neuron:Print(L["Decoding failed."].." "..L["Aborting."])
+		Photon:Print(L["Decoding failed."].." "..L["Aborting."])
 		return
 	end
 
 	--uncompress and check if uncompresion worked properly
 	local uncompressed = LibDeflate:DecompressZlib(decoded)
 	if uncompressed == nil then
-		Neuron:Print(L["Decompression failed."].." "..L["Aborting."])
+		Photon:Print(L["Decompression failed."].." "..L["Aborting."])
 		return
 	end
 
 	--deserialize the data and return it back into a table format
-	local result, newProfile = Neuron:Deserialize(uncompressed)
+	local result, newProfile = Photon:Deserialize(uncompressed)
 
 	if result == true and newProfile then --if we successfully deserialize, load the new table and reload
 		for k,v in pairs(newProfile) do
 			if type(v) == "table" then
-				Neuron.db.profile[k] = CopyTable(v)
+				Photon.db.profile[k] = CopyTable(v)
 			else
-				Neuron.db.profile[k] = v
+				Photon.db.profile[k] = v
 			end
 		end
 		ReloadUI()
 	else
-		Neuron:Print(L["Data import Failed."].." "..L["Aborting."])
+		Photon:Print(L["Data import Failed."].." "..L["Aborting."])
 	end
 end

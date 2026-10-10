@@ -1,13 +1,13 @@
--- Neuron is a World of Warcraft® user interface addon.
--- Copyright (c) 2026 Linus Olsson
+-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
-local Neuron = addonTable.Neuron
+local Photon = addonTable.Photon
 
---the first GUI file to load, see Neuron-GUI.xml
-Neuron.NeuronGUI = Neuron.NeuronGUI or {}
-local NeuronGUI = Neuron.NeuronGUI
+--the first GUI file to load, see Photon-GUI.xml
+Photon.PhotonGUI = Photon.PhotonGUI or {}
+local PhotonGUI = Photon.PhotonGUI
 
 local UI = addonTable.ui
 local Style = UI.Style
@@ -380,7 +380,7 @@ CONTROLS.spacer = function(parent)
 end
 
 ---a control for an AceConfig option type, for other panels in the same style. nil for a type there is none for
-function NeuronGUI.CreateOptionControl(kind, parent)
+function PhotonGUI.CreateOptionControl(kind, parent)
 	return CONTROLS[kind] and CONTROLS[kind](parent)
 end
 
@@ -399,7 +399,7 @@ CONTROLS.box = function(parent)
 		self.border = item.border ~= false
 		self.light = item.light == true
 		self.titleText = addonTable.optionDefinitions.localized(item.name or "")
-		self.neuronFlat.bg:SetColorTexture(unpack(self.light and Style.panelLight or Style.panel))
+		self.photonFlat.bg:SetColorTexture(unpack(self.light and Style.panelLight or Style.panel))
 		Style.SetFlatShown(self, self.border or self.light, self.border)
 	end
 
@@ -690,7 +690,7 @@ end
 --every bar, by name, for the picker
 local function barItems()
 	local items = {}
-	for _, bar in pairs(Neuron.bars) do
+	for _, bar in pairs(Photon.bars) do
 		table.insert(items, {value = bar, text = bar:GetBarName()})
 	end
 	table.sort(items, function(a, b)
@@ -700,13 +700,13 @@ local function barItems()
 end
 
 local function createWindow()
-	window = UI.Window("NeuronBarConfigFrame", "Bar Config")
+	window = UI.Window("PhotonBarConfigFrame", "Bar Config")
 	window:SetSize(700, GetScreenHeight() > 850 and 850 or 700)
 	--wide enough for the bar picker and the new bar controls side by side
 	window:SetMinSize(600, 400)
 	window:SetScript("OnHide", function()
-		if Neuron.barEditMode then
-			Neuron:ToggleBarEditMode(false)
+		if Photon.barEditMode then
+			Photon:ToggleBarEditMode(false)
 		end
 	end)
 
@@ -723,7 +723,7 @@ local function createWindow()
 
 	--picking a bar selects it like clicking it does
 	barDropdown = UI.Dropdown(barRow, function(bar)
-		Neuron.Bar.ChangeSelectedBar(bar)
+		Photon.Bar.ChangeSelectedBar(bar)
 		render()
 	end)
 	barDropdown:SetPoint("LEFT", barLabel, "RIGHT", Style.gap * 2, 0)
@@ -735,7 +735,7 @@ local function createWindow()
 	local newBarType
 	local createButton = UI.Button(barRow, "Create", function()
 		if newBarType then
-			Neuron.Bar:CreateNewBar(newBarType)
+			Photon.Bar:CreateNewBar(newBarType)
 			render()
 		end
 	end)
@@ -743,7 +743,7 @@ local function createWindow()
 	createButton:SetEnabled(false)
 
 	local typeItems = {}
-	for class, info in pairs(Neuron.registeredBarData) do
+	for class, info in pairs(Photon.registeredBarData) do
 		table.insert(typeItems, {value = class, text = info.barLabel})
 	end
 	table.sort(typeItems, function(a, b)
@@ -802,7 +802,7 @@ function render()
 	local offset = scroll:GetVerticalScroll()
 	releaseAll()
 
-	local bar = Neuron.currentBar
+	local bar = Photon.currentBar
 	local defs = addonTable.optionDefinitions
 
 	barDropdown:SetItems(barItems())
@@ -901,13 +901,13 @@ function render()
 end
 
 ---opens the bar editor, in bar edit mode so a bar can be picked by clicking it
-function NeuronGUI:OpenBarConfig()
+function PhotonGUI:OpenBarConfig()
 	if not window then
 		createWindow()
 	end
 
-	if not Neuron.barEditMode then
-		Neuron:ToggleBarEditMode(true)
+	if not Photon.barEditMode then
+		Photon:ToggleBarEditMode(true)
 	end
 
 	window:Show()
@@ -915,11 +915,11 @@ function NeuronGUI:OpenBarConfig()
 end
 
 ---after the selected bar or button changed elsewhere
-function NeuronGUI:RefreshBarConfig()
+function PhotonGUI:RefreshBarConfig()
 	requestRender()
 end
 
-function NeuronGUI:CloseBarConfig()
+function PhotonGUI:CloseBarConfig()
 	if window then
 		window:Hide()
 	end

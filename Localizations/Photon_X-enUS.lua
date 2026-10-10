@@ -1,10 +1,10 @@
-﻿-- Neuron is a World of Warcraft® user interface addon.
+﻿-- Photon is a World of Warcraft® user interface addon.
+-- Copyright (c) 2026- Linus Olsson
 -- Copyright (c) 2017-2023 Britt W. Yazel
 -- Copyright (c) 2006-2014 Connor H. Chenoweth
--- Copyright (c) 2026 Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Neuron", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Photon", "enUS", true)
 
 if not L then return end
 
@@ -159,7 +159,7 @@ L["Option"] = true
 
 L["No bar selected or command invalid"] = true
 
-L["Custom_Option"] = "For custom states, add a desired state string (/neuron state custom <state string>) where <state string> is a semicolon seperated list of state conditions"
+L["Custom_Option"] = "For custom states, add a desired state string (/photon state custom <state string>) where <state string> is a semicolon seperated list of state conditions"
 
 
 
@@ -584,7 +584,7 @@ L["Click"] = true
 L["Generate Macro"] = true
 L["Copy and Paste the text below"] = true
 
-L["Pet Actions can not be added to Neuron bars at this time."] = true
+L["Pet Actions can not be added to Photon bars at this time."] = true
 
 
 L["Profile"] = true
@@ -593,7 +593,7 @@ L["Export"] = true
 L["Import or Export the current profile:"] = true
 L["ImportExport_Desc"] = [[
 
-Below you will find a text representation of your Neuron profile.
+Below you will find a text representation of your Photon profile.
 
 To export this profile, select and copy all of the text below and paste it somewhere safe.
 
