@@ -14,7 +14,6 @@ Neuron.Button = Button
 local Skin = LibStub("Masque", true)
 local L = LibStub("AceLocale-3.0"):GetLocale("Neuron")
 
-LibStub("AceBucket-3.0"):Embed(Button)
 LibStub("AceEvent-3.0"):Embed(Button)
 LibStub("AceTimer-3.0"):Embed(Button)
 LibStub("AceHook-3.0"):Embed(Button)

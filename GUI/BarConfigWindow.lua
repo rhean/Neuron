@@ -86,8 +86,7 @@ StaticPopupDialogs["NEURON_BARCONFIG_CONFIRM"] = UI.RaisePopup{
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(_, func)
-		func({})
-		changed()
+		func()
 	end,
 	timeout = 0,
 	whileDead = true,
@@ -135,7 +134,7 @@ end
 --------------------------Controls-------------------------------------------
 -----------------------------------------------------------------------------
 --one per AceConfig option type. create makes the frame, Bind shows an option on it,
---Measure gives its height for a width
+--Measure gives its height for a width. control.changed runs after the option is set
 
 local CONTROLS = {}
 
@@ -149,7 +148,7 @@ CONTROLS.toggle = function(parent)
 		self:SetDisabled(resolve(option.disabled))
 		self.onChange = function(value)
 			option.set({}, value)
-			changed()
+			self.changed()
 		end
 	end
 
@@ -224,7 +223,7 @@ CONTROLS.select = function(parent)
 		self.dropdown:SetEnabled(not resolve(option.disabled))
 		self.onSelect = function(value)
 			option.set({}, value)
-			changed()
+			self.changed()
 		end
 	end
 
@@ -263,7 +262,7 @@ CONTROLS.input = function(parent)
 		box:SetEnabled(not resolve(option.disabled))
 		self.commit = function(text)
 			option.set({}, text)
-			changed()
+			self.changed()
 		end
 	end
 
@@ -287,10 +286,10 @@ CONTROLS.range = function(parent)
 		self.onChange = function(value)
 			option.set({}, value)
 			if not self.dragging then
-				changed()
+				self.changed()
 			end
 		end
-		self.onRelease = changed
+		self.onRelease = self.changed
 	end
 
 	function control:Measure()
@@ -303,13 +302,16 @@ end
 CONTROLS.execute = function(parent)
 	local control = UI.Button(parent, "", function(self)
 		local option = self.option
+		local function run()
+			option.func({})
+			self.changed()
+		end
 		local confirm = resolve(option.confirm)
 		if confirm then
 			local text = type(confirm) == "string" and confirm or resolve(option.name).."?"
-			StaticPopup_Show("NEURON_BARCONFIG_CONFIRM", text, nil, option.func)
+			StaticPopup_Show("NEURON_BARCONFIG_CONFIRM", text, nil, run)
 		else
-			option.func({})
-			changed()
+			run()
 		end
 	end)
 	tooltip(control, control)
@@ -377,6 +379,11 @@ CONTROLS.spacer = function(parent)
 	return control
 end
 
+---a control for an AceConfig option type, for other panels in the same style. nil for a type there is none for
+function NeuronGUI.CreateOptionControl(kind, parent)
+	return CONTROLS[kind] and CONTROLS[kind](parent)
+end
+
 local layoutLines
 
 --a box inside a box, with a border and/or a lighter background. it has as many slots inside
@@ -440,6 +447,7 @@ local function addControl(box, line, kind, option, units)
 
 	local control = pools[kind]:Acquire()
 	control:SetParent(box)
+	control.changed = changed
 	control.option = option
 	control.units = math.min(units, UNITS)
 	control:Bind(option)

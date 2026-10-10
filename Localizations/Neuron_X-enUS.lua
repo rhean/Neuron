@@ -273,6 +273,7 @@ L["Configure Buttons"] = true
 L["Configure Appearance"] = true
 
 ---button editor window
+L["Bar Config"] = true
 L["Button Editor"] = true
 L["Specialization"] = true
 L["Modifiers"] = true
