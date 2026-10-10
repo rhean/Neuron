@@ -54,6 +54,7 @@ function ActionButton:OnDragStart()
 		end
 
 		self:PickUpMacro()
+		self:RefreshStateData()
 
 		self:InitializeButton()
 		self:UpdateAll()
@@ -136,6 +137,7 @@ function ActionButton:OnReceiveDrag()
 		end
 	end
 
+	self:RefreshStateData()
 	self:InitializeButton()
 
 	self:UpdateAll()

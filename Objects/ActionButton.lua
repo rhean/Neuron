@@ -531,6 +531,13 @@ function ActionButton:UpdateButtonSpec()
 	self:UpdateAll()
 end
 
+--the secure state code swaps in the state attributes set on load, so they have to follow a drag or drop
+function ActionButton:RefreshStateData()
+	if self.class == "ActionBar" then
+		self:LoadDataFromDatabase(Spec.active(self.bar:GetMultiSpec()), self.activeState)
+	end
+end
+
 --this function is used to "fake" a state change in the button editor so you can see what each state will look like
 function ActionButton:FakeStateChange(state)
 	if state then
