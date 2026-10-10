@@ -1,5 +1,5 @@
 -- Photon is a World of Warcraft® user interface addon.
--- Copyright (c) 2026 Linus Olsson
+-- Copyright (c) 2026- Linus Olsson
 -- This code is licensed under the MIT license (see LICENSE for details)
 
 local _, addonTable = ...
