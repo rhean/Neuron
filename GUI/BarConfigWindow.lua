@@ -100,7 +100,7 @@ local function tooltip(widget, control)
 		local desc = control.option and resolve(control.option.desc)
 		if desc and desc ~= "" then
 			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-			GameTooltip:SetText(resolve(control.option.name) or "", 1, 1, 1)
+			GameTooltip:SetText(resolve(control.option.title or control.option.name) or "", 1, 1, 1)
 			GameTooltip:AddLine(desc, nil, nil, nil, true)
 			GameTooltip:Show()
 		end
@@ -487,6 +487,8 @@ local function buildRows(container, rows, entry)
 				if option then
 					--the layout can give a setting a shorter label for where it sits
 					if item.name then
+						--the hover title keeps the full name, "Down" alone doesn't say what is down
+						option.title = option.title or option.name
 						option.name = defs.localized(item.name)
 					end
 				elseif defs.PLACEHOLDER_TYPES[item.type] then

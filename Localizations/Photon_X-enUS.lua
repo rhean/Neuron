@@ -625,3 +625,129 @@ Here you will fill find experimental and potentially dangerous options.
 Use at your own risk.
 
 ]]
+
+
+-----------------------------------------------
+---------------Bar Settings Tooltips-----------
+-----------------------------------------------
+-- the hover text for each setting in the bar editor, keyed BarDesc_<setting id> (see GUI/Options.lua)
+-- {form} becomes the class's word for what is on its stance bar, stance for the classes not listed
+L["BarDesc_FormWord"] = "form" --druid, priest
+L["BarDesc_AuraWord"] = "aura" --paladin
+L["BarDesc_StealthWord"] = "stealth" --rogue
+L["BarDesc_PresenceWord"] = "presence" --death knight
+L["BarDesc_StanceWord"] = "stance" --warrior, monk and the rest
+
+-- General Configuration
+L["BarDesc_deleteBar"] = "Permanently deletes this bar and all the buttons on it."
+
+-- Enabled Functions
+L["BarDesc_multiSpec"] = "Gives the bar a page for each specialization."
+L["BarDesc_pages"] = "Gives the bar a page for each of the base games pages."
+L["BarDesc_state_stance"] = "Gives the bar a page for each {form}."
+L["BarDesc_state_pet"] = "Gives the bar a page for when you have a pet out."
+
+-- General Options
+L["BarDesc_autoHide"] = "Fades the bar out until you move the mouse over it."
+L["BarDesc_hidden"] = "Hides the bar completely. It still shows while editing bars."
+L["BarDesc_showGrid"] = "Shows the outline of empty buttons."
+L["BarDesc_lockActions"] = "Locks the buttons so abilities can't be dragged on or off them, pick a key to unlock them."
+L["BarDesc_clickMode"] = "Whether a button fires when the mouse button is pressed down or when it is released."
+
+-- Size and Shape
+L["BarDesc_numButtons"] = "How many buttons the bar has."
+L["BarDesc_columns"] = "How many buttons per row."
+L["BarDesc_scale"] = "The size of the bar and its buttons."
+L["BarDesc_horizontalPadding"] = "The space between buttons side by side."
+L["BarDesc_verticalPadding"] = "The space between rows of buttons."
+L["BarDesc_shape"] = "How the buttons are laid out."
+L["BarDesc_alpha"] = "How transparent the bar is normally."
+L["BarDesc_alphaUp"] = "When the bar becomes fully visible: on mouseover, in combat, or both."
+L["BarDesc_alphaUpSpeed"] = "How fast the bar fades in and out."
+L["BarDesc_strata"] = "Which layer the bar is drawn on."
+
+-- Visuals
+L["BarDesc_keybindLabel"] = "Shows the key bound to each button."
+L["BarDesc_buttonName"] = "Shows the macro name on each button."
+L["BarDesc_stackCharge"] = "Shows item stack counts and ability charges on each button."
+L["BarDesc_outOfRange"] = "Tints the button when your target is out of range."
+L["BarDesc_cooldownCounter"] = "Shows the time left on cooldowns as numbers on the button."
+L["BarDesc_cooldownColor1"] = "The color of the cooldown counter."
+L["BarDesc_cooldownColor2"] = "The color of the cooldown counter in the last 5 seconds."
+L["BarDesc_cooldownAlpha"] = "Fades the button while its ability is on cooldown."
+L["BarDesc_tooltips"] = "Which tooltip to show when hovering a button: none, a short, or the full tooltip."
+L["BarDesc_tooltipsInCombat"] = "Also shows button tooltips while you are in combat."
+L["BarDesc_spellAlerts"] = "The glow shown on a button when its ability procs or is highlighted by the game."
+L["BarDesc_borderStyle"] = "Shows the game's decorative border art around the button (extra action and zone ability buttons)."
+
+-- Active Bar States: the bar gets a page for the state, set its abilities in the button editor
+L["BarDesc_state_shift"] = "Gives the bar a page for when Shift is held."
+L["BarDesc_state_ctrl"] = "Gives the bar a page for when Control is held."
+L["BarDesc_state_alt"] = "Gives the bar a page for when Alt is held."
+L["BarDesc_state_target"] = "Gives the bar a page for when you have a target."
+L["BarDesc_state_harm"] = "Gives the bar a page for when your target is hostile."
+L["BarDesc_state_help"] = "Gives the bar a page for when your target is friendly."
+L["BarDesc_state_stealth"] = "Gives the bar a page for when you are stealthed."
+L["BarDesc_state_combat"] = "Gives the bar a page for when you are in combat."
+L["BarDesc_state_party"] = "Gives the bar a page for when you are in a party."
+L["BarDesc_state_raid"] = "Gives the bar a page for when you are in a raid."
+L["BarDesc_state_mounted"] = "Gives the bar a page for when you are mounted."
+L["BarDesc_state_swimming"] = "Gives the bar a page for when you are swimming."
+L["BarDesc_state_vehicle"] = "Shows the vehicle's abilities on the bar when you are in a vehicle."
+L["BarDesc_state_possess"] = "Shows the possessed creature's abilities on the bar when you possess something."
+L["BarDesc_state_override"] = "Shows the game's override abilities on the bar when it gives you some (special encounters and quests)."
+L["BarDesc_state_dragonriding"] = "Shows your skyriding abilities on the bar while skyriding."
+L["BarDesc_state_resting"] = "Gives the bar a page for when you are resting in a city or inn."
+L["BarDesc_state_indoors"] = "Gives the bar a page for when you are indoors."
+L["BarDesc_state_outdoors"] = "Gives the bar a page for when you are outdoors."
+L["BarDesc_state_fishing"] = "Gives the bar a page for when you have a fishing pole equipped."
+
+-- Hidden Bar States: checked hides the bar in that state
+L["BarDesc_visibility_paged1"] = "Hides the bar on action bar page 1."
+L["BarDesc_visibility_paged2"] = "Hides the bar on action bar page 2."
+L["BarDesc_visibility_paged3"] = "Hides the bar on action bar page 3."
+L["BarDesc_visibility_paged4"] = "Hides the bar on action bar page 4."
+L["BarDesc_visibility_paged5"] = "Hides the bar on action bar page 5."
+L["BarDesc_visibility_paged6"] = "Hides the bar on action bar page 6."
+L["BarDesc_visibility_shift0"] = "Hides the bar while Shift is not held."
+L["BarDesc_visibility_shift1"] = "Hides the bar while Shift is held."
+L["BarDesc_visibility_ctrl0"] = "Hides the bar while Control is not held."
+L["BarDesc_visibility_ctrl1"] = "Hides the bar while Control is held."
+L["BarDesc_visibility_alt0"] = "Hides the bar while Alt is not held."
+L["BarDesc_visibility_alt1"] = "Hides the bar while Alt is held."
+L["BarDesc_visibility_target0"] = "Hides the bar when you have no target."
+L["BarDesc_visibility_target1"] = "Hides the bar when you have a target."
+L["BarDesc_visibility_harm1"] = "Hides the bar when your target is one you can attack."
+L["BarDesc_visibility_help1"] = "Hides the bar when your target is one you can help."
+L["BarDesc_visibility_reaction0"] = "Hides the bar when your target is friendly."
+L["BarDesc_visibility_reaction1"] = "Hides the bar when your target is hostile."
+L["BarDesc_visibility_stealth0"] = "Hides the bar when you are not stealthed."
+L["BarDesc_visibility_stealth1"] = "Hides the bar when you are stealthed."
+L["BarDesc_visibility_stance0"] = "Hides the bar when you are not in any {form}."
+L["BarDesc_visibility_combat0"] = "Hides the bar when you are out of combat."
+L["BarDesc_visibility_combat1"] = "Hides the bar when you are in combat."
+L["BarDesc_visibility_group0"] = "Hides the bar when you are not in a group."
+L["BarDesc_visibility_group2"] = "Hides the bar when you are in a party."
+L["BarDesc_visibility_group1"] = "Hides the bar when you are in a raid."
+L["BarDesc_visibility_pet0"] = "Hides the bar when you have no pet."
+L["BarDesc_visibility_pet1"] = "Hides the bar when you have a pet."
+L["BarDesc_visibility_mounted0"] = "Hides the bar when you are not mounted."
+L["BarDesc_visibility_mounted1"] = "Hides the bar when you are mounted."
+L["BarDesc_visibility_swimming0"] = "Hides the bar when you are not swimming."
+L["BarDesc_visibility_swimming1"] = "Hides the bar when you are swimming."
+L["BarDesc_visibility_vehicle0"] = "Hides the bar when you are not in a vehicle."
+L["BarDesc_visibility_vehicle1"] = "Hides the bar when you are in a vehicle."
+L["BarDesc_visibility_extrabar0"] = "Hides the bar when there is no extra action button."
+L["BarDesc_visibility_extrabar1"] = "Hides the bar when there is an extra action button."
+L["BarDesc_visibility_possess0"] = "Hides the bar when you are not possessing anything."
+L["BarDesc_visibility_possess1"] = "Hides the bar when you are possessing something."
+L["BarDesc_visibility_override0"] = "Hides the bar when there is no override bar."
+L["BarDesc_visibility_override1"] = "Hides the bar when the game shows an override bar."
+L["BarDesc_visibility_dragonriding0"] = "Hides the bar when you are not skyriding."
+L["BarDesc_visibility_dragonriding1"] = "Hides the bar while skyriding."
+L["BarDesc_visibility_resting0"] = "Hides the bar when you are not resting."
+L["BarDesc_visibility_resting1"] = "Hides the bar when you are resting in a city or inn."
+L["BarDesc_visibility_indoors1"] = "Hides the bar when you are indoors."
+L["BarDesc_visibility_outdoors1"] = "Hides the bar when you are outdoors."
+L["BarDesc_visibility_fishing0"] = "Hides the bar when you have no fishing pole equipped."
+L["BarDesc_visibility_fishing1"] = "Hides the bar when you have a fishing pole equipped."

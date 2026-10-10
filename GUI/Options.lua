@@ -105,6 +105,15 @@ local function barStateToggle(state, name)
 	}
 end
 
+--what each class calls the things on its stance bar, for {form} in the hover text. the rest say stance
+local FORM_WORDS = {
+	DRUID = "BarDesc_FormWord",
+	PRIEST = "BarDesc_FormWord",
+	PALADIN = "BarDesc_AuraWord",
+	ROGUE = "BarDesc_StealthWord",
+	DEATHKNIGHT = "BarDesc_PresenceWord",
+}
+
 --built each time the options are shown, so ranges follow the current bar
 local function barDefinitions()
 	local numObjects = bar():GetNumObjects()
@@ -222,6 +231,13 @@ local function barDefinitions()
 	for state, info in pairs(Photon.MANAGED_SECONDARY_STATES) do
 		local name = not gameBars[state] and Photon.STATES[state.."1"] or info.localizedName
 		definitions["state_"..state] = barStateToggle(state, name)
+	end
+
+	--the hover text, see the BarDesc_ entries in the locale
+	local formWord = L[FORM_WORDS[Photon.class] or "BarDesc_StanceWord"]
+	for id, option in pairs(definitions) do
+		local desc = rawget(L, "BarDesc_"..id)
+		option.desc = option.desc or (desc and desc:gsub("{form}", formWord))
 	end
 
 	return definitions
